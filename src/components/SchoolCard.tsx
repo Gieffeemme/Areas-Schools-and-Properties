@@ -1,5 +1,6 @@
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS } from "@/lib/ratings";
+import { happyColor, p8Color } from "@/lib/scoreColors";
 import Pill from "./Pill";
 
 const OFSTED_SHORT: Record<OfstedRating, string> = {
@@ -11,22 +12,35 @@ const OFSTED_SHORT: Record<OfstedRating, string> = {
   "Not loaded": "—",
 };
 
-// green = good · amber = caution · red = bad
-function p8Color(v: number): string {
-  return v >= 0 ? "#16a34a" : v >= -0.5 ? "#d97706" : "#dc2626";
-}
-function happyColor(pct: number): string {
-  return pct >= 85 ? "#16a34a" : pct >= 65 ? "#d97706" : "#dc2626";
-}
-
-export default function SchoolCard({ school: s }: { school: School }) {
+export default function SchoolCard({
+  school: s,
+  onClick,
+}: {
+  school: School;
+  onClick?: () => void;
+}) {
   const color = RATING_COLORS[s.ofsted];
   const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
   const stale = year != null && new Date().getFullYear() - year > 4;
 
   return (
     <div
-      className="rounded-lg border border-l-4 border-[var(--border)] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+      onClick={onClick}
+      role={onClick ? "button" : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={
+        onClick
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                onClick();
+              }
+            }
+          : undefined
+      }
+      className={`rounded-lg border border-l-4 border-[var(--border)] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+        onClick ? "cursor-pointer" : ""
+      }`}
       style={{ borderLeftColor: color }}
     >
       <div className="flex items-baseline justify-between gap-2">

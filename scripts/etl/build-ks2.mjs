@@ -1,27 +1,27 @@
 #!/usr/bin/env node
 /**
- * Build src/data/ks4-by-urn.json from DfE KS4 (GCSE) performance tables, keyed by URN:
- * Progress 8 (P8MEA), Attainment 8 (ATT8SCR), EBacc entry % (PTEBACC_E_PTQ_EE), EBacc
- * achieved 9-4 % (PTEBACC_94), and disadvantaged Progress 8 (P8MEA_FSM6CLA1A). Secondary only.
+ * Build src/data/ks2-by-urn.json from DfE KS2 (primary) performance tables, keyed by URN:
+ * reading / writing / maths progress (READPROG, WRITPROG, MATPROG) and the % reaching the
+ * expected (PTRWM_EXP) and higher (PTRWM_HIGH) standard in reading, writing & maths combined.
  *
  * Source: DfE "Compare School Performance" download-data (direct CSV; needs a browser UA).
- *   npm run etl:ks4                          # 2022-2023
- *   node scripts/etl/build-ks4.mjs 2021-2022
- *   node scripts/etl/build-ks4.mjs ./england_ks4final.csv
+ *   npm run etl:ks2                          # 2022-2023
+ *   node scripts/etl/build-ks2.mjs 2018-2019
+ *   node scripts/etl/build-ks2.mjs ./england_ks2.csv
  */
 import { writeFile, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = join(HERE, "..", "..", "src", "data", "ks4-by-urn.json");
+const OUT = join(HERE, "..", "..", "src", "data", "ks2-by-urn.json");
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
 
 function downloadUrl(year) {
   return (
     "https://www.compare-school-performance.service.gov.uk/download-data" +
-    `?download=true&regions=0&filters=KS4&fileformat=csv&year=${year}&meta=false`
+    `?download=true&regions=0&filters=KS2&fileformat=csv&year=${year}&meta=false`
   );
 }
 
@@ -64,7 +64,7 @@ async function main() {
     console.log("Reading local CSV:", arg);
     text = await readFile(arg, "utf8");
   } else {
-    console.log("Fetching KS4", year, "from DfE…");
+    console.log("Fetching KS2", year, "from DfE…");
     const res = await fetch(downloadUrl(year), { headers: { "User-Agent": UA } });
     if (!res.ok) throw new Error(`download failed: HTTP ${res.status}`);
     text = await res.text();
@@ -74,37 +74,36 @@ async function main() {
   const hdr = parseLine(lines[0]);
   const i = (n) => hdr.indexOf(n);
   const iURN = i("URN");
-  const iP8 = i("P8MEA");
-  const iAtt = i("ATT8SCR");
-  const iEbE = i("PTEBACC_E_PTQ_EE");
-  const iEb94 = i("PTEBACC_94");
-  const iDis = i("P8MEA_FSM6CLA1A");
-  if (iURN < 0 || iP8 < 0) throw new Error("Expected 'URN' and 'P8MEA' columns in the KS4 CSV.");
+  const iExp = i("PTRWM_EXP");
+  const iHigh = i("PTRWM_HIGH");
+  const iRead = i("READPROG");
+  const iWrit = i("WRITPROG");
+  const iMat = i("MATPROG");
+  if (iURN < 0) throw new Error("Expected a 'URN' column in the KS2 CSV.");
 
   const out = {};
   for (let r = 1; r < lines.length; r++) {
     if (!lines[r]) continue;
     const row = parseLine(lines[r]);
     const urn = (row[iURN] ?? "").trim();
-    if (!urn) continue;
-    const p8 = num(row[iP8]);
-    const att8 = iAtt >= 0 ? num(row[iAtt]) : null;
-    if (p8 === null && att8 === null) continue;
-    out[urn] = {
-      p8,
-      att8,
-      ebaccEntry: iEbE >= 0 ? num(row[iEbE]) : null,
-      ebacc94: iEb94 >= 0 ? num(row[iEb94]) : null,
-      disP8: iDis >= 0 ? num(row[iDis]) : null,
+    if (!/^\d+$/.test(urn)) continue;
+    const rec = {
+      rwmExp: iExp >= 0 ? num(row[iExp]) : null,
+      rwmHigh: iHigh >= 0 ? num(row[iHigh]) : null,
+      readProg: iRead >= 0 ? num(row[iRead]) : null,
+      writProg: iWrit >= 0 ? num(row[iWrit]) : null,
+      matProg: iMat >= 0 ? num(row[iMat]) : null,
       year: yearLabel,
     };
+    if (rec.rwmExp === null && rec.readProg === null && rec.matProg === null) continue;
+    out[urn] = rec;
   }
 
   await writeFile(OUT, JSON.stringify(out) + "\n");
-  console.log(`Wrote ${Object.keys(out).length} KS4 records (${yearLabel}) → ${OUT}`);
+  console.log(`Wrote ${Object.keys(out).length} KS2 records (${yearLabel}) → ${OUT}`);
 }
 
 main().catch((e) => {
-  console.error("KS4 ETL failed:", e.message);
+  console.error("KS2 ETL failed:", e.message);
   process.exit(1);
 });

@@ -5,10 +5,12 @@ export default function SchoolsPanel({
   schools,
   radiusMiles,
   ofstedLoaded,
+  onSelect,
 }: {
   schools: School[];
   radiusMiles: number;
   ofstedLoaded: boolean;
+  onSelect?: (s: School) => void;
 }) {
   return (
     <section>
@@ -26,7 +28,7 @@ export default function SchoolsPanel({
       ) : (
         <div className="space-y-2">
           {schools.slice(0, 12).map((s) => (
-            <SchoolCard key={s.id} school={s} />
+            <SchoolCard key={s.id} school={s} onClick={() => onSelect?.(s)} />
           ))}
         </div>
       )}

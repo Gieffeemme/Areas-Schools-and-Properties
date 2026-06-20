@@ -26,6 +26,27 @@ export interface School {
   ks4Year?: string; // e.g. "2022/23"
   parentViewHappy?: number | null; // % agree "My child is happy" (Ofsted Parent View)
   parentViewResponses?: number;
+  // Detail (for the drawer)
+  ofstedReport?: string; // link to the school's Ofsted reports page
+  ofstedSub?: {
+    education?: OfstedRating;
+    behaviour?: OfstedRating;
+    personal?: OfstedRating;
+    leadership?: OfstedRating;
+    eyfs?: OfstedRating;
+    sixthForm?: OfstedRating;
+  };
+  ebaccEntry?: number | null; // % entering the EBacc (KS4)
+  ebacc94?: number | null; // % achieving EBacc grades 9-4 (KS4)
+  disadvantagedP8?: number | null; // Progress 8 for disadvantaged pupils
+  ks2?: {
+    rwmExp: number | null; // % reaching expected standard (reading, writing & maths)
+    rwmHigh: number | null; // % at higher standard
+    readProg: number | null;
+    writProg: number | null;
+    matProg: number | null;
+    year: string;
+  } | null;
 }
 
 export interface CrimeCategoryCount {

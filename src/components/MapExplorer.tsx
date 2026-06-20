@@ -5,7 +5,8 @@ import PostcodeSearch from "./PostcodeSearch";
 import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
 import SchoolCard from "./SchoolCard";
-import { AreaReport } from "@/lib/types";
+import SchoolDetail from "./SchoolDetail";
+import { AreaReport, School } from "@/lib/types";
 
 export default function MapExplorer() {
   const [report, setReport] = useState<AreaReport | null>(null);
@@ -13,6 +14,7 @@ export default function MapExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<Set<string>>(new Set(["schools"]));
   const [crime, setCrime] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [selected, setSelected] = useState<School | null>(null);
 
   const search = useCallback(async (postcode: string) => {
     setLoading(true);
@@ -97,7 +99,7 @@ export default function MapExplorer() {
               </p>
               <div className="mt-3 space-y-2">
                 {report.schools.slice(0, 40).map((s) => (
-                  <SchoolCard key={s.id} school={s} />
+                  <SchoolCard key={s.id} school={s} onClick={() => setSelected(s)} />
                 ))}
               </div>
             </>
@@ -106,6 +108,7 @@ export default function MapExplorer() {
           )}
         </aside>
       </div>
+      {selected && <SchoolDetail school={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }

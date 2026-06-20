@@ -1,22 +1,16 @@
 #!/usr/bin/env node
 /**
- * Build src/data/ofsted-by-urn.json from Ofsted's official "state-funded schools inspections
- * and outcomes" management information (xlsx), keyed by URN. The app joins these onto live
- * OpenStreetMap school pins via the URN (OSM tag `ref:edubase`).
+ * Build src/data/ofsted-by-urn.json from Ofsted's "state-funded schools inspections and
+ * outcomes" management information (xlsx), keyed by URN: overall grade + sub-grades
+ * (quality of education, behaviour, personal development, leadership, EYFS, sixth form),
+ * the inspection date, and a link to the school's Ofsted report.
  *
- * NOTE: GIAS (the schools register) does NOT contain Ofsted grades — they live in this separate
- * Ofsted dataset. Each grade is stored with its inspection date so the UI can show provenance.
+ * GIAS does NOT contain Ofsted grades — they live in this separate Ofsted dataset.
+ * Source: https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
+ * (Latest cleanly-structured workbook is as at Nov 2019; Ofsted retired overall grades Sept 2024.)
  *
- * Source page:
- *   https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
- * Caveat: the latest cleanly-structured workbook there is "state-funded schools ... as at Nov
- * 2019"; Ofsted abolished single 'overall effectiveness' grades in Sept 2024, so pre-2024
- * inspections are where overall grades still exist.
- *
- * Usage:
- *   npm run etl:schools                        # auto-pick the state-funded MI from gov.uk
- *   node scripts/etl/build-schools.mjs <url>   # a specific .xlsx URL
- *   node scripts/etl/build-schools.mjs ./file.xlsx
+ *   npm run etl:schools
+ *   node scripts/etl/build-schools.mjs <url|file.xlsx>
  */
 import { writeFile, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
@@ -29,6 +23,7 @@ const PAGE =
   "https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes";
 
 const GRADE = { "1": "Outstanding", "2": "Good", "3": "Requires improvement", "4": "Inadequate" };
+const grade = (v) => GRADE[String(v ?? "").trim()];
 
 async function getWorkbook() {
   const arg = process.argv[2];
@@ -72,30 +67,52 @@ async function main() {
   const hi = rows.findIndex((r) => r.some((c) => String(c).trim().toLowerCase() === "urn"));
   if (hi < 0) throw new Error("Could not find a header row containing a URN column.");
   const hdr = rows[hi].map((h) => String(h).trim());
-  const col = (re) => hdr.findIndex((h) => re.test(h));
-  const iUrn = col(/^urn$/i);
-  const iName = col(/^school name$/i);
-  const iOverall = col(/^overall effectiveness$/i);
-  const iDate = col(/^inspection start date$/i);
-  if (iUrn < 0 || iOverall < 0) {
-    throw new Error("Expected 'URN' and 'Overall effectiveness' columns in the Ofsted MI sheet.");
+  const col = (n) => hdr.indexOf(n);
+
+  const iU = col("URN");
+  const iName = col("School name");
+  const iDate = col("Inspection start date");
+  const iWeb = col("Web link");
+  const iOverall = col("Overall effectiveness");
+  const SUB = {
+    education: col("Quality of education"),
+    behaviour: col("Behaviour and attitudes"),
+    personal: col("Personal development"),
+    leadership: col("Effectiveness of leadership and management"),
+    eyfs: col("Early years provision (where applicable)"),
+    sixthForm: col("Sixth form provision (where applicable)"),
+  };
+  if (iU < 0 || iOverall < 0) {
+    throw new Error("Expected 'URN' and 'Overall effectiveness' columns.");
   }
 
   const out = {};
   for (let r = hi + 1; r < rows.length; r++) {
     const row = rows[r];
-    const urn = String(row[iUrn] ?? "").trim();
-    const rating = GRADE[String(row[iOverall] ?? "").trim()];
-    if (!urn || !rating) continue;
+    const urn = String(row[iU] ?? "").trim();
+    const rating = grade(row[iOverall]);
+    if (!/^\d+$/.test(urn) || !rating) continue;
+
+    const sub = {};
+    for (const [k, i] of Object.entries(SUB)) {
+      if (i >= 0) {
+        const g = grade(row[i]);
+        if (g) sub[k] = g;
+      }
+    }
+    const web = iWeb >= 0 ? String(row[iWeb] ?? "").trim() : "";
+
     out[urn] = {
       rating,
       date: iDate >= 0 ? isoDate(row[iDate]) : undefined,
       name: iName >= 0 ? String(row[iName] ?? "").trim() || undefined : undefined,
+      report: web.startsWith("http") ? web : undefined,
+      sub: Object.keys(sub).length ? sub : undefined,
     };
   }
 
   await writeFile(OUT, JSON.stringify(out) + "\n");
-  console.log(`Wrote ${Object.keys(out).length} Ofsted-graded schools (sheet "${sheetName}") → ${OUT}`);
+  console.log(`Wrote ${Object.keys(out).length} Ofsted records (overall + sub-grades) → ${OUT}`);
 }
 
 main().catch((e) => {

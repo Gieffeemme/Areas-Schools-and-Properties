@@ -3,6 +3,7 @@ import { School, OfstedRating, LatLng } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
 import parentviewByUrn from "@/data/parentview-by-urn.json";
+import ks2ByUrn from "@/data/ks2-by-urn.json";
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 
@@ -10,6 +11,15 @@ interface OfstedRecord {
   rating: OfstedRating;
   date?: string;
   name?: string;
+  report?: string;
+  sub?: {
+    education?: OfstedRating;
+    behaviour?: OfstedRating;
+    personal?: OfstedRating;
+    leadership?: OfstedRating;
+    eyfs?: OfstedRating;
+    sixthForm?: OfstedRating;
+  };
 }
 
 const ofstedMap = ofstedByUrn as Record<string, OfstedRecord>;
@@ -20,6 +30,9 @@ export const ofstedLoaded: boolean = Object.keys(ofstedMap).length > 0;
 interface Ks4Record {
   p8: number | null; // Progress 8 (P8MEA)
   att8: number | null; // Attainment 8 (ATT8SCR)
+  ebaccEntry?: number | null;
+  ebacc94?: number | null;
+  disP8?: number | null;
   year: string;
 }
 
@@ -31,6 +44,17 @@ interface PvRecord {
 }
 
 const pvMap = parentviewByUrn as Record<string, PvRecord>;
+
+interface Ks2Record {
+  rwmExp: number | null;
+  rwmHigh: number | null;
+  readProg: number | null;
+  writProg: number | null;
+  matProg: number | null;
+  year: string;
+}
+
+const ks2Map = ks2ByUrn as Record<string, Ks2Record>;
 
 interface OverpassEl {
   type: string;
@@ -93,6 +117,7 @@ export async function fetchSchools(
     const enr = urn ? ofstedMap[urn] : undefined;
     const ks4 = urn ? ks4Map[urn] : undefined;
     const pv = urn ? pvMap[urn] : undefined;
+    const ks2 = urn ? ks2Map[urn] : undefined;
     schools.push({
       id,
       name,
@@ -107,8 +132,14 @@ export async function fetchSchools(
       progress8: ks4?.p8 ?? null,
       attainment8: ks4?.att8 ?? null,
       ks4Year: ks4?.year,
+      ebaccEntry: ks4?.ebaccEntry ?? null,
+      ebacc94: ks4?.ebacc94 ?? null,
+      disadvantagedP8: ks4?.disP8 ?? null,
       parentViewHappy: pv?.happy ?? null,
       parentViewResponses: pv?.responses,
+      ofstedReport: enr?.report,
+      ofstedSub: enr?.sub,
+      ks2: ks2 ?? null,
     });
   }
 

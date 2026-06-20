@@ -8,15 +8,17 @@ import CrimePanel from "./CrimePanel";
 import PricePanel from "./PricePanel";
 import PropertyChecks from "./PropertyChecks";
 import RouteSelector from "./RouteSelector";
+import SchoolDetail from "./SchoolDetail";
 import { RATING_COLORS } from "@/lib/ratings";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
-import { AreaReport, OfstedRating, SourceError } from "@/lib/types";
+import { AreaReport, OfstedRating, School, SourceError } from "@/lib/types";
 
 export default function Dashboard() {
   const [route, setRoute] = useState<Route>(DEFAULT_ROUTE);
   const [report, setReport] = useState<AreaReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<School | null>(null);
 
   const search = useCallback(async (postcode: string) => {
     setLoading(true);
@@ -69,7 +71,10 @@ export default function Dashboard() {
       </div>
       {error && <Banner>{error}</Banner>}
       {loading && <Skeleton />}
-      {report && !loading && <Report report={report} route={route} onRoute={setRoute} />}
+      {report && !loading && (
+        <Report report={report} route={route} onRoute={setRoute} onSelect={setSelected} />
+      )}
+      {selected && <SchoolDetail school={selected} onClose={() => setSelected(null)} />}
     </div>
   );
 }
@@ -78,10 +83,12 @@ function Report({
   report,
   route,
   onRoute,
+  onSelect,
 }: {
   report: AreaReport;
   route: Route;
   onRoute: (r: Route) => void;
+  onSelect: (s: School) => void;
 }) {
   const f = report.facts;
   return (
@@ -121,7 +128,7 @@ function Report({
         </div>
 
         <div className="space-y-4">
-          <SidePanels report={report} route={route} />
+          <SidePanels report={report} route={route} onSelect={onSelect} />
         </div>
       </div>
 
@@ -136,12 +143,21 @@ function Report({
 }
 
 // Panel order/emphasis tailored to the chosen route (all data shared).
-function SidePanels({ report, route }: { report: AreaReport; route: Route }) {
+function SidePanels({
+  report,
+  route,
+  onSelect,
+}: {
+  report: AreaReport;
+  route: Route;
+  onSelect: (s: School) => void;
+}) {
   const schools = (
     <SchoolsPanel
       schools={report.schools}
       radiusMiles={report.radiusMiles}
       ofstedLoaded={report.ofstedLoaded}
+      onSelect={onSelect}
     />
   );
   const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;
