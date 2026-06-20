@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# python (ETL pipelines)
+__pycache__/
+*.pyc
+.venv/
