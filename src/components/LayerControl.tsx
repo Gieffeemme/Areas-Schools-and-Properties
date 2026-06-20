@@ -3,7 +3,7 @@
 const LAYERS: { id: string; label: string; available: boolean }[] = [
   { id: "schools", label: "Schools (Ofsted)", available: true },
   { id: "crime", label: "Crime (heatmap)", available: true },
-  { id: "deprivation", label: "Deprivation", available: false },
+  { id: "deprivation", label: "Deprivation (IMD)", available: true },
   { id: "prices", label: "Property prices", available: false },
   { id: "flood", label: "Flood risk", available: false },
   { id: "amenities", label: "Amenities", available: false },

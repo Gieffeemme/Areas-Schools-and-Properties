@@ -13,10 +13,11 @@ interface Props {
   radiusMiles: number;
   activeLayers: Set<string>;
   crimePoints: GeoJSON.FeatureCollection | null;
+  deprivationPoints: GeoJSON.FeatureCollection | null;
 }
 
 // mapbox-gl is imported dynamically inside the effect so it never evaluates during SSR.
-export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints }: Props) {
+export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints, deprivationPoints }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MbMap | null>(null);
   const loadedRef = useRef(false);
@@ -83,6 +84,27 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
           },
         });
 
+        // Deprivation (IMD) surface — sampled IMD deciles as a heatmap weighted so the most-deprived
+        // deciles burn hottest. Inserted beneath the school pins so they stay visible and clickable.
+        map.addSource("deprivation", { type: "geojson", data: deprivationPoints ?? EMPTY });
+        map.addLayer(
+          {
+            id: "deprivation-heat", type: "heatmap", source: "deprivation",
+            layout: { visibility: vis(activeLayers, "deprivation") },
+            paint: {
+              "heatmap-weight": ["interpolate", ["linear"], ["get", "decile"], 1, 1, 10, 0.08],
+              "heatmap-radius": 32,
+              "heatmap-opacity": 0.7,
+              // Indigo ramp — distinct from the amber/red crime heatmap.
+              "heatmap-color": [
+                "interpolate", ["linear"], ["heatmap-density"],
+                0, "rgba(0,0,0,0)", 0.2, "#c7d2fe", 0.45, "#818cf8", 0.7, "#6366f1", 1, "#3730a3",
+              ],
+            },
+          },
+          "schools-circle",
+        );
+
         map.on("click", "schools-circle", (e) => {
           const f = e.features?.[0];
           if (!f) return;
@@ -136,6 +158,16 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
     else map.once("load", apply);
   }, [crimePoints]);
 
+  // Feed the deprivation surface when it arrives.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () =>
+      (map.getSource("deprivation") as GeoJSONSource | undefined)?.setData(deprivationPoints ?? EMPTY);
+    if (loadedRef.current) apply();
+    else map.once("load", apply);
+  }, [deprivationPoints]);
+
   // Toggle layer visibility.
   useEffect(() => {
     const map = mapRef.current;
@@ -145,6 +177,8 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
         map.setLayoutProperty("schools-circle", "visibility", vis(activeLayers, "schools"));
       if (map.getLayer("crime-heat"))
         map.setLayoutProperty("crime-heat", "visibility", vis(activeLayers, "crime"));
+      if (map.getLayer("deprivation-heat"))
+        map.setLayoutProperty("deprivation-heat", "visibility", vis(activeLayers, "deprivation"));
     };
     if (loadedRef.current) apply();
     else map.once("load", apply);

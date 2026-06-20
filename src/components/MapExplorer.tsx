@@ -14,12 +14,14 @@ export default function MapExplorer() {
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<Set<string>>(new Set(["schools"]));
   const [crime, setCrime] = useState<GeoJSON.FeatureCollection | null>(null);
+  const [deprivation, setDeprivation] = useState<GeoJSON.FeatureCollection | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
 
   const search = useCallback(async (postcode: string) => {
     setLoading(true);
     setError(null);
     setCrime(null);
+    setDeprivation(null);
     try {
       const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=1`);
       const data = await res.json();
@@ -53,8 +55,19 @@ export default function MapExplorer() {
           /* heatmap stays empty */
         }
       }
+      // Lazy-load the deprivation surface the first time that layer is enabled.
+      if (id === "deprivation" && turningOn && !deprivation && report) {
+        try {
+          const res = await fetch(
+            `/api/deprivation-points?lat=${report.centre.lat}&lng=${report.centre.lng}&radius=${report.radiusMiles}`,
+          );
+          if (res.ok) setDeprivation(await res.json());
+        } catch {
+          /* layer stays empty */
+        }
+      }
     },
-    [active, crime, report],
+    [active, crime, deprivation, report],
   );
 
   return (
@@ -76,6 +89,7 @@ export default function MapExplorer() {
                 radiusMiles={report.radiusMiles}
                 activeLayers={active}
                 crimePoints={crime}
+                deprivationPoints={deprivation}
               />
               <LayerControl active={active} onToggle={toggle} />
             </>
