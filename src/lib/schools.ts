@@ -4,6 +4,8 @@ import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
 import parentviewByUrn from "@/data/parentview-by-urn.json";
 import ks2ByUrn from "@/data/ks2-by-urn.json";
+import censusByUrn from "@/data/census-by-urn.json";
+import destinationsByUrn from "@/data/destinations-by-urn.json";
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 
@@ -55,6 +57,32 @@ interface Ks2Record {
 }
 
 const ks2Map = ks2ByUrn as Record<string, Ks2Record>;
+
+interface CensusRecord {
+  fsm: number | null;
+  eal: number | null;
+  senEhcp: number | null;
+  senSupport: number | null;
+}
+const censusMap = censusByUrn as Record<string, CensusRecord>;
+
+interface DestRecord {
+  ks4?: {
+    sustained: number | null;
+    education: number | null;
+    appren: number | null;
+    employment: number | null;
+    notSustained: number | null;
+  };
+  ks5?: {
+    sustained: number | null;
+    he: number | null;
+    fe: number | null;
+    appren: number | null;
+    employment: number | null;
+  };
+}
+const destMap = destinationsByUrn as Record<string, DestRecord>;
 
 interface OverpassEl {
   type: string;
@@ -118,6 +146,8 @@ export async function fetchSchools(
     const ks4 = urn ? ks4Map[urn] : undefined;
     const pv = urn ? pvMap[urn] : undefined;
     const ks2 = urn ? ks2Map[urn] : undefined;
+    const census = urn ? censusMap[urn] : undefined;
+    const dest = urn ? destMap[urn] : undefined;
     schools.push({
       id,
       name,
@@ -140,6 +170,8 @@ export async function fetchSchools(
       ofstedReport: enr?.report,
       ofstedSub: enr?.sub,
       ks2: ks2 ?? null,
+      composition: census,
+      destinations: dest,
     });
   }
 

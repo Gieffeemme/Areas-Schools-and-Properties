@@ -22,6 +22,11 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const hasKs4 = s.progress8 != null || s.attainment8 != null || s.ebaccEntry != null;
   const ks2 = s.ks2;
   const hasKs2 = !!ks2 && (ks2.rwmExp != null || ks2.readProg != null);
+  const dest = s.destinations;
+  const hasDest = !!dest && !!(dest.ks4 || dest.ks5);
+  const comp = s.composition;
+  const hasComp =
+    !!comp && (comp.fsm != null || comp.eal != null || comp.senEhcp != null || comp.senSupport != null);
 
   return (
     <div className="fixed inset-0 z-[2000] flex justify-end" role="dialog" aria-modal="true">
@@ -111,6 +116,46 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             </Section>
           )}
 
+          {hasDest && dest && (
+            <Section title="Destinations">
+              {dest.ks4 && (
+                <>
+                  <p className="text-xs font-semibold text-[var(--muted)]">After GCSEs (KS4)</p>
+                  <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-2">
+                    <Stat label="Sustained" value={pct(dest.ks4.sustained)} color={tint(dest.ks4.sustained, pctColor)} />
+                    <Stat label="Education" value={pct(dest.ks4.education)} />
+                    <Stat label="Apprenticeship" value={pct(dest.ks4.appren)} />
+                    <Stat label="Employment" value={pct(dest.ks4.employment)} />
+                    <Stat label="Not sustained" value={pct(dest.ks4.notSustained)} />
+                  </div>
+                </>
+              )}
+              {dest.ks5 && (
+                <div className={dest.ks4 ? "mt-3" : ""}>
+                  <p className="text-xs font-semibold text-[var(--muted)]">After sixth form (KS5)</p>
+                  <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-2">
+                    <Stat label="Sustained" value={pct(dest.ks5.sustained)} color={tint(dest.ks5.sustained, pctColor)} />
+                    <Stat label="University" value={pct(dest.ks5.he)} color={tint(dest.ks5.he, pctColor)} />
+                    <Stat label="Further education" value={pct(dest.ks5.fe)} />
+                    <Stat label="Apprenticeship" value={pct(dest.ks5.appren)} />
+                    <Stat label="Employment" value={pct(dest.ks5.employment)} />
+                  </div>
+                </div>
+              )}
+            </Section>
+          )}
+
+          {hasComp && comp && (
+            <Section title="Pupil composition">
+              <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+                <Stat label="FSM (last 6 yrs)" value={pct(comp.fsm)} />
+                <Stat label="EAL" value={pct(comp.eal)} />
+                <Stat label="SEN — EHC plan" value={pct(comp.senEhcp)} />
+                <Stat label="SEN support" value={pct(comp.senSupport)} />
+              </div>
+            </Section>
+          )}
+
           {typeof s.parentViewHappy === "number" && (
             <Section title="Parent View">
               <p>
@@ -126,8 +171,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           <p className="text-[11px] leading-relaxed text-[var(--muted)]">
-            Coming next: post-16 destinations and pupil composition (FSM / EAL / SEN). Sources:
-            DfE performance tables &amp; Ofsted.
+            Coming next: admissions (catchment proxy) and multi-year trends. Sources: DfE
+            performance tables, Ofsted, postcodes.io.
           </p>
         </div>
       </div>

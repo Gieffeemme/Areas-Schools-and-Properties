@@ -47,6 +47,28 @@ export interface School {
     matProg: number | null;
     year: string;
   } | null;
+  composition?: {
+    fsm: number | null; // % FSM (last 6 years)
+    eal: number | null; // % English as additional language
+    senEhcp: number | null; // % SEN with an EHC plan
+    senSupport: number | null; // % SEN support
+  };
+  destinations?: {
+    ks4?: {
+      sustained: number | null;
+      education: number | null;
+      appren: number | null;
+      employment: number | null;
+      notSustained: number | null;
+    };
+    ks5?: {
+      sustained: number | null;
+      he: number | null; // higher education / university
+      fe: number | null;
+      appren: number | null;
+      employment: number | null;
+    };
+  };
 }
 
 export interface CrimeCategoryCount {
