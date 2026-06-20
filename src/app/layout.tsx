@@ -24,9 +24,17 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 UK area &amp; school intelligence
               </span>
             </a>
-            <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-[var(--primary)]">
-              MVP
-            </span>
+            <div className="flex items-center gap-4">
+              <a
+                href="/compare"
+                className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--primary)]"
+              >
+                Compare areas
+              </a>
+              <span className="rounded-full bg-indigo-50 px-2.5 py-1 text-[11px] font-medium text-[var(--primary)]">
+                MVP
+              </span>
+            </div>
           </div>
         </header>
 

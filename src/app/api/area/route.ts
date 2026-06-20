@@ -4,7 +4,8 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { cacheGet, cacheSet } from "@/lib/cache";
-import { AreaReport, SourceError } from "@/lib/types";
+import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
+import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
 
 const CACHE_TTL_SECONDS = 6 * 60 * 60;
 
@@ -56,6 +57,12 @@ export async function GET(req: NextRequest) {
   if (pricesR.status === "rejected")
     errors.push({ source: "prices", message: reason(pricesR) });
 
+  const benchmarks: AreaBenchmarks = {
+    crime: crimeBenchmark(crime?.total),
+    price: priceBenchmark(prices?.averagePrice ?? null),
+    sampleGeneratedAt: benchmarkGeneratedAt,
+  };
+
   const report: AreaReport = {
     query: postcode,
     centre,
@@ -64,6 +71,7 @@ export async function GET(req: NextRequest) {
     schools,
     crime,
     prices,
+    benchmarks,
     ofstedLoaded,
     errors,
     generatedAt: new Date().toISOString(),

@@ -1,8 +1,14 @@
-import { CrimeSummary } from "@/lib/types";
+import { CrimeSummary, MetricBenchmark } from "@/lib/types";
 import { monthLabel, num } from "@/lib/format";
 import Card from "./Card";
 
-export default function CrimePanel({ crime }: { crime: CrimeSummary | null }) {
+export default function CrimePanel({
+  crime,
+  benchmark,
+}: {
+  crime: CrimeSummary | null;
+  benchmark?: MetricBenchmark | null;
+}) {
   if (!crime) {
     return (
       <Card title="Crime">
@@ -22,8 +28,8 @@ export default function CrimePanel({ crime }: { crime: CrimeSummary | null }) {
     );
   }
 
-  const { label, color } = band(crime.ratioToNational);
   const max = crime.byCategory[0]?.count ?? 1;
+  const band = benchmark ? pctBand(benchmark.percentile) : ratioBand(crime.ratioToNational);
 
   return (
     <Card title="Crime" subtitle={`Within ~1 mile · ${monthLabel(crime.month)}`}>
@@ -35,15 +41,21 @@ export default function CrimePanel({ crime }: { crime: CrimeSummary | null }) {
         <div className="text-right">
           <span
             className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold text-white"
-            style={{ backgroundColor: color }}
+            style={{ backgroundColor: band.color }}
           >
-            {crime.ratioToNational}× avg
+            {benchmark ? `${benchmark.percentile}th pct` : `${crime.ratioToNational}× avg`}
           </span>
-          <p className="mt-1 text-xs" style={{ color }}>
-            {label}
+          <p className="mt-1 text-xs" style={{ color: band.color }}>
+            {band.label}
           </p>
         </div>
       </div>
+
+      {benchmark && (
+        <p className="mt-2 text-xs">
+          More crime than <strong>{benchmark.percentile}%</strong> of English areas.
+        </p>
+      )}
 
       <div className="mt-4 space-y-2">
         {crime.byCategory.slice(0, 5).map((c) => (
@@ -63,14 +75,23 @@ export default function CrimePanel({ crime }: { crime: CrimeSummary | null }) {
       </div>
 
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Source: police.uk street-level crime (latest month). “Avg” compares to a typical UK
-        populated area of the same size (~120/mo) — approximate, for relative sense only.
+        Source: police.uk street-level crime (latest month).{" "}
+        {benchmark
+          ? `Percentile vs a sample of ${benchmark.sampleSize} English areas.`
+          : "“Avg” compares to a typical UK populated area (~120/mo) — approximate."}
       </p>
     </Card>
   );
 }
 
-function band(ratio: number): { label: string; color: string } {
+function pctBand(p: number): { label: string; color: string } {
+  if (p < 33) return { label: "lower than most areas", color: "#15803d" };
+  if (p < 66) return { label: "mid-range", color: "#475569" };
+  if (p < 85) return { label: "higher than most areas", color: "#d97706" };
+  return { label: "among the highest", color: "#dc2626" };
+}
+
+function ratioBand(ratio: number): { label: string; color: string } {
   if (ratio < 0.75) return { label: "below average", color: "#15803d" };
   if (ratio <= 1.25) return { label: "around average", color: "#475569" };
   if (ratio <= 2) return { label: "above average", color: "#d97706" };

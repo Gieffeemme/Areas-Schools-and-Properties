@@ -45,6 +45,12 @@ export default function Dashboard() {
         <div className="mx-auto mt-8 max-w-xl">
           <PostcodeSearch onSearch={search} loading={loading} large />
         </div>
+        <p className="mt-4 text-center text-sm text-[var(--muted)]">
+          or{" "}
+          <a href="/compare" className="font-medium text-[var(--primary)] hover:underline">
+            compare several areas side by side →
+          </a>
+        </p>
         {error && <Banner>{error}</Banner>}
         <div className="mx-auto mt-10 grid max-w-xl grid-cols-3 gap-3 text-center text-xs">
           <Feature emoji="🎓" label="Schools & Ofsted" />
@@ -80,6 +86,12 @@ function Report({ report }: { report: AreaReport }) {
         )}
         {typeof f.imdDecile === "number" && <Chip>{imdLabel(f.imdDecile)}</Chip>}
         {f.constituency && <Chip subtle>{f.constituency}</Chip>}
+        <a
+          href={`/compare?postcodes=${encodeURIComponent(f.postcode)}`}
+          className="ml-auto rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium shadow-sm transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
+        >
+          Compare with another area →
+        </a>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">
@@ -100,8 +112,8 @@ function Report({ report }: { report: AreaReport }) {
             radiusMiles={report.radiusMiles}
             ofstedLoaded={report.ofstedLoaded}
           />
-          <CrimePanel crime={report.crime} />
-          <PricePanel prices={report.prices} />
+          <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />
+          <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />
         </div>
       </div>
 

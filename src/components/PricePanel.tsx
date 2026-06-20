@@ -1,8 +1,14 @@
-import { PriceSummary } from "@/lib/types";
+import { MetricBenchmark, PriceSummary } from "@/lib/types";
 import { gbp } from "@/lib/format";
 import Card from "./Card";
 
-export default function PricePanel({ prices }: { prices: PriceSummary | null }) {
+export default function PricePanel({
+  prices,
+  benchmark,
+}: {
+  prices: PriceSummary | null;
+  benchmark?: MetricBenchmark | null;
+}) {
   if (!prices) {
     return (
       <Card title="Property prices">
@@ -27,6 +33,12 @@ export default function PricePanel({ prices }: { prices: PriceSummary | null }) 
     <Card title="Property prices" subtitle={`${prices.postcode} · ${prices.count} sales on record`}>
       <p className="text-3xl font-bold leading-none">{gbp(prices.averagePrice)}</p>
       <p className="mt-1 text-xs text-[var(--muted)]">average sold price (all on record)</p>
+
+      {benchmark && (
+        <p className="mt-2 text-xs">
+          This local authority is pricier than <strong>{benchmark.percentile}%</strong> of England.
+        </p>
+      )}
 
       {years.length > 1 && (
         <div className="mt-4 flex h-24 items-end gap-1.5">
@@ -59,16 +71,18 @@ export default function PricePanel({ prices }: { prices: PriceSummary | null }) 
         ))}
       </ul>
 
-      <Source />
+      <Source benchmark={benchmark} />
     </Card>
   );
 }
 
-function Source() {
+function Source({ benchmark }: { benchmark?: MetricBenchmark | null }) {
   return (
     <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-      Source: HM Land Registry Price Paid — recorded sales for this exact postcode. A
-      postcode-sector trend is on the roadmap.
+      Source: HM Land Registry Price Paid — recorded sales for this exact postcode.
+      {benchmark
+        ? ` Percentile is local-authority average vs a sample of ${benchmark.sampleSize} English authorities.`
+        : ""}
     </p>
   );
 }

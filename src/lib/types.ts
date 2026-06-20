@@ -69,6 +69,17 @@ export interface AreaFacts {
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
 }
 
+export interface MetricBenchmark {
+  percentile: number; // 0–100 position within the England sample (higher value ⇒ higher %)
+  sampleSize: number;
+}
+
+export interface AreaBenchmarks {
+  crime: MetricBenchmark | null; // by monthly incident count (higher = more crime)
+  price: MetricBenchmark | null; // by average sold price (higher = pricier)
+  sampleGeneratedAt: string | null;
+}
+
 export interface SourceError {
   source: "schools" | "crime" | "prices";
   message: string;
@@ -82,6 +93,7 @@ export interface AreaReport {
   schools: School[];
   crime: CrimeSummary | null;
   prices: PriceSummary | null;
+  benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)
   generatedAt: string;
