@@ -35,19 +35,26 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
         style: "mapbox://styles/mapbox/light-v11",
         center: [centre.lng, centre.lat],
         zoom: 13.5,
+        attributionControl: false,
       });
       mapRef.current = map;
       map.addControl(new mapboxgl.NavigationControl({ showCompass: false }), "top-left");
+      map.addControl(new mapboxgl.AttributionControl({ compact: true }), "bottom-right");
 
       map.on("load", () => {
         map.addSource("ring", { type: "geojson", data: ringPolygon(centre, radiusMiles) });
         map.addLayer({
           id: "ring-fill", type: "fill", source: "ring",
-          paint: { "fill-color": "#4f46e5", "fill-opacity": 0.06 },
+          paint: { "fill-color": "#6366f1", "fill-opacity": 0.04 },
         });
         map.addLayer({
           id: "ring-line", type: "line", source: "ring",
-          paint: { "line-color": "#4f46e5", "line-width": 1.5 },
+          paint: {
+            "line-color": "#6366f1",
+            "line-width": 1.5,
+            "line-opacity": 0.4,
+            "line-dasharray": [2, 2],
+          },
         });
 
         map.addSource("schools", { type: "geojson", data: schoolsGeo(schools) });
@@ -55,7 +62,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
           id: "schools-circle", type: "circle", source: "schools",
           layout: { visibility: vis(activeLayers, "schools") },
           paint: {
-            "circle-radius": 6,
+            "circle-radius": 7,
             "circle-color": ["get", "color"],
             "circle-stroke-width": 2,
             "circle-stroke-color": "#ffffff",

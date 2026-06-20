@@ -2,6 +2,28 @@
 
 import { ROUTES, Route } from "@/lib/routes";
 
+const ICONS: Record<Route, React.ReactElement> = {
+  school: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 4 2 9l10 5 10-5-10-5Z" />
+      <path d="M6 11.5V16c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-4.5" />
+    </svg>
+  ),
+  area: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M9 6 3 4v14l6 2 6-2 6 2V6l-6-2-6 2Z" />
+      <path d="M9 4v14M15 6v14" />
+    </svg>
+  ),
+  property: (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 10.5 12 4l9 6.5" />
+      <path d="M5 9.8V20h14V9.8" />
+      <path d="M10 20v-5h4v5" />
+    </svg>
+  ),
+};
+
 export default function RouteSelector({
   value,
   onChange,
@@ -24,7 +46,6 @@ export default function RouteSelector({
                 : "text-[var(--muted)] hover:text-[var(--foreground)]"
             }`}
           >
-            <span className="mr-1">{r.emoji}</span>
             {r.label}
           </button>
         ))}
@@ -41,15 +62,18 @@ export default function RouteSelector({
             key={r.id}
             onClick={() => onChange(r.id)}
             aria-pressed={active}
-            className={`rounded-2xl border bg-white p-4 text-left shadow-sm transition ${
-              active
-                ? "border-[var(--primary)] ring-2 ring-indigo-100"
-                : "border-[var(--border)] hover:border-[var(--primary)]"
+            className={`rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
+              active ? "border-[var(--primary)] ring-2 ring-indigo-100" : "border-[var(--border)]"
             }`}
           >
-            <div className="text-2xl">{r.emoji}</div>
-            <div className="mt-2 font-semibold">{r.label}</div>
-            <div className="mt-1 text-xs text-[var(--muted)]">{r.blurb}</div>
+            <span
+              className="grid h-11 w-11 place-items-center rounded-xl text-[var(--primary)]"
+              style={{ backgroundColor: "#6366f114" }}
+            >
+              {ICONS[r.id]}
+            </span>
+            <div className="mt-3 text-base font-semibold">{r.label}</div>
+            <div className="mt-1 text-sm leading-snug text-[var(--muted)]">{r.blurb}</div>
           </button>
         );
       })}

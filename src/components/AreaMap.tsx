@@ -37,26 +37,29 @@ export default function AreaMap({ centre, schools, radiusMiles }: Props) {
         14,
       );
       mapInstance.current = map;
+      map.attributionControl.setPrefix("");
 
       L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
-        attribution: "© OpenStreetMap © CARTO",
+        attribution: "© OSM, CARTO",
         subdomains: "abcd",
         maxZoom: 19,
       }).addTo(map);
 
-      // 1-mile distance guide
+      // 1-mile distance guide — subtle, dashed
       L.circle([centre.lat, centre.lng], {
         radius: radiusMetres,
-        color: "#4f46e5",
+        color: "#6366f1",
         weight: 1.5,
-        fillColor: "#4f46e5",
-        fillOpacity: 0.05,
+        opacity: 0.4,
+        dashArray: "6 6",
+        fillColor: "#6366f1",
+        fillOpacity: 0.03,
       }).addTo(map);
 
       // Search location
       const centreIcon = L.divIcon({
         className: "",
-        html: `<div style="width:16px;height:16px;border-radius:50%;background:#4f46e5;border:3px solid #fff;box-shadow:0 0 0 2px #4f46e5;"></div>`,
+        html: `<div style="width:16px;height:16px;border-radius:50%;background:#6366f1;border:3px solid #fff;box-shadow:0 0 0 2px #6366f1;"></div>`,
         iconSize: [16, 16],
         iconAnchor: [8, 8],
       });
@@ -69,9 +72,9 @@ export default function AreaMap({ centre, schools, radiusMiles }: Props) {
         const color = RATING_COLORS[s.ofsted];
         const icon = L.divIcon({
           className: "",
-          html: `<div style="width:13px;height:13px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.35);"></div>`,
-          iconSize: [13, 13],
-          iconAnchor: [6, 12],
+          html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 15],
         });
         L.marker([s.lat, s.lng], { icon })
           .addTo(map)

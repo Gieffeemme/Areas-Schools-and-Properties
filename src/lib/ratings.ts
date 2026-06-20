@@ -2,12 +2,12 @@ import { OfstedRating } from "./types";
 
 /** Single source of truth for Ofsted colours, shared by map pins and badges. */
 export const RATING_COLORS: Record<OfstedRating, string> = {
-  Outstanding: "#15803d",
-  Good: "#0d9488",
+  Outstanding: "#16a34a",
+  Good: "#2563eb",
   "Requires improvement": "#d97706",
   Inadequate: "#dc2626",
-  "Not rated": "#94a3b8",
-  "Not loaded": "#94a3b8",
+  "Not rated": "#9ca3af",
+  "Not loaded": "#9ca3af",
 };
 
 export const RATING_LABELS: Record<OfstedRating, string> = {

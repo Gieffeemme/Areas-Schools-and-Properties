@@ -107,8 +107,8 @@ function Report({
         <RouteSelector value={route} onChange={onRoute} variant="tabs" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <div className="lg:col-span-3">
+      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+        <div>
           <div className="h-[420px] overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm sm:h-[520px] lg:h-[640px]">
             <AreaMap
               key={`${report.centre.lat},${report.centre.lng}`}
@@ -120,7 +120,7 @@ function Report({
           <Legend />
         </div>
 
-        <div className="space-y-4 lg:col-span-2">
+        <div className="space-y-4">
           <SidePanels report={report} route={route} />
         </div>
       </div>
@@ -206,9 +206,9 @@ function Banner({ children }: { children: React.ReactNode }) {
 
 function Skeleton() {
   return (
-    <div className="grid animate-pulse gap-4 lg:grid-cols-5">
-      <div className="h-[420px] rounded-2xl bg-slate-200 sm:h-[520px] lg:col-span-3 lg:h-[640px]" />
-      <div className="space-y-4 lg:col-span-2">
+    <div className="grid animate-pulse gap-4 lg:grid-cols-[3fr_2fr]">
+      <div className="h-[420px] rounded-2xl bg-slate-200 sm:h-[520px] lg:h-[640px]" />
+      <div className="space-y-4">
         {[0, 1, 2].map((i) => (
           <div key={i} className="h-40 rounded-2xl bg-slate-200" />
         ))}
