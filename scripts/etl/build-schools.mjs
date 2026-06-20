@@ -7,7 +7,10 @@
  *
  * GIAS does NOT contain Ofsted grades — they live in this separate Ofsted dataset.
  * Source: https://www.gov.uk/government/statistical-data-sets/monthly-management-information-ofsteds-school-inspections-outcomes
- * (Latest cleanly-structured workbook is as at Nov 2019; Ofsted retired overall grades Sept 2024.)
+ * Ofsted retired single-headline grades in Sept 2024, so the "as at 31 Aug 2024" snapshot is the
+ * last MI workbook carrying overall + sub-grades — we pin to it. By then ~10.4k schools had been
+ * graded under the EIF (Sept 2019+), which is what populates Behaviour & attitudes / Personal
+ * development; older-framework inspections only carry an overall grade + leadership.
  *
  *   npm run etl:schools
  *   node scripts/etl/build-schools.mjs <url|file.xlsx>
@@ -37,7 +40,11 @@ async function getWorkbook() {
     const urls = [
       ...page.matchAll(/https:\/\/assets\.publishing\.service\.gov\.uk\/media\/[^"]+\.xlsx/g),
     ].map((m) => m[0]);
-    url = urls.find((u) => /state.funded/i.test(decodeURIComponent(u))) || urls[0];
+    // Pin to the 31 Aug 2024 state-funded snapshot — the last before grades were retired.
+    url =
+      urls.find((u) => /state.funded.*as.at.*31.aug.*2024/i.test(decodeURIComponent(u))) ||
+      urls.find((u) => /state.funded/i.test(decodeURIComponent(u))) ||
+      urls[0];
     if (!url) throw new Error("No Ofsted MI .xlsx link found on the gov.uk page.");
   }
   console.log("Fetching:", decodeURIComponent(url.split("/").pop()));
@@ -58,9 +65,12 @@ function isoDate(v) {
 
 async function main() {
   const wb = await getWorkbook();
+  // Sheet names vary by vintage: "Most recent inspections" (older) vs "Most_recent_inspections"
+  // (2024). Normalise underscores so we never fall through to a partial sheet like Published_inspections.
+  const norm = (n) => String(n).replace(/_/g, " ").toLowerCase();
   const sheetName =
-    wb.SheetNames.find((n) => /most recent inspections/i.test(n)) ||
-    wb.SheetNames.find((n) => /inspection/i.test(n)) ||
+    wb.SheetNames.find((n) => /most recent inspections/.test(norm(n))) ||
+    wb.SheetNames.find((n) => /inspection/.test(norm(n))) ||
     wb.SheetNames[0];
   const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, blankrows: false });
 
