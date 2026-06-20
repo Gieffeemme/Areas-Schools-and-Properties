@@ -21,6 +21,9 @@ export interface School {
   phase?: string; // Primary / Secondary / All-through (best-effort from OSM tags)
   ofsted: OfstedRating;
   ofstedDate?: string; // last inspection date, once enriched
+  progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE
+  attainment8?: number | null; // KS4 Attainment 8
+  ks4Year?: string; // e.g. "2022/23"
 }
 
 export interface CrimeCategoryCount {

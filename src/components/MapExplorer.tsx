@@ -5,6 +5,7 @@ import PostcodeSearch from "./PostcodeSearch";
 import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
 import RatingBadge from "./RatingBadge";
+import Progress8Badge from "./Progress8Badge";
 import { AreaReport } from "@/lib/types";
 
 export default function MapExplorer() {
@@ -106,7 +107,12 @@ export default function MapExplorer() {
                           .join(" · ")}
                       </p>
                     </div>
-                    <RatingBadge rating={s.ofsted} small />
+                    <div className="flex shrink-0 items-center gap-1.5">
+                      {typeof s.progress8 === "number" && (
+                        <Progress8Badge value={s.progress8} year={s.ks4Year} />
+                      )}
+                      <RatingBadge rating={s.ofsted} small />
+                    </div>
                   </li>
                 ))}
               </ul>

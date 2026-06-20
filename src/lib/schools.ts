@@ -1,6 +1,7 @@
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
+import ks4ByUrn from "@/data/ks4-by-urn.json";
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 
@@ -14,6 +15,14 @@ const ofstedMap = ofstedByUrn as Record<string, OfstedRecord>;
 
 /** True once the ETL has populated src/data/ofsted-by-urn.json. */
 export const ofstedLoaded: boolean = Object.keys(ofstedMap).length > 0;
+
+interface Ks4Record {
+  p8: number | null; // Progress 8 (P8MEA)
+  att8: number | null; // Attainment 8 (ATT8SCR)
+  year: string;
+}
+
+const ks4Map = ks4ByUrn as Record<string, Ks4Record>;
 
 interface OverpassEl {
   type: string;
@@ -74,6 +83,7 @@ export async function fetchSchools(
 
     const urn = tags["ref:edubase"];
     const enr = urn ? ofstedMap[urn] : undefined;
+    const ks4 = urn ? ks4Map[urn] : undefined;
     schools.push({
       id,
       name,
@@ -85,6 +95,9 @@ export async function fetchSchools(
       phase: phaseFromTags(tags),
       ofsted: enr?.rating ?? (ofstedLoaded ? "Not rated" : "Not loaded"),
       ofstedDate: enr?.date,
+      progress8: ks4?.p8 ?? null,
+      attainment8: ks4?.att8 ?? null,
+      ks4Year: ks4?.year,
     });
   }
 
