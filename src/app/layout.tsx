@@ -26,6 +26,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
             <div className="flex items-center gap-4">
               <a
+                href="/map"
+                className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--primary)]"
+              >
+                Map
+              </a>
+              <a
                 href="/compare"
                 className="text-sm font-medium text-[var(--muted)] transition hover:text-[var(--primary)]"
               >
