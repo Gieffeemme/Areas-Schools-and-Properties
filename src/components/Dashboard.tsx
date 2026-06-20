@@ -6,10 +6,14 @@ import AreaMap from "./AreaMap";
 import SchoolsPanel from "./SchoolsPanel";
 import CrimePanel from "./CrimePanel";
 import PricePanel from "./PricePanel";
+import PropertyChecks from "./PropertyChecks";
+import RouteSelector from "./RouteSelector";
 import { RATING_COLORS } from "@/lib/ratings";
+import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
 import { AreaReport, OfstedRating, SourceError } from "@/lib/types";
 
 export default function Dashboard() {
+  const [route, setRoute] = useState<Route>(DEFAULT_ROUTE);
   const [report, setReport] = useState<AreaReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,18 +35,20 @@ export default function Dashboard() {
   }, []);
 
   if (!report && !loading) {
+    const def = routeDef(route);
     return (
-      <div className="mx-auto max-w-3xl px-4 py-16 sm:py-24">
+      <div className="mx-auto max-w-3xl px-4 py-14 sm:py-20">
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">
-            Know an area before you move
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl text-[var(--muted)]">
-            Enter a UK postcode and see the schools, crime, and property prices around it — in one
-            place, from free and open data. No login.
-          </p>
+          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{def.headline}</h1>
+          <p className="mx-auto mt-3 max-w-xl text-[var(--muted)]">{def.sub}</p>
         </div>
-        <div className="mx-auto mt-8 max-w-xl">
+
+        <p className="mt-8 mb-2 text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
+          What are you trying to do?
+        </p>
+        <RouteSelector value={route} onChange={setRoute} variant="cards" />
+
+        <div className="mx-auto mt-6 max-w-xl">
           <PostcodeSearch onSearch={search} loading={loading} large />
         </div>
         <p className="mt-4 text-center text-sm text-[var(--muted)]">
@@ -52,11 +58,6 @@ export default function Dashboard() {
           </a>
         </p>
         {error && <Banner>{error}</Banner>}
-        <div className="mx-auto mt-10 grid max-w-xl grid-cols-3 gap-3 text-center text-xs">
-          <Feature emoji="🎓" label="Schools & Ofsted" />
-          <Feature emoji="🛡️" label="Crime vs average" />
-          <Feature emoji="🏠" label="Sold prices" />
-        </div>
       </div>
     );
   }
@@ -68,30 +69,42 @@ export default function Dashboard() {
       </div>
       {error && <Banner>{error}</Banner>}
       {loading && <Skeleton />}
-      {report && !loading && <Report report={report} />}
+      {report && !loading && <Report report={report} route={route} onRoute={setRoute} />}
     </div>
   );
 }
 
-function Report({ report }: { report: AreaReport }) {
+function Report({
+  report,
+  route,
+  onRoute,
+}: {
+  report: AreaReport;
+  route: Route;
+  onRoute: (r: Route) => void;
+}) {
   const f = report.facts;
   return (
     <div>
-      <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1">
-        <h1 className="text-2xl font-bold tracking-tight">{f.postcode}</h1>
-        {(f.district || f.region) && (
-          <span className="text-[var(--muted)]">
-            {[f.district, f.region].filter(Boolean).join(", ")}
-          </span>
-        )}
-        {typeof f.imdDecile === "number" && <Chip>{imdLabel(f.imdDecile)}</Chip>}
-        {f.constituency && <Chip subtle>{f.constituency}</Chip>}
-        <a
-          href={`/compare?postcodes=${encodeURIComponent(f.postcode)}`}
-          className="ml-auto rounded-lg border border-[var(--border)] bg-white px-3 py-1.5 text-sm font-medium shadow-sm transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
-        >
-          Compare with another area →
-        </a>
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">{f.postcode}</h1>
+            {(f.district || f.region) && (
+              <span className="text-[var(--muted)]">
+                {[f.district, f.region].filter(Boolean).join(", ")}
+              </span>
+            )}
+            {typeof f.imdDecile === "number" && <Chip>{imdLabel(f.imdDecile)}</Chip>}
+          </div>
+          <a
+            href={`/compare?postcodes=${encodeURIComponent(f.postcode)}`}
+            className="mt-1 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
+          >
+            Compare with another area →
+          </a>
+        </div>
+        <RouteSelector value={route} onChange={onRoute} variant="tabs" />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-5">
@@ -106,14 +119,9 @@ function Report({ report }: { report: AreaReport }) {
           </div>
           <Legend />
         </div>
+
         <div className="space-y-4 lg:col-span-2">
-          <SchoolsPanel
-            schools={report.schools}
-            radiusMiles={report.radiusMiles}
-            ofstedLoaded={report.ofstedLoaded}
-          />
-          <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />
-          <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />
+          <SidePanels report={report} route={route} />
         </div>
       </div>
 
@@ -127,12 +135,52 @@ function Report({ report }: { report: AreaReport }) {
   );
 }
 
-function Feature({ emoji, label }: { emoji: string; label: string }) {
+// Panel order/emphasis tailored to the chosen route (all data shared).
+function SidePanels({ report, route }: { report: AreaReport; route: Route }) {
+  const schools = (
+    <SchoolsPanel
+      schools={report.schools}
+      radiusMiles={report.radiusMiles}
+      ofstedLoaded={report.ofstedLoaded}
+    />
+  );
+  const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;
+  const price = <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />;
+
+  if (route === "property") {
+    return (
+      <>
+        {price}
+        <PropertyChecks />
+        {crime}
+        {schools}
+      </>
+    );
+  }
+
+  if (route === "school") {
+    return (
+      <>
+        {schools}
+        <a
+          href="/map"
+          className="block rounded-2xl border border-dashed border-[var(--border)] bg-white p-3 text-center text-sm font-medium text-[var(--primary)] shadow-sm transition hover:border-[var(--primary)]"
+        >
+          See these schools on the map →
+        </a>
+        {crime}
+        {price}
+      </>
+    );
+  }
+
+  // area
   return (
-    <div className="rounded-xl border border-[var(--border)] bg-white p-3 shadow-sm">
-      <div className="text-lg">{emoji}</div>
-      <div className="mt-1 font-medium">{label}</div>
-    </div>
+    <>
+      {schools}
+      {crime}
+      {price}
+    </>
   );
 }
 
@@ -174,7 +222,7 @@ const LEGEND: { rating: OfstedRating; label: string }[] = [
   { rating: "Good", label: "Good" },
   { rating: "Requires improvement", label: "Requires improvement" },
   { rating: "Inadequate", label: "Inadequate" },
-  { rating: "Not loaded", label: "Rating not loaded" },
+  { rating: "Not rated", label: "Not rated" },
 ];
 
 function Legend() {
