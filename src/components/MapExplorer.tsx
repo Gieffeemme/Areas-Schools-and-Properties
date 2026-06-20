@@ -101,7 +101,9 @@ export default function MapExplorer() {
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium">{s.name}</p>
                       <p className="text-xs text-[var(--muted)]">
-                        {[s.phase, `${s.distanceMiles} mi`].filter(Boolean).join(" · ")}
+                        {[s.phase, `${s.distanceMiles} mi`, s.ofstedDate ? `Ofsted ${s.ofstedDate.slice(0, 4)}` : null]
+                          .filter(Boolean)
+                          .join(" · ")}
                       </p>
                     </div>
                     <RatingBadge rating={s.ofsted} small />

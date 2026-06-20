@@ -38,7 +38,9 @@ npm run etl:schools   # builds src/data/ofsted-by-urn.json (joined by URN)
 ```
 
 Until that runs, ratings show as "not loaded". See [`scripts/etl/README.md`](scripts/etl/README.md).
-(The gov.uk GIAS download was returning 5xx at build time — the script supports a manual CSV path.)
+Source: Ofsted's "state-funded schools inspections and outcomes" management information (xlsx) —
+**not** GIAS, which has no Ofsted column. The latest cleanly-structured file is **as at Nov 2019**,
+so grades carry their inspection date; Ofsted retired single overall grades in Sept 2024.
 
 ## Honesty by design
 

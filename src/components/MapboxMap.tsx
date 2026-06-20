@@ -79,12 +79,15 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
         map.on("click", "schools-circle", (e) => {
           const f = e.features?.[0];
           if (!f) return;
-          const p = f.properties as { name: string; phase: string; dist: string; ofsted: string };
+          const p = f.properties as {
+            name: string; phase: string; dist: string; ofsted: string; date: string;
+          };
           const [lng, lat] = (f.geometry as GeoJSON.Point).coordinates;
+          const year = p.date ? ` · ${p.date.slice(0, 4)}` : "";
           new mapboxgl.Popup()
             .setLngLat([lng, lat])
             .setHTML(
-              `<strong>${esc(p.name)}</strong><br>${p.phase ? esc(p.phase) + " · " : ""}${p.dist} mi<br>${esc(p.ofsted)}`,
+              `<strong>${esc(p.name)}</strong><br>${p.phase ? esc(p.phase) + " · " : ""}${p.dist} mi<br>${esc(p.ofsted)}${year}`,
             )
             .addTo(map);
         });
@@ -174,6 +177,7 @@ function schoolsGeo(schools: School[]): GeoJSON.FeatureCollection {
         phase: s.phase ?? "",
         dist: String(s.distanceMiles),
         ofsted: s.ofsted,
+        date: s.ofstedDate ?? "",
         color: RATING_COLORS[s.ofsted],
       },
     })),

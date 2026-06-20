@@ -1,7 +1,8 @@
 # ETL — Ofsted ratings
 
-`build-schools.mjs` builds `src/data/ofsted-by-urn.json` from the official DfE **Get
-Information About Schools (GIAS)** all-establishments CSV.
+`build-schools.mjs` builds `src/data/ofsted-by-urn.json` from Ofsted's official **state-funded
+schools inspections and outcomes** management information (xlsx), keyed by URN. (GIAS, the
+schools register, does **not** contain Ofsted grades — they live in this separate Ofsted dataset.)
 
 ```json
 { "100000": { "rating": "Outstanding", "date": "2018-05-16", "name": "City of London School" } }
