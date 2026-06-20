@@ -9,7 +9,8 @@
     "lint": "eslint",
     "etl:schools": "node scripts/etl/build-schools.mjs",
     "etl:benchmarks": "node scripts/etl/build-benchmarks.mjs",
-    "etl:ks4": "node scripts/etl/build-ks4.mjs"
+    "etl:ks4": "node scripts/etl/build-ks4.mjs",
+    "etl:parentview": "node scripts/etl/build-parentview.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

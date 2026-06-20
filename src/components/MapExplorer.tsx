@@ -6,6 +6,7 @@ import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
 import RatingBadge from "./RatingBadge";
 import Progress8Badge from "./Progress8Badge";
+import ParentViewBadge from "./ParentViewBadge";
 import { AreaReport } from "@/lib/types";
 
 export default function MapExplorer() {
@@ -110,6 +111,9 @@ export default function MapExplorer() {
                     <div className="flex shrink-0 items-center gap-1.5">
                       {typeof s.progress8 === "number" && (
                         <Progress8Badge value={s.progress8} year={s.ks4Year} />
+                      )}
+                      {typeof s.parentViewHappy === "number" && (
+                        <ParentViewBadge pct={s.parentViewHappy} responses={s.parentViewResponses} />
                       )}
                       <RatingBadge rating={s.ofsted} small />
                     </div>

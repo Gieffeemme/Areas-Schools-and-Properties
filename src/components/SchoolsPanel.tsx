@@ -1,6 +1,7 @@
 import { School } from "@/lib/types";
 import RatingBadge from "./RatingBadge";
 import Progress8Badge from "./Progress8Badge";
+import ParentViewBadge from "./ParentViewBadge";
 import Card from "./Card";
 
 export default function SchoolsPanel({
@@ -34,6 +35,9 @@ export default function SchoolsPanel({
               <div className="flex shrink-0 items-center gap-1.5">
                 {typeof s.progress8 === "number" && (
                   <Progress8Badge value={s.progress8} year={s.ks4Year} />
+                )}
+                {typeof s.parentViewHappy === "number" && (
+                  <ParentViewBadge pct={s.parentViewHappy} responses={s.parentViewResponses} />
                 )}
                 <RatingBadge rating={s.ofsted} small />
               </div>

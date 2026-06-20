@@ -2,6 +2,7 @@ import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
+import parentviewByUrn from "@/data/parentview-by-urn.json";
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 
@@ -23,6 +24,13 @@ interface Ks4Record {
 }
 
 const ks4Map = ks4ByUrn as Record<string, Ks4Record>;
+
+interface PvRecord {
+  happy: number; // % who agree "My child is happy at this school"
+  responses?: number;
+}
+
+const pvMap = parentviewByUrn as Record<string, PvRecord>;
 
 interface OverpassEl {
   type: string;
@@ -84,6 +92,7 @@ export async function fetchSchools(
     const urn = tags["ref:edubase"];
     const enr = urn ? ofstedMap[urn] : undefined;
     const ks4 = urn ? ks4Map[urn] : undefined;
+    const pv = urn ? pvMap[urn] : undefined;
     schools.push({
       id,
       name,
@@ -98,6 +107,8 @@ export async function fetchSchools(
       progress8: ks4?.p8 ?? null,
       attainment8: ks4?.att8 ?? null,
       ks4Year: ks4?.year,
+      parentViewHappy: pv?.happy ?? null,
+      parentViewResponses: pv?.responses,
     });
   }
 

@@ -24,6 +24,8 @@ export interface School {
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE
   attainment8?: number | null; // KS4 Attainment 8
   ks4Year?: string; // e.g. "2022/23"
+  parentViewHappy?: number | null; // % agree "My child is happy" (Ofsted Parent View)
+  parentViewResponses?: number;
 }
 
 export interface CrimeCategoryCount {
