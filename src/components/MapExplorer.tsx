@@ -112,7 +112,7 @@ export default function MapExplorer() {
                 {report.radiusMiles === 1 ? "" : "s"}
               </p>
               <div className="mt-3 space-y-2">
-                {report.schools.slice(0, 40).map((s) => (
+                {report.schools.map((s) => (
                   <SchoolCard key={s.id} school={s} onClick={() => setSelected(s)} />
                 ))}
               </div>

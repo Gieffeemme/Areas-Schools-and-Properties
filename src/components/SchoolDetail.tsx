@@ -173,20 +173,32 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           {typeof s.parentViewHappy === "number" && (
-            <Section title="Parent View">
-              <ParentViewLink href={s.urn ? parentViewUrl(s.urn) : undefined}>
-                <p>
+            <Section
+              title="Parent View"
+              href={s.urn ? parentViewUrl(s.urn) : undefined}
+              linkTitle="Ofsted Parent View — read parent reviews"
+            >
+              <p>
+                {s.urn ? (
+                  <a
+                    href={parentViewUrl(s.urn)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-2xl font-bold hover:underline"
+                    style={{ color: happyColor(s.parentViewHappy) }}
+                  >
+                    {s.parentViewHappy}%
+                  </a>
+                ) : (
                   <span className="text-2xl font-bold" style={{ color: happyColor(s.parentViewHappy) }}>
                     {s.parentViewHappy}%
-                  </span>{" "}
-                  <span className="text-sm text-[var(--muted)]">agree their child is happy here</span>
-                </p>
-                {s.parentViewResponses != null && (
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    {s.parentViewResponses} responses{s.urn ? " ↗" : ""}
-                  </p>
-                )}
-              </ParentViewLink>
+                  </span>
+                )}{" "}
+                <span className="text-sm text-[var(--muted)]">agree their child is happy here</span>
+              </p>
+              {s.parentViewResponses != null && (
+                <p className="mt-1 text-xs text-[var(--muted)]">{s.parentViewResponses} responses</p>
+              )}
             </Section>
           )}
 
@@ -200,7 +212,17 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   );
 }
 
-function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
+function Section({
+  title,
+  href,
+  linkTitle = "DfE — compare school performance",
+  children,
+}: {
+  title: string;
+  href?: string;
+  linkTitle?: string;
+  children: React.ReactNode;
+}) {
   return (
     <section className="rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
       <h3 className="mb-2 text-sm font-semibold tracking-tight">
@@ -210,7 +232,7 @@ function Section({ title, href, children }: { title: string; href?: string; chil
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline"
-            title="DfE — compare school performance"
+            title={linkTitle}
           >
             {title}
             <span aria-hidden className="text-[10px]">↗</span>
@@ -221,21 +243,6 @@ function Section({ title, href, children }: { title: string; href?: string; chil
       </h3>
       {children}
     </section>
-  );
-}
-
-function ParentViewLink({ href, children }: { href?: string; children: React.ReactNode }) {
-  if (!href) return <>{children}</>;
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="block transition hover:opacity-80"
-      title="Ofsted Parent View — read parent reviews"
-    >
-      {children}
-    </a>
   );
 }
 

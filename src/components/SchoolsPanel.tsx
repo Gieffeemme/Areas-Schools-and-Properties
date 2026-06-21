@@ -27,14 +27,10 @@ export default function SchoolsPanel({
         </p>
       ) : (
         <div className="space-y-2">
-          {schools.slice(0, 12).map((s) => (
+          {schools.map((s) => (
             <SchoolCard key={s.id} school={s} onClick={() => onSelect?.(s)} />
           ))}
         </div>
-      )}
-
-      {schools.length > 12 && (
-        <p className="mt-2 text-xs text-[var(--muted)]">+{schools.length - 12} more in this radius</p>
       )}
 
       {ofstedLoaded ? (

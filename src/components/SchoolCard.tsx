@@ -52,7 +52,7 @@ export default function SchoolCard({
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => e.stopPropagation()}
-              className="hover:text-[var(--primary)] hover:underline"
+              className="text-[var(--primary)] hover:underline"
               title="DfE — compare school performance"
             >
               {s.name}
