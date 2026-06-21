@@ -45,22 +45,20 @@ export default function SchoolCard({
       style={{ borderLeftColor: color }}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <p className="truncate text-[15px] font-semibold leading-tight">
-          {s.urn ? (
-            <a
-              href={dfePerformanceUrl(s.urn)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="text-[var(--primary)] hover:underline"
-              title="DfE — compare school performance"
-            >
-              {s.name}
-            </a>
-          ) : (
-            s.name
-          )}
-        </p>
+        {s.urn ? (
+          <a
+            href={dfePerformanceUrl(s.urn)}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="min-w-0 truncate text-[15px] font-semibold leading-tight text-[var(--primary)] hover:underline"
+            title="DfE — compare school performance"
+          >
+            {s.name}
+          </a>
+        ) : (
+          <p className="min-w-0 truncate text-[15px] font-semibold leading-tight">{s.name}</p>
+        )}
         <span className="shrink-0 text-xs text-[var(--muted)]">{s.distanceMiles} mi</span>
       </div>
 

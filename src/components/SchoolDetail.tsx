@@ -184,7 +184,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                     href={parentViewUrl(s.urn)}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-2xl font-bold hover:underline"
+                    className="inline-block text-2xl font-bold hover:underline"
                     style={{ color: happyColor(s.parentViewHappy) }}
                   >
                     {s.parentViewHappy}%
