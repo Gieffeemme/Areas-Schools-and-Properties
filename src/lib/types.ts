@@ -11,6 +11,18 @@ export type OfstedRating =
   | "Not rated"
   | "Not loaded";
 
+// One Ofsted Parent View question's results. Fields used vary by question kind:
+//   agreement (Q1-3,5,8-13,7b): pos/neg  ·  agreement+NA (Q4,6): pos/neg/na
+//   Q7a SEND prevalence: yes  ·  Q14 would-recommend: pos (= % yes; neg implied = 100-pos)
+export interface PvQuestion {
+  pos?: number; // % positive (Strongly agree + Agree); for Q14, % who would recommend
+  neg?: number; // % negative (Strongly disagree + Disagree)
+  na?: number; // % "not applicable" — Q4 "not been bullied", Q6 "no concerns raised"
+  yes?: number; // Q7a only: % of parents reporting their child has SEND
+}
+// Keyed by question id: "1".."6","7a","7b","8".."14". Suppressed questions are absent.
+export type ParentView = Record<string, PvQuestion>;
+
 export interface School {
   id: string; // "node/123" — OSM type/id
   name: string;
@@ -26,6 +38,7 @@ export interface School {
   ks4Year?: string; // e.g. "2022/23"
   parentViewHappy?: number | null; // % agree "My child is happy" (Ofsted Parent View)
   parentViewResponses?: number;
+  parentView?: ParentView | null; // full survey breakdown, keyed by question id ("1".."14","7a","7b")
   // Detail (for the drawer)
   ofstedReport?: string; // link to the school's Ofsted reports page
   ofstedSub?: {

@@ -14,6 +14,62 @@ const SUB: { key: keyof NonNullable<School["ofstedSub"]>; label: string }[] = [
   { key: "sixthForm", label: "Sixth form" },
 ];
 
+// Ofsted Parent View statements (exact wording, from the MI workbook). naLabel explains the
+// "Not applicable" share that Q4/Q6 carry; for those, pos/neg are measured among the rest.
+const PV_QUESTIONS: { id: string; text: string; naLabel?: string }[] = [
+  { id: "1", text: "My child is happy at this school." },
+  { id: "2", text: "My child feels safe at this school." },
+  { id: "3", text: "The school makes sure its pupils are well behaved." },
+  { id: "4", text: "My child has been bullied and the school dealt with the bullying quickly and effectively.", naLabel: "child has not been bullied" },
+  { id: "5", text: "The school makes me aware of what my child will learn during the year." },
+  { id: "6", text: "When I have raised concerns with the school they have been dealt with properly.", naLabel: "no concerns raised" },
+  { id: "8", text: "The school has high expectations for my child." },
+  { id: "9", text: "My child does well at this school." },
+  { id: "10", text: "The school lets me know how my child is doing." },
+  { id: "11", text: "There is a good range of subjects available to my child at this school." },
+  { id: "12", text: "My child can take part in clubs and activities at this school." },
+  { id: "13", text: "The school supports my child's wider personal development." },
+];
+const PV_SEND_TEXT =
+  "My child has SEND, and the school gives them the support they need to succeed.";
+
+type PvRowData = { id: string; text: string; pos: number; neg?: number; note?: string };
+
+// Flatten a school's Parent View into ordered rows for the breakdown list, injecting the SEND
+// question (Q7b, with its Q7a prevalence note) before Q8 and the would-recommend question last.
+function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
+  const rows: PvRowData[] = [];
+  for (const def of PV_QUESTIONS) {
+    if (def.id === "8") {
+      const send = pv["7b"];
+      if (send?.pos != null) {
+        const prev = pv["7a"]?.yes;
+        rows.push({
+          id: "7b",
+          text: PV_SEND_TEXT,
+          pos: send.pos,
+          neg: send.neg,
+          note: prev != null ? `Among the ${prev}% of parents who report their child has SEND` : undefined,
+        });
+      }
+    }
+    const d = pv[def.id];
+    if (!d || d.pos == null) continue;
+    rows.push({
+      id: def.id,
+      text: def.text,
+      pos: d.pos,
+      neg: d.neg,
+      note: def.naLabel && d.na != null ? `Not applicable for ${d.na}% — ${def.naLabel}` : undefined,
+    });
+  }
+  const rec = pv["14"];
+  if (rec?.pos != null) {
+    rows.push({ id: "14", text: "I would recommend this school to another parent.", pos: rec.pos, neg: 100 - rec.pos });
+  }
+  return rows;
+}
+
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
   const color = RATING_COLORS[s.ofsted];
   const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
@@ -29,6 +85,9 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const comp = s.composition;
   const hasComp =
     !!comp && (comp.fsm != null || comp.eal != null || comp.senEhcp != null || comp.senSupport != null);
+  const pv = s.parentView ?? null;
+  const pvList = pv ? pvRows(pv) : [];
+  const recommend = pv?.["14"]?.pos;
 
   return (
     <div className="fixed inset-0 z-[2000] flex justify-end" role="dialog" aria-modal="true">
@@ -178,26 +237,53 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               href={s.urn ? parentViewUrl(s.urn) : undefined}
               linkTitle="Ofsted Parent View — read parent reviews"
             >
-              <p>
-                {s.urn ? (
-                  <a
-                    href={parentViewUrl(s.urn)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block text-2xl font-bold hover:underline"
-                    style={{ color: happyColor(s.parentViewHappy) }}
-                  >
-                    {s.parentViewHappy}%
-                  </a>
-                ) : (
-                  <span className="text-2xl font-bold" style={{ color: happyColor(s.parentViewHappy) }}>
-                    {s.parentViewHappy}%
-                  </span>
-                )}{" "}
-                <span className="text-sm text-[var(--muted)]">agree their child is happy here</span>
-              </p>
+              <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
+                <div>
+                  {s.urn ? (
+                    <a
+                      href={parentViewUrl(s.urn)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-2xl font-bold leading-none hover:underline"
+                      style={{ color: happyColor(s.parentViewHappy) }}
+                    >
+                      {s.parentViewHappy}%
+                    </a>
+                  ) : (
+                    <span className="text-2xl font-bold leading-none" style={{ color: happyColor(s.parentViewHappy) }}>
+                      {s.parentViewHappy}%
+                    </span>
+                  )}
+                  <p className="mt-1.5 text-xs text-[var(--muted)]">agree their child is happy</p>
+                </div>
+                {recommend != null && (
+                  <div>
+                    <span className="text-2xl font-bold leading-none" style={{ color: happyColor(recommend) }}>
+                      {recommend}%
+                    </span>
+                    <p className="mt-1.5 text-xs text-[var(--muted)]">would recommend</p>
+                  </div>
+                )}
+              </div>
               {s.parentViewResponses != null && (
-                <p className="mt-1 text-xs text-[var(--muted)]">{s.parentViewResponses} responses</p>
+                <p className="mt-2 text-xs text-[var(--muted)]">{s.parentViewResponses} responses</p>
+              )}
+
+              {pvList.length > 0 && (
+                <details className="group mt-3 border-t border-[var(--border)] pt-3">
+                  <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm font-medium text-[var(--primary)] hover:underline">
+                    <span className="text-[10px] transition-transform group-open:rotate-90" aria-hidden>▶</span>
+                    All survey questions
+                  </summary>
+                  <ul className="mt-3 space-y-3">
+                    {pvList.map((row) => (
+                      <PvRow key={row.id} text={row.text} pos={row.pos} neg={row.neg} note={row.note} />
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                    Bars show parents who agree (green) vs. disagree (red); the gap is “don’t know”.
+                  </p>
+                </details>
               )}
             </Section>
           )}
@@ -253,6 +339,32 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
         {value}
       </p>
       <p className="mt-1 text-xs leading-snug text-[var(--muted)]">{label}</p>
+    </div>
+  );
+}
+
+function PvRow({ text, pos, neg, note }: { text: string; pos: number; neg?: number; note?: string }) {
+  return (
+    <li className="space-y-1">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="text-xs leading-snug">{text}</span>
+        <span className="shrink-0 text-xs font-semibold tabular-nums" style={{ color: happyColor(pos) }}>
+          {pos}%
+        </span>
+      </div>
+      <PvBar pos={pos} neg={neg} />
+      {note && <p className="text-[11px] leading-snug text-[var(--muted)]">{note}</p>}
+    </li>
+  );
+}
+
+function PvBar({ pos, neg = 0 }: { pos: number; neg?: number }) {
+  const neutral = Math.max(0, 100 - pos - neg);
+  return (
+    <div className="flex h-1.5 w-full overflow-hidden rounded-full bg-slate-100" aria-hidden>
+      <div style={{ width: `${pos}%`, backgroundColor: "#16a34a" }} />
+      <div style={{ width: `${neutral}%` }} />
+      <div style={{ width: `${neg}%`, backgroundColor: "#dc2626" }} />
     </div>
   );
 }

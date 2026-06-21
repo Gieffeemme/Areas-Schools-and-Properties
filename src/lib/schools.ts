@@ -1,5 +1,5 @@
 import { distanceMiles } from "./distance";
-import { School, OfstedRating, LatLng } from "./types";
+import { School, OfstedRating, LatLng, ParentView } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
 import parentviewByUrn from "@/data/parentview-by-urn.json";
@@ -41,8 +41,9 @@ interface Ks4Record {
 const ks4Map = ks4ByUrn as Record<string, Ks4Record>;
 
 interface PvRecord {
-  happy: number; // % who agree "My child is happy at this school"
+  happy: number; // % who agree "My child is happy at this school" (= q["1"].pos)
   responses?: number;
+  q?: ParentView; // full survey breakdown
 }
 
 const pvMap = parentviewByUrn as Record<string, PvRecord>;
@@ -167,6 +168,7 @@ export async function fetchSchools(
       disadvantagedP8: ks4?.disP8 ?? null,
       parentViewHappy: pv?.happy ?? null,
       parentViewResponses: pv?.responses,
+      parentView: pv?.q ?? null,
       ofstedReport: enr?.report,
       ofstedSub: enr?.sub,
       ks2: ks2 ?? null,
