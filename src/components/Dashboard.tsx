@@ -167,7 +167,7 @@ function SidePanels({
     return (
       <>
         {price}
-        <PropertyChecks />
+        <PropertyChecks centre={report.centre} />
         {crime}
         {schools}
       </>

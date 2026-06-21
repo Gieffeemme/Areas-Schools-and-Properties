@@ -71,6 +71,14 @@ export interface School {
   };
 }
 
+export interface FloodSummary {
+  status: "warning-area" | "alert-area" | "clear"; // does an EA flood area contain the point
+  areaName?: string; // description of the containing flood area
+  riverOrSea?: string; // source of the flood risk
+  activeWarnings: number; // EA warnings/alerts in force near the point right now
+  topSeverity?: string; // most severe active warning, e.g. "Flood alert"
+}
+
 export interface CrimeCategoryCount {
   category: string;
   count: number;
