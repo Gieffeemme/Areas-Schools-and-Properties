@@ -96,14 +96,18 @@ export interface PriceSale {
 export interface PriceYear {
   year: number;
   averagePrice: number;
+  medianPrice: number;
   count: number;
 }
 
 export interface PriceSummary {
-  postcode: string;
+  postcode: string; // the searched postcode
+  scope: "postcode" | "sector"; // geography the figures actually cover
+  area: string; // display label for that geography, e.g. "SW2 1AA" or "SW2 1"
   sales: PriceSale[]; // most recent first (trimmed)
   count: number; // total sales returned
-  averagePrice: number | null;
+  averagePrice: number | null; // mean — feeds the national price benchmark
+  medianPrice: number | null; // median — the headline figure (robust to commercial outliers)
   byYear: PriceYear[];
 }
 
