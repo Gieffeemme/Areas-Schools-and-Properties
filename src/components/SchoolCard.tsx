@@ -1,6 +1,7 @@
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS } from "@/lib/ratings";
 import { happyColor, p8Color } from "@/lib/scoreColors";
+import { dfePerformanceUrl } from "@/lib/links";
 import Pill from "./Pill";
 
 const OFSTED_SHORT: Record<OfstedRating, string> = {
@@ -44,7 +45,22 @@ export default function SchoolCard({
       style={{ borderLeftColor: color }}
     >
       <div className="flex items-baseline justify-between gap-2">
-        <p className="truncate text-[15px] font-semibold leading-tight">{s.name}</p>
+        <p className="truncate text-[15px] font-semibold leading-tight">
+          {s.urn ? (
+            <a
+              href={dfePerformanceUrl(s.urn)}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="hover:text-[var(--primary)] hover:underline"
+              title="DfE — compare school performance"
+            >
+              {s.name}
+            </a>
+          ) : (
+            s.name
+          )}
+        </p>
         <span className="shrink-0 text-xs text-[var(--muted)]">{s.distanceMiles} mi</span>
       </div>
 

@@ -3,6 +3,7 @@
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS, RATING_LABELS } from "@/lib/ratings";
 import { happyColor, p8Color, pctColor, progressColor } from "@/lib/scoreColors";
+import { dfePerformanceUrl, ofstedReportUrl, parentViewUrl } from "@/lib/links";
 
 const SUB: { key: keyof NonNullable<School["ofstedSub"]>; label: string }[] = [
   { key: "education", label: "Quality of education" },
@@ -18,7 +19,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
   const stale = year != null && new Date().getFullYear() - year > 4;
   const sub = s.ofstedSub ?? {};
-  const reportUrl = s.urn ? `https://reports.ofsted.gov.uk/provider/23/${s.urn}` : s.ofstedReport;
+  const reportUrl = s.urn ? ofstedReportUrl(s.urn) : s.ofstedReport;
+  const dfeHref = s.urn ? dfePerformanceUrl(s.urn) : undefined;
   const hasKs4 = s.progress8 != null || s.attainment8 != null || s.ebaccEntry != null;
   const ks2 = s.ks2;
   const hasKs2 = !!ks2 && (ks2.rwmExp != null || ks2.readProg != null);
@@ -34,7 +36,21 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
       <div className="relative flex h-full w-full max-w-md flex-col overflow-y-auto bg-[var(--background)] shadow-2xl">
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-white px-5 py-4">
           <div className="min-w-0">
-            <h2 className="text-lg font-bold leading-tight">{s.name}</h2>
+            <h2 className="text-lg font-bold leading-tight">
+              {dfeHref ? (
+                <a
+                  href={dfeHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-[var(--primary)] hover:underline"
+                  title="DfE — compare school performance"
+                >
+                  {s.name}
+                </a>
+              ) : (
+                s.name
+              )}
+            </h2>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
               {[s.phase, `${s.distanceMiles} mi away`].filter(Boolean).join(" · ")}
             </p>
@@ -89,7 +105,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           </Section>
 
           {hasKs4 && (
-            <Section title={`GCSE results${s.ks4Year ? ` · ${s.ks4Year}` : ""}`}>
+            <Section title={`GCSE results${s.ks4Year ? ` · ${s.ks4Year}` : ""}`} href={dfeHref}>
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <Stat label="Progress 8" value={signed(s.progress8)} color={tint(s.progress8, p8Color)} />
                 <Stat label="Attainment 8" value={s.attainment8 != null ? String(s.attainment8) : "—"} />
@@ -105,7 +121,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           {hasKs2 && ks2 && (
-            <Section title={`KS2 results${ks2.year ? ` · ${ks2.year}` : ""}`}>
+            <Section title={`KS2 results${ks2.year ? ` · ${ks2.year}` : ""}`} href={dfeHref}>
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <Stat label="Expected in RWM" value={pct(ks2.rwmExp)} color={tint(ks2.rwmExp, pctColor)} />
                 <Stat label="Higher in RWM" value={pct(ks2.rwmHigh)} color={tint(ks2.rwmHigh, pctColor)} />
@@ -117,7 +133,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           {hasDest && dest && (
-            <Section title="Destinations">
+            <Section title="Destinations" href={dfeHref}>
               {dest.ks4 && (
                 <>
                   <p className="text-xs font-semibold text-[var(--muted)]">After GCSEs (KS4)</p>
@@ -146,7 +162,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           {hasComp && comp && (
-            <Section title="Pupil composition">
+            <Section title="Pupil composition" href={dfeHref}>
               <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                 <Stat label="FSM (last 6 yrs)" value={pct(comp.fsm)} />
                 <Stat label="EAL" value={pct(comp.eal)} />
@@ -158,15 +174,19 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
 
           {typeof s.parentViewHappy === "number" && (
             <Section title="Parent View">
-              <p>
-                <span className="text-2xl font-bold" style={{ color: happyColor(s.parentViewHappy) }}>
-                  {s.parentViewHappy}%
-                </span>{" "}
-                <span className="text-sm text-[var(--muted)]">agree their child is happy here</span>
-              </p>
-              {s.parentViewResponses != null && (
-                <p className="mt-1 text-xs text-[var(--muted)]">{s.parentViewResponses} responses</p>
-              )}
+              <ParentViewLink href={s.urn ? parentViewUrl(s.urn) : undefined}>
+                <p>
+                  <span className="text-2xl font-bold" style={{ color: happyColor(s.parentViewHappy) }}>
+                    {s.parentViewHappy}%
+                  </span>{" "}
+                  <span className="text-sm text-[var(--muted)]">agree their child is happy here</span>
+                </p>
+                {s.parentViewResponses != null && (
+                  <p className="mt-1 text-xs text-[var(--muted)]">
+                    {s.parentViewResponses} responses{s.urn ? " ↗" : ""}
+                  </p>
+                )}
+              </ParentViewLink>
             </Section>
           )}
 
@@ -180,12 +200,42 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({ title, href, children }: { title: string; href?: string; children: React.ReactNode }) {
   return (
     <section className="rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
-      <h3 className="mb-2 text-sm font-semibold tracking-tight">{title}</h3>
+      <h3 className="mb-2 text-sm font-semibold tracking-tight">
+        {href ? (
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[var(--primary)] hover:underline"
+            title="DfE — compare school performance"
+          >
+            {title}
+            <span aria-hidden className="text-[10px]">↗</span>
+          </a>
+        ) : (
+          title
+        )}
+      </h3>
       {children}
     </section>
+  );
+}
+
+function ParentViewLink({ href, children }: { href?: string; children: React.ReactNode }) {
+  if (!href) return <>{children}</>;
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="block transition hover:opacity-80"
+      title="Ofsted Parent View — read parent reviews"
+    >
+      {children}
+    </a>
   );
 }
 
