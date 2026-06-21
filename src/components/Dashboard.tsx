@@ -19,15 +19,19 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
+  const [radius, setRadius] = useState(1);
+  const [lastQuery, setLastQuery] = useState<string | null>(null);
 
-  const search = useCallback(async (postcode: string) => {
+  const run = useCallback(async (postcode: string, r: number) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=1`);
+      const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=${r}`);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setReport(data);
+      setLastQuery(postcode);
+      setRadius(r);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setReport(null);
@@ -35,6 +39,9 @@ export default function Dashboard() {
       setLoading(false);
     }
   }, []);
+
+  const search = (postcode: string) => run(postcode, radius);
+  const changeRadius = (r: number) => (lastQuery ? run(lastQuery, r) : setRadius(r));
 
   if (!report && !loading) {
     const def = routeDef(route);
@@ -72,7 +79,13 @@ export default function Dashboard() {
       {error && <Banner>{error}</Banner>}
       {loading && <Skeleton />}
       {report && !loading && (
-        <Report report={report} route={route} onRoute={setRoute} onSelect={setSelected} />
+        <Report
+          report={report}
+          route={route}
+          onRoute={setRoute}
+          onSelect={setSelected}
+          onRadius={changeRadius}
+        />
       )}
       {selected && <SchoolDetail school={selected} onClose={() => setSelected(null)} />}
     </div>
@@ -84,11 +97,13 @@ function Report({
   route,
   onRoute,
   onSelect,
+  onRadius,
 }: {
   report: AreaReport;
   route: Route;
   onRoute: (r: Route) => void;
   onSelect: (s: School) => void;
+  onRadius: (r: number) => void;
 }) {
   const f = report.facts;
   return (
@@ -114,6 +129,11 @@ function Report({
         <RouteSelector value={route} onChange={onRoute} variant="tabs" />
       </div>
 
+      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1">
+        <span className="text-xs font-medium text-[var(--muted)]">Show area within</span>
+        <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
         <div>
           <div className="h-[420px] overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm sm:h-[520px] lg:h-[640px]">
@@ -135,8 +155,9 @@ function Report({
       {report.errors.length > 0 && <PartialNote errors={report.errors} />}
 
       <p className="mt-4 text-xs text-[var(--muted)]">
-        The shaded circle is a <strong>1-mile distance guide</strong>, not a school catchment
-        boundary. Catchment areas are a later phase.
+        The shaded circle is a{" "}
+        <strong>{report.radiusMiles === 0.5 ? "½" : report.radiusMiles}-mile distance guide</strong>,
+        not a school catchment boundary. Catchment areas are a later phase.
       </p>
     </div>
   );
@@ -197,6 +218,27 @@ function SidePanels({
       {crime}
       {price}
     </>
+  );
+}
+
+const RADII = [0.5, 1, 2, 3, 5];
+function RadiusSelector({ value, onChange }: { value: number; onChange: (r: number) => void }) {
+  return (
+    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)] bg-white text-xs">
+      {RADII.map((r) => (
+        <button
+          key={r}
+          onClick={() => onChange(r)}
+          className={`px-2.5 py-1 transition ${
+            r === value
+              ? "bg-[var(--primary)] font-semibold text-white"
+              : "text-[var(--muted)] hover:bg-slate-50"
+          }`}
+        >
+          {r === 0.5 ? "½" : r} mi
+        </button>
+      ))}
+    </div>
   );
 }
 

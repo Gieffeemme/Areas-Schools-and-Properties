@@ -52,6 +52,13 @@ export interface School {
   ebaccEntry?: number | null; // % entering the EBacc (KS4)
   ebacc94?: number | null; // % achieving EBacc grades 9-4 (KS4)
   disadvantagedP8?: number | null; // Progress 8 for disadvantaged pupils
+  alevel?: {
+    grade: string | null; // average result per A level entry, as a grade (e.g. "B-")
+    aps: number | null; // average point score per A level entry (A*=60…E=10)
+    aabFac: number | null; // % achieving AAB+ incl. >=2 facilitating subjects
+    pupils: number | null; // A level cohort size
+    year: string;
+  } | null;
   ks2?: {
     rwmExp: number | null; // % reaching expected standard (reading, writing & maths)
     rwmHigh: number | null; // % at higher standard

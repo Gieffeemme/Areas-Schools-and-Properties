@@ -2,6 +2,7 @@ import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
+import ks5ByUrn from "@/data/ks5-by-urn.json";
 import parentviewByUrn from "@/data/parentview-by-urn.json";
 import ks2ByUrn from "@/data/ks2-by-urn.json";
 import censusByUrn from "@/data/census-by-urn.json";
@@ -39,6 +40,16 @@ interface Ks4Record {
 }
 
 const ks4Map = ks4ByUrn as Record<string, Ks4Record>;
+
+interface Ks5Record {
+  grade: string | null; // average result per A level entry, as a grade
+  aps: number | null; // average point score per A level entry
+  aabFac: number | null; // % AAB+ incl. >=2 facilitating subjects
+  pupils: number | null;
+  year: string;
+}
+
+const ks5Map = ks5ByUrn as Record<string, Ks5Record>;
 
 interface PvRecord {
   happy: number; // % who agree "My child is happy at this school" (= q["1"].pos)
@@ -145,6 +156,7 @@ export async function fetchSchools(
     const urn = tags["ref:edubase"];
     const enr = urn ? ofstedMap[urn] : undefined;
     const ks4 = urn ? ks4Map[urn] : undefined;
+    const ks5 = urn ? ks5Map[urn] : undefined;
     const pv = urn ? pvMap[urn] : undefined;
     const ks2 = urn ? ks2Map[urn] : undefined;
     const census = urn ? censusMap[urn] : undefined;
@@ -166,6 +178,7 @@ export async function fetchSchools(
       ebaccEntry: ks4?.ebaccEntry ?? null,
       ebacc94: ks4?.ebacc94 ?? null,
       disadvantagedP8: ks4?.disP8 ?? null,
+      alevel: ks5 ?? null,
       parentViewHappy: pv?.happy ?? null,
       parentViewResponses: pv?.responses,
       parentView: pv?.q ?? null,

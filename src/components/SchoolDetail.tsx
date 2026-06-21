@@ -2,7 +2,7 @@
 
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS, RATING_LABELS } from "@/lib/ratings";
-import { happyColor, p8Color, pctColor, progressColor } from "@/lib/scoreColors";
+import { gradeColor, happyColor, p8Color, pctColor, progressColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl, ofstedReportUrl, parentViewUrl } from "@/lib/links";
 
 const SUB: { key: keyof NonNullable<School["ofstedSub"]>; label: string }[] = [
@@ -78,6 +78,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const reportUrl = s.urn ? ofstedReportUrl(s.urn) : s.ofstedReport;
   const dfeHref = s.urn ? dfePerformanceUrl(s.urn) : undefined;
   const hasKs4 = s.progress8 != null || s.attainment8 != null || s.ebaccEntry != null;
+  const al = s.alevel ?? null;
+  const hasAlevel = !!al && (al.grade != null || al.aps != null);
   const ks2 = s.ks2;
   const hasKs2 = !!ks2 && (ks2.rwmExp != null || ks2.readProg != null);
   const dest = s.destinations;
@@ -175,6 +177,21 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   value={signed(s.disadvantagedP8)}
                   color={tint(s.disadvantagedP8, p8Color)}
                 />
+              </div>
+            </Section>
+          )}
+
+          {hasAlevel && al && (
+            <Section title={`A-level results${al.year ? ` · ${al.year}` : ""}`} href={dfeHref}>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                <Stat
+                  label="Average grade"
+                  value={al.grade ?? "—"}
+                  color={al.grade ? gradeColor(al.grade) : undefined}
+                />
+                <Stat label="Points per entry" value={al.aps != null ? al.aps.toFixed(2) : "—"} />
+                <Stat label="AAB+ (2 facilitating)" value={pct(al.aabFac)} />
+                <Stat label="A-level cohort" value={al.pupils != null ? String(al.pupils) : "—"} />
               </div>
             </Section>
           )}

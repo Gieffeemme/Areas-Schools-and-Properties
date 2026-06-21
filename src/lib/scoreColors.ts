@@ -16,3 +16,11 @@ export function progressColor(v: number): string {
 export function pctColor(pct: number): string {
   return pct >= 65 ? "#16a34a" : pct >= 45 ? "#d97706" : "#dc2626";
 }
+
+// A-level average grade → colour. A/B = strong, C = average, D/E/U = weak.
+export function gradeColor(grade: string): string {
+  const c = grade.replace("*", "").charAt(0).toUpperCase();
+  if (c === "A" || c === "B") return "#16a34a";
+  if (c === "C") return "#d97706";
+  return "#dc2626";
+}
