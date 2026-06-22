@@ -8,9 +8,8 @@ import ks2ByUrn from "@/data/ks2-by-urn.json";
 import censusByUrn from "@/data/census-by-urn.json";
 import destinationsByUrn from "@/data/destinations-by-urn.json";
 import nurseriesData from "@/data/nurseries.json";
+import giasData from "@/data/gias.json";
 import { ofstedReportUrl } from "./links";
-
-const OVERPASS = "https://overpass-api.de/api/interpreter";
 
 interface OfstedRecord {
   rating: OfstedRating;
@@ -112,87 +111,56 @@ interface NurseryRecord {
 }
 const nurseries = nurseriesData as unknown as NurseryRecord[];
 
-interface OverpassEl {
-  type: string;
-  id: number;
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
+// GIAS — the DfE register of every school in England (build-gias.mjs, postcode-geocoded). The
+// authoritative source of school pins + phase, replacing OpenStreetMap (which missed schools and
+// guessed phase). URN is native, so every school joins to the enrichment data above.
+interface GiasRecord {
+  urn: string;
+  name: string;
+  postcode: string;
+  phase: string;
+  lat: number;
+  lng: number;
 }
+const gias = giasData as GiasRecord[];
+// State nursery schools appear in GIAS too; dedupe them against the EY register by postcode so a
+// setting in both isn't listed twice (GIAS wins — it carries a school-framework Ofsted grade).
+const giasNurseryPostcodes = new Set(
+  gias.filter((g) => g.phase === "Nursery").map((g) => g.postcode),
+);
 
-/** Live school locations within `radiusMiles` of a point, from OpenStreetMap via Overpass. */
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/**
+ * Schools within `radiusMiles` of a point, from the GIAS register (enriched by URN with Ofsted,
+ * KS2/KS4/KS5, Parent View, census and destinations), plus nurseries from the Ofsted Early Years
+ * register. Both are committed, geocoded datasets — no live API call.
+ */
 export async function fetchSchools(
   centre: LatLng,
   radiusMiles: number,
 ): Promise<School[]> {
-  const radiusM = Math.round(radiusMiles * 1609.34);
-  // amenity=school = primary/secondary/all-through; college = sixth-form & FE colleges (post-16).
-  // Nurseries come from the authoritative Ofsted Early Years register (merged in below), NOT OSM —
-  // OSM misses too many of them.
-  const AMENITIES = ["school", "college"];
-  const q =
-    `[out:json][timeout:25];(` +
-    AMENITIES.map(
-      (a) =>
-        `node["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});` +
-        `way["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});` +
-        `relation["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});`,
-    ).join("") +
-    `);out center tags;`;
-
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 30000);
-  let elements: OverpassEl[] = [];
-  try {
-    const res = await fetch(OVERPASS, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        // Overpass rejects requests with no User-Agent (HTTP 406). Identify ourselves politely.
-        "User-Agent": "area-intel/0.1 (UK area & school intelligence)",
-      },
-      body: "data=" + encodeURIComponent(q),
-      signal: ctrl.signal,
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) throw new Error(`Overpass returned ${res.status}`);
-    const json = await res.json();
-    elements = (json.elements ?? []) as OverpassEl[];
-  } finally {
-    clearTimeout(timer);
-  }
-
-  const seen = new Set<string>();
   const schools: School[] = [];
-  for (const el of elements) {
-    const lat = el.lat ?? el.center?.lat;
-    const lng = el.lon ?? el.center?.lon;
-    const tags = el.tags ?? {};
-    const name = tags.name;
-    if (lat == null || lng == null || !name) continue;
 
-    const id = `${el.type}/${el.id}`;
-    if (seen.has(id)) continue;
-    seen.add(id);
-
-    const urn = tags["ref:edubase"];
-    const enr = urn ? ofstedMap[urn] : undefined;
-    const ks4 = urn ? ks4Map[urn] : undefined;
-    const ks5 = urn ? ks5Map[urn] : undefined;
-    const pv = urn ? pvMap[urn] : undefined;
-    const ks2 = urn ? ks2Map[urn] : undefined;
-    const census = urn ? censusMap[urn] : undefined;
-    const dest = urn ? destMap[urn] : undefined;
+  for (const g of gias) {
+    const d = distanceMiles(centre.lat, centre.lng, g.lat, g.lng);
+    if (d > radiusMiles) continue;
+    const urn = g.urn;
+    const enr = ofstedMap[urn];
+    const ks4 = ks4Map[urn];
+    const ks5 = ks5Map[urn];
+    const pv = pvMap[urn];
+    const ks2 = ks2Map[urn];
+    const census = censusMap[urn];
+    const dest = destMap[urn];
     schools.push({
-      id,
-      name,
-      lat,
-      lng,
-      distanceMiles:
-        Math.round(distanceMiles(centre.lat, centre.lng, lat, lng) * 10) / 10,
+      id: `gias/${urn}`,
+      name: g.name,
+      lat: g.lat,
+      lng: g.lng,
+      distanceMiles: round1(d),
       urn,
-      phase: phaseFromTags(tags),
+      phase: g.phase,
       ofsted: enr?.rating ?? (ofstedLoaded ? "Not rated" : "Not loaded"),
       ofstedDate: enr?.date,
       progress8: ks4?.p8 ?? null,
@@ -205,7 +173,7 @@ export async function fetchSchools(
       parentViewHappy: pv?.happy ?? null,
       parentViewResponses: pv?.responses,
       parentView: pv?.q ?? null,
-      ofstedReport: enr?.report,
+      ofstedReport: enr?.report ?? ofstedReportUrl(urn),
       ofstedSub: enr?.sub,
       ks2: ks2 ?? null,
       composition: census,
@@ -213,9 +181,10 @@ export async function fetchSchools(
     });
   }
 
-  // Merge in nurseries from the Ofsted Early Years register (authoritative; OSM misses most).
-  // Postcode-geocoded, each carrying its Ofsted inspection outcome.
+  // Nurseries from the Ofsted Early Years register (~23k). Skip any that are also a GIAS state
+  // nursery school at the same postcode (already added above).
   for (const n of nurseries) {
+    if (giasNurseryPostcodes.has(n.postcode)) continue;
     const d = distanceMiles(centre.lat, centre.lng, n.lat, n.lng);
     if (d > radiusMiles) continue;
     schools.push({
@@ -223,7 +192,7 @@ export async function fetchSchools(
       name: n.name,
       lat: n.lat,
       lng: n.lng,
-      distanceMiles: Math.round(d * 10) / 10,
+      distanceMiles: round1(d),
       phase: "Nursery",
       ofsted: n.rating ?? "Not rated",
       ofstedDate: n.date,
@@ -235,37 +204,4 @@ export async function fetchSchools(
 
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
-}
-
-// Best-effort age-range phase from OSM tags. amenity is the strongest signal (kindergarten =
-// nursery, college = post-16); otherwise infer from explicit ages, then ISCED levels.
-function phaseFromTags(tags: Record<string, string>): string | undefined {
-  if (tags["amenity"] === "college") return "College";
-
-  const min = parseInt(tags["min_age"] ?? "", 10);
-  const max = parseInt(tags["max_age"] ?? "", 10);
-  const lo = Number.isNaN(min) ? null : min;
-  const hi = Number.isNaN(max) ? null : max;
-  if (lo != null || hi != null) {
-    if (hi != null && hi <= 5) return "Nursery";
-    if (lo != null && lo >= 16) return "Sixth form";
-    if (lo != null && hi != null && lo <= 7 && hi >= 16) return "All-through";
-    if (hi != null && hi <= 11) return "Primary";
-    if ((hi != null && hi >= 12) || (lo != null && lo >= 11)) return "Secondary";
-  }
-
-  const isced = tags["isced:level"];
-  if (isced) {
-    const has = (re: RegExp) => re.test(isced);
-    if (has(/0/) && !has(/[123]/)) return "Nursery";
-    const primary = has(/1/);
-    const lower = has(/2/);
-    const upper = has(/3/);
-    if (primary && (lower || upper)) return "All-through";
-    if (upper && !primary && !lower) return "Sixth form";
-    if (lower || upper) return "Secondary";
-    if (primary) return "Primary";
-  }
-
-  return tags["school:type"] || tags["operator:type"] || undefined;
 }
