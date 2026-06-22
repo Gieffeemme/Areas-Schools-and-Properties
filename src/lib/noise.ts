@@ -51,13 +51,15 @@ function infoUrl(wms: string, layer: string, centre: LatLng): string {
   return `${wms}?${qs}`;
 }
 
-// One WMS GetFeatureInfo read. The maps are modelled on a 10 m grid with a lower cutoff of 40 dB
-// (Lden) / 35 dB (Lnight); below that GeoServer returns a NoData sentinel (GRAY_INDEX 0 or negative,
-// or an empty feature collection), so a positive value is the only "has noise" signal:
+// One WMS GetFeatureInfo read. We only ever query England (fetchNoise's caller gates on it), where
+// every covered point returns a feature: a positive GRAY_INDEX is the modelled dB; 0 or a negative
+// sentinel means "no modelled noise here". So:
 //   number > 0  → modelled dB at the point
-//   null        → no modelled noise here (below the cutoff / NoData)
-//   undefined   → the read itself failed (network, HTTP status, bad JSON); the caller retries once
-//                 and treats an all-undefined result as a service outage, not a quiet area.
+//   null        → 0 / negative sentinel = genuinely no modelled noise at this point
+//   undefined   → the read yielded no value — network/HTTP/JSON error, OR an empty/absent feature.
+//                 Inside England an empty collection is a transient server blip (rural England still
+//                 returns a 0 feature), never real "quiet", so the caller retries (see queryLayer);
+//                 an all-undefined result is surfaced as a service outage, not a silent quiet area.
 async function readPixel(url: string, signal: AbortSignal): Promise<number | null | undefined> {
   let res: Response;
   try {
@@ -72,12 +74,17 @@ async function readPixel(url: string, signal: AbortSignal): Promise<number | nul
   } catch {
     return undefined;
   }
-  const v = data.features?.[0]?.properties?.GRAY_INDEX;
-  return typeof v === "number" && v > 0 ? Math.round(v) : null;
+  const feats = data.features ?? [];
+  if (feats.length === 0) return undefined; // transient blip within England → retry
+  const v = feats[0]?.properties?.GRAY_INDEX;
+  if (typeof v !== "number") return undefined;
+  return v > 0 ? Math.round(v) : null;
 }
 
-// Resolves to number | null (both definitive) or undefined when the read failed even after a retry —
-// the caller distinguishes a single failed metric from a wholesale outage. Never rejects.
+// Resolves to number | null (both definitive) or undefined when every attempt failed — the caller
+// distinguishes a single failed metric from a wholesale outage. Never rejects. Up to 3 attempts to
+// ride out a transient empty/blip; readPixel uses no-store, so each attempt re-hits the origin, and
+// an aborted (timed-out) signal makes the remaining attempts fail fast rather than hang.
 async function queryLayer(
   wms: string,
   layer: string,
@@ -85,9 +92,11 @@ async function queryLayer(
   signal: AbortSignal,
 ): Promise<number | null | undefined> {
   const url = infoUrl(wms, layer, centre);
-  let r = await readPixel(url, signal);
-  if (r === undefined) r = await readPixel(url, signal); // one retry for a transient/empty response
-  return r;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const r = await readPixel(url, signal);
+    if (r !== undefined) return r; // definitive number or null
+  }
+  return undefined;
 }
 
 export async function fetchNoise(centre: LatLng): Promise<NoiseSummary> {
