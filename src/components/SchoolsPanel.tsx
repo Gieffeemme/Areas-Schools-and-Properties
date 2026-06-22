@@ -23,13 +23,18 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "parent", label: "Parent View" },
 ];
 
-// "Best" first; schools missing the metric sink to the bottom; distance breaks ties.
+// "Best" first; schools missing the metric sink below those that have it. Within an equal or
+// absent metric, a better Ofsted grade wins, then nearer distance — so e.g. a Parent View sort
+// no longer lists a "Good" school above an "Outstanding" one among the schools that lack a Parent
+// View score (nurseries and preschools aren't in the survey at all).
 function comparator(key: SortKey): (a: School, b: School) => number {
   if (key === "distance") return (a, b) => a.distanceMiles - b.distanceMiles;
   if (key === "name") return (a, b) => a.name.localeCompare(b.name);
-  if (key === "ofsted")
-    return (a, b) =>
-      (OFSTED_RANK[a.ofsted] ?? 9) - (OFSTED_RANK[b.ofsted] ?? 9) || a.distanceMiles - b.distanceMiles;
+
+  const byQuality = (a: School, b: School) =>
+    (OFSTED_RANK[a.ofsted] ?? 9) - (OFSTED_RANK[b.ofsted] ?? 9) || a.distanceMiles - b.distanceMiles;
+  if (key === "ofsted") return byQuality;
+
   const get: (s: School) => number | null | undefined =
     key === "p8" ? (s) => s.progress8
     : key === "att8" ? (s) => s.attainment8
@@ -38,10 +43,10 @@ function comparator(key: SortKey): (a: School, b: School) => number {
     : (s) => s.parentViewHappy;
   return (a, b) => {
     const av = get(a), bv = get(b);
-    if (av == null && bv == null) return a.distanceMiles - b.distanceMiles;
-    if (av == null) return 1;
-    if (bv == null) return -1;
-    return bv - av || a.distanceMiles - b.distanceMiles;
+    if (av != null && bv != null) return bv - av || byQuality(a, b);
+    if (av != null) return -1; // schools with the metric rank above those without
+    if (bv != null) return 1;
+    return byQuality(a, b); // neither has the metric → Ofsted grade, then distance
   };
 }
 
