@@ -17,8 +17,8 @@ export const ROUTES: RouteDef[] = [
     label: "Find a school & search an area",
     emoji: "🏘️",
     blurb: "Search a postcode or a school name — schools, nurseries, crime, prices & deprivation.",
-    headline: "Explore an area — or find a school",
-    sub: "Search any UK postcode for schools, nurseries, crime, property prices and deprivation — or type a school name to jump straight to it.",
+    headline: "Find a school — and research the area around it",
+    sub: "Search any UK postcode — or a school name — for schools, nurseries, crime, prices and deprivation. Property checks are coming next.",
   },
   {
     id: "property",
