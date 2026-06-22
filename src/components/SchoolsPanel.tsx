@@ -2,15 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { School } from "@/lib/types";
+import { gradeRank } from "@/lib/reportCard";
 import { SchoolFilters, applyFilters } from "@/lib/schoolFilters";
 import SchoolControls from "./SchoolControls";
 import SchoolCard from "./SchoolCard";
 
 type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "em5" | "ks2" | "alevel" | "parent";
-
-const OFSTED_RANK: Record<string, number> = {
-  Outstanding: 0, Good: 1, "Requires improvement": 2, Inadequate: 3, "Not rated": 4, "Not loaded": 5,
-};
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "distance", label: "Distance" },
@@ -33,7 +30,7 @@ function comparator(key: SortKey): (a: School, b: School) => number {
   if (key === "name") return (a, b) => a.name.localeCompare(b.name);
 
   const byQuality = (a: School, b: School) =>
-    (OFSTED_RANK[a.ofsted] ?? 9) - (OFSTED_RANK[b.ofsted] ?? 9) || a.distanceMiles - b.distanceMiles;
+    gradeRank(a.reportCard, a.ofsted) - gradeRank(b.reportCard, b.ofsted) || a.distanceMiles - b.distanceMiles;
   if (key === "ofsted") return byQuality;
 
   const get: (s: School) => number | null | undefined =

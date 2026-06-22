@@ -22,12 +22,12 @@ export type ReportCardBand =
 
 /** The 5-band early-years scale, best→worst, with Ofsted's exact brand colours (verified Jun 2026
  *  against the live scale graphic and the gov.uk "understanding report cards" guidance). */
-export const REPORT_CARD_BANDS: { code: ReportCardBand; label: string; colour: string }[] = [
-  { code: "exceptional", label: "Exceptional", colour: "#0176E0" },
-  { code: "strong", label: "Strong standard", colour: "#33903C" },
-  { code: "expected", label: "Expected standard", colour: "#5CD168" },
-  { code: "needs-attention", label: "Needs attention", colour: "#FF8341" },
-  { code: "urgent", label: "Urgent improvement", colour: "#CE1E02" },
+export const REPORT_CARD_BANDS: { code: ReportCardBand; label: string; short: string; colour: string }[] = [
+  { code: "exceptional", label: "Exceptional", short: "Exceptional", colour: "#0176E0" },
+  { code: "strong", label: "Strong standard", short: "Strong", colour: "#33903C" },
+  { code: "expected", label: "Expected standard", short: "Expected", colour: "#5CD168" },
+  { code: "needs-attention", label: "Needs attention", short: "Needs attn", colour: "#FF8341" },
+  { code: "urgent", label: "Urgent improvement", short: "Urgent", colour: "#CE1E02" },
 ];
 
 export const REPORT_CARD_LABEL: Record<ReportCardBand, string> = Object.fromEntries(
@@ -36,6 +36,10 @@ export const REPORT_CARD_LABEL: Record<ReportCardBand, string> = Object.fromEntr
 
 export const REPORT_CARD_COLOUR: Record<ReportCardBand, string> = Object.fromEntries(
   REPORT_CARD_BANDS.map((b) => [b.code, b.colour]),
+) as Record<ReportCardBand, string>;
+
+export const REPORT_CARD_SHORT: Record<ReportCardBand, string> = Object.fromEntries(
+  REPORT_CARD_BANDS.map((b) => [b.code, b.short]),
 ) as Record<ReportCardBand, string>;
 
 /** One provider's new-framework report card, keyed by URN in report-cards-by-urn.json. */
@@ -74,4 +78,24 @@ export function gradeDisplay(
     };
   }
   return { label: RATING_LABELS[legacy], colour: RATING_COLORS[legacy], isReportCard: false };
+}
+
+// Approximate cross-scale ordering (lower = better) for sorting/comparing settings that may be on
+// EITHER the legacy 4-band Ofsted scale or the new 5-band report-card scale. Ofsted publishes no
+// official crosswalk, so this interleaves them by rough equivalence (Strong ~ Outstanding/Good,
+// Expected ~ Good, Needs attention ~ Requires improvement, Urgent ~ Inadequate). Unrated → 9 (sinks).
+const GRADE_RANK: Record<string, number> = {
+  exceptional: 0,
+  Outstanding: 1,
+  strong: 2,
+  Good: 3,
+  expected: 4,
+  "Requires improvement": 5,
+  "needs-attention": 6,
+  Inadequate: 7,
+  urgent: 8,
+};
+
+export function gradeRank(reportCard: ReportCard | null | undefined, legacy: OfstedRating): number {
+  return reportCard ? GRADE_RANK[reportCard.overall] ?? 9 : GRADE_RANK[legacy] ?? 9;
 }

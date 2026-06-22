@@ -1,14 +1,13 @@
-import { AreaReport, OfstedRating } from "@/lib/types";
+import { AreaReport, School } from "@/lib/types";
 import { gbp, num } from "@/lib/format";
 import RatingBadge from "./RatingBadge";
+import { gradeRank, REPORT_CARD_COLOUR, REPORT_CARD_SHORT } from "@/lib/reportCard";
 
 export interface CompareRow {
   pc: string;
   report: AreaReport | null;
   error: string | null;
 }
-
-const OFSTED_ORDER: OfstedRating[] = ["Outstanding", "Good", "Requires improvement", "Inadequate"];
 
 export default function CompareTable({ rows }: { rows: CompareRow[] }) {
   const ok = rows.filter((r): r is CompareRow & { report: AreaReport } => !!r.report);
@@ -54,10 +53,22 @@ export default function CompareTable({ rows }: { rows: CompareRow[] }) {
 
           <MetricRow label="Best Ofsted nearby">
             {reports.map((r, i) => {
-              const top = bestOfsted(r);
+              const top = bestSchool(r);
               return (
                 <Td key={i}>
-                  {top ? <RatingBadge rating={top} small /> : <Muted />}
+                  {!top ? (
+                    <Muted />
+                  ) : top.reportCard ? (
+                    <span
+                      title={top.reportCard.overallLabel}
+                      className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2 py-0.5 text-[11px] font-semibold text-white"
+                      style={{ backgroundColor: REPORT_CARD_COLOUR[top.reportCard.overall] }}
+                    >
+                      {REPORT_CARD_SHORT[top.reportCard.overall]}
+                    </span>
+                  ) : (
+                    <RatingBadge rating={top.ofsted} small />
+                  )}
                 </Td>
               );
             })}
@@ -163,11 +174,18 @@ function Muted() {
   return <span className="text-[var(--muted)]">—</span>;
 }
 
-function bestOfsted(r: AreaReport): OfstedRating | null {
-  for (const rating of OFSTED_ORDER) {
-    if (r.schools.some((s) => s.ofsted === rating)) return rating;
+// Best (rated) setting near an area, ranked across both the legacy and report-card scales.
+function bestSchool(r: AreaReport): School | null {
+  let best: School | null = null;
+  let bestRank = 9; // 9 = unrated; anything rated (0–8) beats it
+  for (const s of r.schools) {
+    const rank = gradeRank(s.reportCard, s.ofsted);
+    if (rank < bestRank) {
+      bestRank = rank;
+      best = s;
+    }
   }
-  return null;
+  return best;
 }
 
 function argbest(vals: (number | null)[], dir: "min" | "max"): number {
