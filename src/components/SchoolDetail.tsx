@@ -77,6 +77,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const sub = s.ofstedSub ?? {};
   const reportUrl = s.urn ? ofstedReportUrl(s.urn) : s.ofstedReport;
   const dfeHref = s.urn ? dfePerformanceUrl(s.urn) : undefined;
+  const nameHref = dfeHref ?? s.ofstedReport; // nurseries have no DfE link; use their Ofsted report
   const hasKs4 = s.progress8 != null || s.attainment8 != null || s.ebaccEntry != null;
   const al = s.alevel ?? null;
   const hasAlevel = !!al && (al.grade != null || al.aps != null);
@@ -98,13 +99,13 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
         <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-[var(--border)] bg-white px-5 py-4">
           <div className="min-w-0">
             <h2 className="text-lg font-bold leading-tight">
-              {dfeHref ? (
+              {nameHref ? (
                 <a
-                  href={dfeHref}
+                  href={nameHref}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--primary)] hover:underline"
-                  title="DfE — compare school performance"
+                  title={dfeHref ? "DfE — compare school performance" : "Ofsted report"}
                 >
                   {s.name}
                 </a>

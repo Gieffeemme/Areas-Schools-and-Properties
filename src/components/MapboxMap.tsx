@@ -123,6 +123,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
         map.on("mouseenter", "schools-circle", () => { map.getCanvas().style.cursor = "pointer"; });
         map.on("mouseleave", "schools-circle", () => { map.getCanvas().style.cursor = ""; });
 
+        map.fitBounds(ringBounds(centre, radiusMiles), { padding: 28, duration: 0 });
         loadedRef.current = true;
       });
     });
@@ -141,7 +142,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
     const map = mapRef.current;
     if (!map) return;
     const apply = () => {
-      map.flyTo({ center: [centre.lng, centre.lat], zoom: 13.5, essential: true });
+      map.fitBounds(ringBounds(centre, radiusMiles), { padding: 28, duration: 600 });
       (map.getSource("ring") as GeoJSONSource | undefined)?.setData(ringPolygon(centre, radiusMiles));
       (map.getSource("schools") as GeoJSONSource | undefined)?.setData(schoolsGeo(schools));
     };
@@ -223,6 +224,17 @@ function schoolsGeo(schools: School[]): GeoJSON.FeatureCollection {
       },
     })),
   };
+}
+
+// Bounding box of the radius ring, so the map can zoom to show the whole selected area.
+function ringBounds(centre: LatLng, radiusMiles: number): [[number, number], [number, number]] {
+  const km = radiusMiles * 1.60934;
+  const dLat = km / 110.574;
+  const dLng = km / (111.32 * Math.cos((centre.lat * Math.PI) / 180));
+  return [
+    [centre.lng - dLng, centre.lat - dLat],
+    [centre.lng + dLng, centre.lat + dLat],
+  ];
 }
 
 function ringPolygon(centre: LatLng, radiusMiles: number): GeoJSON.Feature {

@@ -23,6 +23,9 @@ export default function SchoolCard({
   const color = RATING_COLORS[s.ofsted];
   const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
   const stale = year != null && new Date().getFullYear() - year > 4;
+  // Schools link to DfE compare-school-performance; nurseries (no DfE URN) to their Ofsted report.
+  const nameHref = s.urn ? dfePerformanceUrl(s.urn) : s.ofstedReport;
+  const nameTitle = s.urn ? "DfE — compare school performance" : "Ofsted report";
 
   return (
     <div
@@ -45,14 +48,14 @@ export default function SchoolCard({
       style={{ borderLeftColor: color }}
     >
       <div className="flex items-baseline justify-between gap-2">
-        {s.urn ? (
+        {nameHref ? (
           <a
-            href={dfePerformanceUrl(s.urn)}
+            href={nameHref}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
             className="min-w-0 truncate text-[15px] font-semibold leading-tight text-[var(--primary)] hover:underline"
-            title="DfE — compare school performance"
+            title={nameTitle}
           >
             {s.name}
           </a>
