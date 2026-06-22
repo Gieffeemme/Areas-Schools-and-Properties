@@ -111,9 +111,10 @@ export async function fetchSchools(
   radiusMiles: number,
 ): Promise<School[]> {
   const radiusM = Math.round(radiusMiles * 1609.34);
-  // amenity=school = primary/secondary/all-through; kindergarten = nurseries; college = sixth-form
-  // & FE colleges (post-16). Together these populate the full age-range filter.
-  const AMENITIES = ["school", "kindergarten", "college"];
+  // amenity=school = primary/secondary/all-through; kindergarten + childcare = nurseries/daycare
+  // (OSM tags both); college = sixth-form & FE colleges (post-16). Together these populate the
+  // full age-range filter.
+  const AMENITIES = ["school", "kindergarten", "childcare", "college"];
   const q =
     `[out:json][timeout:25];(` +
     AMENITIES.map(
@@ -203,7 +204,7 @@ export async function fetchSchools(
 // Best-effort age-range phase from OSM tags. amenity is the strongest signal (kindergarten =
 // nursery, college = post-16); otherwise infer from explicit ages, then ISCED levels.
 function phaseFromTags(tags: Record<string, string>): string | undefined {
-  if (tags["amenity"] === "kindergarten") return "Nursery";
+  if (tags["amenity"] === "kindergarten" || tags["amenity"] === "childcare") return "Nursery";
   if (tags["amenity"] === "college") return "College";
 
   const min = parseInt(tags["min_age"] ?? "", 10);
