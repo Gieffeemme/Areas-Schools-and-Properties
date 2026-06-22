@@ -25,11 +25,17 @@ export default function LayerControl({
   onToggle,
   imdDomain,
   onImdDomain,
+  crimeCats,
+  crimeExcluded,
+  onToggleCrimeCat,
 }: {
   active: Set<string>;
   onToggle: (id: string) => void;
   imdDomain: string;
   onImdDomain: (d: string) => void;
+  crimeCats: string[];
+  crimeExcluded: string[];
+  onToggleCrimeCat: (c: string) => void;
 }) {
   return (
     <div className="absolute right-3 top-3 z-10 w-52 rounded-xl border border-[var(--border)] bg-white/95 p-3 shadow-lg backdrop-blur">
@@ -68,6 +74,23 @@ export default function LayerControl({
                 ))}
               </select>
             )}
+            {l.id === "crime" && active.has("crime") && crimeCats.length > 0 && (
+              <ul className="mt-1.5 max-h-40 space-y-1 overflow-auto pl-5">
+                {crimeCats.map((c) => (
+                  <li key={c}>
+                    <label className="flex cursor-pointer items-center gap-1.5 text-xs text-[var(--muted)]">
+                      <input
+                        type="checkbox"
+                        checked={!crimeExcluded.includes(c)}
+                        onChange={() => onToggleCrimeCat(c)}
+                        className="accent-[var(--primary)]"
+                      />
+                      <span>{prettyCat(c)}</span>
+                    </label>
+                  </li>
+                ))}
+              </ul>
+            )}
           </li>
         ))}
       </ul>
@@ -76,4 +99,8 @@ export default function LayerControl({
       </p>
     </div>
   );
+}
+
+function prettyCat(slug: string): string {
+  return slug.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase());
 }

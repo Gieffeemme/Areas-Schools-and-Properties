@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import type { GeoJSONSource, Map as MbMap } from "mapbox-gl";
+import type { GeoJSONSource, Map as MbMap, FilterSpecification } from "mapbox-gl";
 import { LatLng, School } from "@/lib/types";
 import { gradeDisplay } from "@/lib/reportCard";
 
@@ -15,10 +15,11 @@ interface Props {
   crimePoints: GeoJSON.FeatureCollection | null;
   deprivationPoints: GeoJSON.FeatureCollection | null;
   imdDomain: string;
+  crimeExcluded?: string[]; // crime categories to hide from the heatmap
 }
 
 // mapbox-gl is imported dynamically inside the effect so it never evaluates during SSR.
-export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints, deprivationPoints, imdDomain }: Props) {
+export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints, deprivationPoints, imdDomain, crimeExcluded }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MbMap | null>(null);
   const loadedRef = useRef(false);
@@ -183,6 +184,22 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
     if (loadedRef.current) apply();
     else map.once("load", apply);
   }, [imdDomain]);
+
+  // Filter the crime heatmap to the selected categories (`crimeExcluded` = the unchecked ones).
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (!map.getLayer("crime-heat")) return;
+      const ex = crimeExcluded ?? [];
+      const filter = ex.length
+        ? (["!", ["in", ["get", "category"], ["literal", ex]]] as FilterSpecification)
+        : null;
+      map.setFilter("crime-heat", filter);
+    };
+    if (loadedRef.current) apply();
+    else map.once("load", apply);
+  }, [crimeExcluded]);
 
   // Toggle layer visibility.
   useEffect(() => {

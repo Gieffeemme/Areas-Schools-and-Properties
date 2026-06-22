@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import PostcodeSearch from "./PostcodeSearch";
 import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
@@ -17,6 +17,16 @@ export default function MapExplorer() {
   const [deprivation, setDeprivation] = useState<GeoJSON.FeatureCollection | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
   const [imdDomain, setImdDomain] = useState("overall");
+  const [crimeExcluded, setCrimeExcluded] = useState<string[]>([]);
+  const crimeCats = useMemo(
+    () =>
+      crime
+        ? [...new Set(crime.features.map((f) => String(f.properties?.category ?? "")).filter(Boolean))].sort()
+        : [],
+    [crime],
+  );
+  const toggleCrimeCat = (cat: string) =>
+    setCrimeExcluded((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 
   const search = useCallback(async (postcode: string): Promise<AreaReport | null> => {
     setLoading(true);
@@ -100,12 +110,16 @@ export default function MapExplorer() {
                 crimePoints={crime}
                 deprivationPoints={deprivation}
                 imdDomain={imdDomain}
+                crimeExcluded={crimeExcluded}
               />
               <LayerControl
                 active={active}
                 onToggle={toggle}
                 imdDomain={imdDomain}
                 onImdDomain={setImdDomain}
+                crimeCats={crimeCats}
+                crimeExcluded={crimeExcluded}
+                onToggleCrimeCat={toggleCrimeCat}
               />
             </>
           ) : (
