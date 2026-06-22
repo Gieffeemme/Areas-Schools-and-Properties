@@ -274,6 +274,16 @@ For agents working in this repo: the Bash cwd can drift back to a sibling projec
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
 in-tool browser preview is sandboxed and can't load this app).
 
+> **⚠️ Known setup issue — TO ADDRESS.** These sessions have been run from an *unrelated* sibling
+> workspace (the `Whatson` project), with `area-intel` only an additional working directory. Two
+> consequences leak from that: (1) the built-in **Preview** integration is bound to the Whatson root,
+> so it can't load this app and just nags to start a preview server after every edit (harmless, but
+> noise — ignore it); (2) `area-intel`-specific permissions (`curl localhost`, `node` scripts over
+> `area-intel/src/data`, the Vercel URL, …) have accumulated in **`Whatson/.claude/settings.local.json`**,
+> tangling two projects that have nothing in common. **Fix (later):** run `area-intel` from its own
+> workspace root with its own `.claude/` settings, and prune the area-intel entries out of Whatson's
+> local settings. Until then: verify via `tsc` / `build` / `curl` + the live URL.
+
 ---
 
 ## 10. Run, refresh, deploy
