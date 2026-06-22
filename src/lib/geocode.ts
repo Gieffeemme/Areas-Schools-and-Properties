@@ -41,6 +41,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           postcode: r.postcode,
           district: r.admin_district,
           region: r.region,
+          country: r.country,
           constituency: r.parliamentary_constituency,
           lsoa: r.lsoa,
           lsoaCode,
@@ -67,6 +68,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           postcode: r.outcode,
           district: Array.isArray(r.admin_district) ? r.admin_district[0] : undefined,
           region: Array.isArray(r.region) ? r.region[0] : undefined,
+          country: Array.isArray(r.country) ? r.country[0] : undefined,
         },
       };
     }

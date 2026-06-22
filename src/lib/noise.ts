@@ -1,9 +1,11 @@
 import { LatLng, NoiseSource, NoiseSummary } from "./types";
 
 // Environmental noise at a point, from Defra's strategic noise maps (Round 4 — a 2021 snapshot for
-// England) served as GeoServer WMS rasters. Live point-query (no committed dataset), cached with the
-// rest of the area report; the underlying maps are static (a 5-year cycle) so we let Next cache the
-// upstream fetches hard. Defra's GeoServer wants a browser User-Agent.
+// England) served as GeoServer WMS rasters. Live point-query (no committed dataset); the assembled
+// area report is what gets cached (Upstash, 6 h). We deliberately DON'T cache the individual WMS
+// reads (`no-store`): a definitive reading and a transient empty response are both HTTP 200, so
+// caching would risk freezing a spurious gap, and a same-URL retry would just re-read it. Defra's
+// GeoServer wants a browser User-Agent.
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36";
 
@@ -21,19 +23,9 @@ const SOURCES = [
   },
 ] as const;
 
-const REVALIDATE = 60 * 60 * 24 * 30; // 30 days — Defra republishes on a 5-year cycle
 const HALF_DEG = 0.0006; // ~50 m half-box around the point
 
-// One WMS GetFeatureInfo against a raster layer → the modelled dB at the point, or null when the
-// queried pixel is NoData. The maps are modelled on a 10 m grid with a lower cutoff of 40 dB (Lden)
-// / 35 dB (Lnight), and GeoServer returns GRAY_INDEX 0 for anything below that — i.e. no significant
-// source at this point. No valid modelled value falls between 0 and the cutoff, so >0 means real.
-async function queryLayer(
-  wms: string,
-  layer: string,
-  centre: LatLng,
-  signal: AbortSignal,
-): Promise<number | null> {
+function infoUrl(wms: string, layer: string, centre: LatLng): string {
   // CRS:84 keeps coordinates in lon,lat order, sidestepping the WMS 1.3.0 EPSG:4326 axis-order trap.
   const bbox = [
     centre.lng - HALF_DEG,
@@ -56,41 +48,67 @@ async function queryLayer(
     info_format: "application/json",
     feature_count: "1",
   });
-  const res = await fetch(`${wms}?${qs}`, {
-    headers: { "User-Agent": UA },
-    signal,
-    next: { revalidate: REVALIDATE },
-  });
-  if (!res.ok) throw new Error(`Defra noise WMS returned ${res.status}`);
-  const data = (await res.json()) as {
-    features?: { properties?: { GRAY_INDEX?: number } }[];
-  };
+  return `${wms}?${qs}`;
+}
+
+// One WMS GetFeatureInfo read. The maps are modelled on a 10 m grid with a lower cutoff of 40 dB
+// (Lden) / 35 dB (Lnight); below that GeoServer returns a NoData sentinel (GRAY_INDEX 0 or negative,
+// or an empty feature collection), so a positive value is the only "has noise" signal:
+//   number > 0  → modelled dB at the point
+//   null        → no modelled noise here (below the cutoff / NoData)
+//   undefined   → the read itself failed (network, HTTP status, bad JSON); the caller retries once
+//                 and treats an all-undefined result as a service outage, not a quiet area.
+async function readPixel(url: string, signal: AbortSignal): Promise<number | null | undefined> {
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: { "User-Agent": UA }, signal, cache: "no-store" });
+  } catch {
+    return undefined;
+  }
+  if (!res.ok) return undefined;
+  let data: { features?: { properties?: { GRAY_INDEX?: number } }[] };
+  try {
+    data = (await res.json()) as typeof data;
+  } catch {
+    return undefined;
+  }
   const v = data.features?.[0]?.properties?.GRAY_INDEX;
   return typeof v === "number" && v > 0 ? Math.round(v) : null;
+}
+
+// Resolves to number | null (both definitive) or undefined when the read failed even after a retry —
+// the caller distinguishes a single failed metric from a wholesale outage. Never rejects.
+async function queryLayer(
+  wms: string,
+  layer: string,
+  centre: LatLng,
+  signal: AbortSignal,
+): Promise<number | null | undefined> {
+  const url = infoUrl(wms, layer, centre);
+  let r = await readPixel(url, signal);
+  if (r === undefined) r = await readPixel(url, signal); // one retry for a transient/empty response
+  return r;
 }
 
 export async function fetchNoise(centre: LatLng): Promise<NoiseSummary> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 12000);
   try {
-    // [roadLden, roadLnight, railLden, railLnight] — each fails independently.
-    const settled = await Promise.allSettled(
+    // [roadLden, roadLnight, railLden, railLnight] — queryLayer never rejects.
+    const results = await Promise.all(
       SOURCES.flatMap((s) => [
         queryLayer(s.wms, s.lden, centre, ctrl.signal),
         queryLayer(s.wms, s.lnight, centre, ctrl.signal),
       ]),
     );
-    // A point genuinely below threshold returns 0 (→ null), which is a valid "quiet" result. Only a
-    // wholesale outage (every call rejected) is an error worth surfacing.
-    if (settled.every((r) => r.status === "rejected")) {
+    // A point below threshold returns null, a valid "quiet" result. Only a wholesale outage (every
+    // read failed → all undefined) is an error worth surfacing as "noise temporarily unavailable".
+    if (results.every((r) => r === undefined)) {
       throw new Error("Defra noise service is unavailable");
     }
-    const val = (i: number) =>
-      settled[i].status === "fulfilled"
-        ? (settled[i] as PromiseFulfilledResult<number | null>).value
-        : null;
-    const road: NoiseSource = { lden: val(0), lnight: val(1) };
-    const rail: NoiseSource = { lden: val(2), lnight: val(3) };
+    const v = (i: number) => results[i] ?? null; // undefined (failed) or null → null
+    const road: NoiseSource = { lden: v(0), lnight: v(1) };
+    const rail: NoiseSource = { lden: v(2), lnight: v(3) };
     return { road, rail, year: "2021" };
   } finally {
     clearTimeout(timer);

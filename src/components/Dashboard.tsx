@@ -255,7 +255,10 @@ function SidePanels({
   const amenities = <AmenitiesPanel amenities={report.amenities} />;
   const rankings = <RankingsPanel report={report} />;
   const broadband = <BroadbandPanel broadband={report.broadband} />;
-  const noise = <NoisePanel noise={report.noise} />;
+  // Defra noise is England-only; hide the panel elsewhere (report.noise is null there because the
+  // lookup was skipped, so within England a null unambiguously means the service failed).
+  const noise =
+    report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
 
   if (route === "property") {
     return (

@@ -40,12 +40,15 @@ export async function GET(req: NextRequest) {
 
   // The three data layers run in parallel and fail independently — one outage shouldn't
   // blank the whole dashboard.
+  // Defra strategic noise is England-only; skip the lookup elsewhere (geocoding is UK-wide) so we
+  // neither show a false "quiet" nor a spurious error for Scotland/Wales/NI.
+  const wantNoise = facts.country === "England";
   const [schoolsR, crimeR, pricesR, amenitiesR, noiseR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
     fetchAmenities(centre),
-    fetchNoise(centre),
+    wantNoise ? fetchNoise(centre) : Promise.resolve(null),
   ]);
 
   const errors: SourceError[] = [];
@@ -67,7 +70,7 @@ export async function GET(req: NextRequest) {
     errors.push({ source: "amenities", message: reason(amenitiesR) });
 
   const noise = noiseR.status === "fulfilled" ? noiseR.value : null;
-  if (noiseR.status === "rejected")
+  if (wantNoise && noiseR.status === "rejected")
     errors.push({ source: "noise", message: reason(noiseR) });
 
   const broadband = broadbandForLaua(facts.lauaCode);

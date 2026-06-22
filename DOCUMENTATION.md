@@ -205,8 +205,8 @@ map remounts and re-fits when any of those change.
   **Parent View**. Nurseries deep-link to the live Ofsted page.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (OSM/Overpass — shops, transport,
-  GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail — Lden/Lnight at the
-  point), Property prices, Property checks (EA flood).
+  GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail, England — Lden/Lnight
+  at the point), Property prices, Property checks (EA flood).
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 
@@ -253,7 +253,9 @@ These cost real time to discover — don't re-learn them:
   geometry, no point-in-polygon. Use `crs=CRS:84` (lon,lat) to dodge the WMS 1.3.0 EPSG:4326
   axis-order trap; road and rail are in **different workspaces** (rail lives in the `noise-data`
   workspace, road in `road-noise-all-metrics-england-round-4`). The legacy `/arcgis/rest/` paths are
-  dead (500).
+  dead (500). It's an **England-only** dataset (out-of-coverage points return empty / `0` / a negative
+  sentinel inconsistently), so `/api/area` calls `fetchNoise()` only when `facts.country === "England"`
+  and the dashboard hides the panel elsewhere.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the

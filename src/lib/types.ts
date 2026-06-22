@@ -187,6 +187,7 @@ export interface AreaFacts {
   postcode: string;
   district?: string;
   region?: string;
+  country?: string; // "England" | "Scotland" | "Wales" | "Northern Ireland" (postcodes.io)
   constituency?: string;
   lsoa?: string; // LSOA name (display)
   lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
