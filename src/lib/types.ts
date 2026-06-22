@@ -92,6 +92,17 @@ export interface School {
   };
 }
 
+// A school/nursery name-search hit (from the GIAS + Early Years registers). `id` matches School.id
+// so the UI can auto-open the matching card after running the area report at `postcode`.
+export interface SchoolMatch {
+  id: string; // "gias/{urn}" or "ey/{urn}"
+  name: string;
+  phase?: string;
+  postcode: string;
+  lat: number;
+  lng: number;
+}
+
 export interface FloodSummary {
   status: "warning-area" | "alert-area" | "clear"; // does an EA flood area contain the point
   areaName?: string; // description of the containing flood area

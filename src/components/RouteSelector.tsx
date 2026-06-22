@@ -3,12 +3,6 @@
 import { ROUTES, Route } from "@/lib/routes";
 
 const ICONS: Record<Route, React.ReactElement> = {
-  school: (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M12 4 2 9l10 5 10-5-10-5Z" />
-      <path d="M6 11.5V16c0 1.1 2.7 2.5 6 2.5s6-1.4 6-2.5v-4.5" />
-    </svg>
-  ),
   area: (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M9 6 3 4v14l6 2 6-2 6 2V6l-6-2-6 2Z" />
@@ -54,7 +48,7 @@ export default function RouteSelector({
   }
 
   return (
-    <div className="grid gap-3 sm:grid-cols-3">
+    <div className="grid gap-3 sm:grid-cols-2">
       {ROUTES.map((r) => {
         const active = value === r.id;
         return (

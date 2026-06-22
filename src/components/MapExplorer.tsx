@@ -6,7 +6,7 @@ import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
 import SchoolCard from "./SchoolCard";
 import SchoolDetail from "./SchoolDetail";
-import { AreaReport, School } from "@/lib/types";
+import { AreaReport, School, SchoolMatch } from "@/lib/types";
 
 export default function MapExplorer() {
   const [report, setReport] = useState<AreaReport | null>(null);
@@ -17,7 +17,7 @@ export default function MapExplorer() {
   const [deprivation, setDeprivation] = useState<GeoJSON.FeatureCollection | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
 
-  const search = useCallback(async (postcode: string) => {
+  const search = useCallback(async (postcode: string): Promise<AreaReport | null> => {
     setLoading(true);
     setError(null);
     setCrime(null);
@@ -27,13 +27,21 @@ export default function MapExplorer() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setReport(data);
+      return data as AreaReport;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setReport(null);
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const goToSchool = async (m: SchoolMatch) => {
+    const data = await search(m.postcode);
+    const hit = data?.schools.find((s) => s.id === m.id);
+    if (hit) setSelected(hit);
+  };
 
   const toggle = useCallback(
     async (id: string) => {
@@ -74,7 +82,7 @@ export default function MapExplorer() {
     <div className="flex h-[calc(100vh-57px)] flex-col">
       <div className="border-b border-[var(--border)] bg-white px-4 py-3">
         <div className="mx-auto max-w-xl">
-          <PostcodeSearch onSearch={search} loading={loading} />
+          <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} />
         </div>
         {error && <p className="mx-auto mt-2 max-w-xl text-sm text-red-700">{error}</p>}
       </div>

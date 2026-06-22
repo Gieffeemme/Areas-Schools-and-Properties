@@ -1,4 +1,4 @@
-export type Route = "school" | "area" | "property";
+export type Route = "area" | "property";
 
 export interface RouteDef {
   id: Route;
@@ -9,23 +9,16 @@ export interface RouteDef {
   sub: string;
 }
 
-// The three pathways from the brief. Each tailors the default view; all share one data engine.
+// "Find a school" and "Research an area" were the same postcode search, so they're merged: the
+// search box now takes a postcode OR a school name. "Check a property" stays distinct (address-led).
 export const ROUTES: RouteDef[] = [
   {
-    id: "school",
-    label: "Find a school",
-    emoji: "🎓",
-    blurb: "Compare schools near a location by Ofsted & distance.",
-    headline: "Find the right school",
-    sub: "Every school near a postcode with its Ofsted grade, phase and distance — no move required.",
-  },
-  {
     id: "area",
-    label: "Research an area",
+    label: "Schools & area",
     emoji: "🏘️",
-    blurb: "Schools, crime, prices & deprivation for a neighbourhood.",
-    headline: "Know an area before you move",
-    sub: "Schools, crime, property prices and deprivation around any UK postcode — one place, open data.",
+    blurb: "Search a postcode or a school name — schools, nurseries, crime, prices & deprivation.",
+    headline: "Explore an area — or find a school",
+    sub: "Search any UK postcode for schools, nurseries, crime, property prices and deprivation — or type a school name to jump straight to it.",
   },
   {
     id: "property",
@@ -40,5 +33,5 @@ export const ROUTES: RouteDef[] = [
 export const DEFAULT_ROUTE: Route = "area";
 
 export function routeDef(r: Route): RouteDef {
-  return ROUTES.find((x) => x.id === r) ?? ROUTES[1];
+  return ROUTES.find((x) => x.id === r) ?? ROUTES[0];
 }

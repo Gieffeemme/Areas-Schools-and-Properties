@@ -1,5 +1,5 @@
 import { distanceMiles } from "./distance";
-import { School, OfstedRating, LatLng, ParentView } from "./types";
+import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
 import ofstedByUrn from "@/data/ofsted-by-urn.json";
 import ks4ByUrn from "@/data/ks4-by-urn.json";
 import ks5ByUrn from "@/data/ks5-by-urn.json";
@@ -204,4 +204,35 @@ export async function fetchSchools(
 
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
+}
+
+/**
+ * Search schools + nurseries by name (for the search box). Matches are ranked: exact, then prefix,
+ * then "The "-prefixed, then any substring; ties broken by shorter name (closer match).
+ */
+export function searchSchools(query: string, limit = 8): SchoolMatch[] {
+  const q = query.trim().toLowerCase();
+  if (q.length < 2) return [];
+  const scored: { score: number; m: SchoolMatch }[] = [];
+  const rank = (name: string) => {
+    const lc = name.toLowerCase();
+    const i = lc.indexOf(q);
+    if (i < 0) return -1;
+    if (lc === q) return 0;
+    if (i === 0) return 1;
+    if (lc.startsWith("the " + q)) return 2;
+    return 3;
+  };
+  for (const g of gias) {
+    const score = rank(g.name);
+    if (score < 0) continue;
+    scored.push({ score, m: { id: `gias/${g.urn}`, name: g.name, phase: g.phase, postcode: g.postcode, lat: g.lat, lng: g.lng } });
+  }
+  for (const nrec of nurseries) {
+    const score = rank(nrec.name);
+    if (score < 0) continue;
+    scored.push({ score, m: { id: `ey/${nrec.urn}`, name: nrec.name, phase: "Nursery", postcode: nrec.postcode, lat: nrec.lat, lng: nrec.lng } });
+  }
+  scored.sort((a, b) => a.score - b.score || a.m.name.length - b.m.name.length);
+  return scored.slice(0, limit).map((s) => s.m);
 }

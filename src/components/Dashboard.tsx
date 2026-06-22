@@ -11,7 +11,7 @@ import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
 import { RATING_COLORS } from "@/lib/ratings";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
-import { AreaReport, OfstedRating, School, SourceError } from "@/lib/types";
+import { AreaReport, OfstedRating, School, SchoolMatch, SourceError } from "@/lib/types";
 
 export default function Dashboard() {
   const [route, setRoute] = useState<Route>(DEFAULT_ROUTE);
@@ -22,7 +22,7 @@ export default function Dashboard() {
   const [radius, setRadius] = useState(1);
   const [lastQuery, setLastQuery] = useState<string | null>(null);
 
-  const run = useCallback(async (postcode: string, r: number) => {
+  const run = useCallback(async (postcode: string, r: number): Promise<AreaReport | null> => {
     setLoading(true);
     setError(null);
     try {
@@ -32,9 +32,11 @@ export default function Dashboard() {
       setReport(data);
       setLastQuery(postcode);
       setRadius(r);
+      return data as AreaReport;
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
       setReport(null);
+      return null;
     } finally {
       setLoading(false);
     }
@@ -42,6 +44,12 @@ export default function Dashboard() {
 
   const search = (postcode: string) => run(postcode, radius);
   const changeRadius = (r: number) => (lastQuery ? run(lastQuery, r) : setRadius(r));
+  // School-name search: run the area report at the school's postcode, then open its card.
+  const goToSchool = async (m: SchoolMatch) => {
+    const data = await run(m.postcode, radius);
+    const hit = data?.schools.find((s) => s.id === m.id);
+    if (hit) setSelected(hit);
+  };
 
   if (!report && !loading) {
     const def = routeDef(route);
@@ -58,7 +66,7 @@ export default function Dashboard() {
         <RouteSelector value={route} onChange={setRoute} variant="cards" />
 
         <div className="mx-auto mt-6 max-w-xl">
-          <PostcodeSearch onSearch={search} loading={loading} large />
+          <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} large />
         </div>
         <p className="mt-4 text-center text-sm text-[var(--muted)]">
           or{" "}
@@ -74,7 +82,7 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 max-w-xl">
-        <PostcodeSearch onSearch={search} loading={loading} />
+        <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} />
       </div>
       {error && <Banner>{error}</Banner>}
       {loading && <Skeleton />}
@@ -106,6 +114,7 @@ function Report({
   onRadius: (r: number) => void;
 }) {
   const f = report.facts;
+  const [mapFull, setMapFull] = useState(false);
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -134,22 +143,36 @@ function Report({
         <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-[3fr_2fr]">
+      <div className={mapFull ? "" : "grid gap-4 lg:grid-cols-[3fr_2fr]"}>
         <div>
-          <div className="h-[420px] overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm sm:h-[520px] lg:h-[640px]">
+          <div
+            className={`relative overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm ${
+              mapFull ? "h-[78vh]" : "h-[420px] sm:h-[520px] lg:h-[640px]"
+            }`}
+          >
+            {/* key includes radius + layout so the (mount-only) Leaflet map re-fits when either changes */}
             <AreaMap
-              key={`${report.centre.lat},${report.centre.lng}`}
+              key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${mapFull ? "full" : "split"}`}
               centre={report.centre}
               schools={report.schools}
               radiusMiles={report.radiusMiles}
             />
+            <button
+              type="button"
+              onClick={() => setMapFull((v) => !v)}
+              className="absolute right-3 top-3 z-10 rounded-lg border border-[var(--border)] bg-white/95 px-2.5 py-1 text-xs font-medium shadow-sm transition hover:bg-white"
+            >
+              {mapFull ? "Show list →" : "⤢ Expand map"}
+            </button>
           </div>
           <Legend />
         </div>
 
-        <div className="space-y-4">
-          <SidePanels report={report} route={route} onSelect={onSelect} />
-        </div>
+        {!mapFull && (
+          <div className="space-y-4">
+            <SidePanels report={report} route={route} onSelect={onSelect} />
+          </div>
+        )}
       </div>
 
       {report.errors.length > 0 && <PartialNote errors={report.errors} />}
@@ -195,23 +218,7 @@ function SidePanels({
     );
   }
 
-  if (route === "school") {
-    return (
-      <>
-        {schools}
-        <a
-          href="/map"
-          className="block rounded-2xl border border-dashed border-[var(--border)] bg-white p-3 text-center text-sm font-medium text-[var(--primary)] shadow-sm transition hover:border-[var(--primary)]"
-        >
-          See these schools on the map →
-        </a>
-        {crime}
-        {price}
-      </>
-    );
-  }
-
-  // area
+  // area + schools (the default)
   return (
     <>
       {schools}
