@@ -1,96 +1,268 @@
-# Locale — Architecture & Roadmap
+# Locale — UK Area & School Intelligence — Architecture & Data Guide
+
+This is the reference for the whole system. If you're new here, read §3 (the core idea) and §6
+(the ETL catalogue) first — they explain 90% of how the app works and where the data comes from.
+
+---
 
 ## 1. What this is
 
-The MVP vertical slice of a UK area & school intelligence platform. It proves the brief's
-success condition end-to-end with **real, live, free data** and an honest UI, before the
-heavier data-engineering layers (bulk ETL + PostGIS) are built.
+A map-first web app: enter a **UK postcode** (or a **school name**) and get a dashboard of the
+**schools, crime, property prices and deprivation** around it, plus a deep per-school detail view.
+A Locrating-style "area & school intelligence" tool. No login. England-focused for school data
+(school registers and DfE performance data are England-only; crime/prices/geocoding are UK-wide).
 
-## 2. Request flow
+- **Live:** https://areas-schools-and-properties.vercel.app
+- **Repo:** `Gieffeemme/Areas-Schools-and-Properties` — **push to `main` → Vercel auto-deploys.**
+
+---
+
+## 2. Stack & ground rules
+
+- **Next.js 16 (App Router) · React 19 · TypeScript · Tailwind 4.**
+- **Maps:** Leaflet on the dashboard (`AreaMap`, OSM/CARTO tiles, no token); Mapbox GL on the
+  `/map` explorer page (`MapboxMap`, needs `NEXT_PUBLIC_MAPBOX_TOKEN`).
+- **No database.** All data is **committed JSON in `src/data/`**, produced by **Node ETL scripts
+  in `scripts/etl/*.mjs`**. At request time the API reads those files and joins live geocoding.
+  Refreshing data = re-run an ETL, commit the regenerated JSON, push.
+- **Caching:** optional Upstash Redis caches successful `/api/area` reports for 6 h (see §10). With
+  no Redis env vars it's a no-op.
+- ⚠️ **`AGENTS.md`: "This is NOT the Next.js you know."** Next 16 has breaking changes vs older
+  versions — read `node_modules/next/dist/docs/` before writing Next-API code (routing, data
+  fetching, config). Most app logic is plain React/TS and unaffected.
+
+---
+
+## 3. The core idea: register pins + URN / LSOA enrichment
+
+Everything hinges on two join keys.
+
+**Schools are pins from official registers** (not OpenStreetMap — OSM was removed):
+
+| Layer | File | Source register | Coords | ~Count |
+|-------|------|-----------------|--------|--------|
+| Schools | `gias.json` | **GIAS** (Get Information About Schools) | precise grid-ref (OSGB36→WGS84, <1 cm) | ~20,800 open England schools |
+| Nurseries | `nurseries.json` | **Ofsted Early Years register** | postcode centroid (register has no coords) | ~23,000 |
+
+**The DfE URN is the join key.** Every GIAS school carries its URN natively, so `fetchSchools()`
+enriches it with all the `*-by-urn.json` datasets — Ofsted grades, KS2/KS4/KS5 results, Parent
+View, pupil census, destinations, workforce, finance. Because URN is native (not fuzzy-matched
+like the old OSM approach), enrichment reaches ~all schools (e.g. 97% of secondaries have Ofsted).
+
+**Area deprivation joins by LSOA code.** `geocodePostcode()` reads `codes.lsoa` from postcodes.io
+and looks the seven IMD-2019 domain deciles up in `imd-domains-by-lsoa.json`.
+
+State **nursery schools** appear in GIAS too; they're de-duped against the Early Years register by
+postcode (GIAS wins — it has a school-framework Ofsted grade).
+
+---
+
+## 4. Request flow
 
 ```
-PostcodeSearch (client)
-   └── GET /api/area?postcode=…&radius=1
-         ├── geocodePostcode()  postcodes.io        → centre + facts (IMD, district…)
-         └── Promise.allSettled:
-               ├── fetchSchools()  Overpass/OSM      → school pins (+ URN, phase)
-               ├── fetchCrime()    police.uk         → totals, categories, vs-avg
-               └── fetchPrices()   HM Land Registry  → sales, average, by-year
-   └── AreaReport JSON → Dashboard renders map + panels
+PostcodeSearch / school-name search (client)
+  └─ GET /api/area?postcode=…&radius=1
+       ├─ geocodePostcode()        postcodes.io  → centre, facts (district, region, LSOA,
+       │                                            IMD overall decile + 7 domain deciles)
+       └─ Promise.allSettled:
+            ├─ fetchSchools()       gias.json + nurseries.json, enriched by URN  → School[]
+            ├─ fetchCrime()         police.uk     → totals, categories, vs-benchmark
+            └─ fetchPrices()        HM Land Registry → sales, averages, by-year
+  └─ AreaReport JSON → <Dashboard/> renders map + panels + detail drawer
 ```
 
-Geocoding is the only hard dependency. The three data layers **fail independently**
-(`Promise.allSettled`): one outage degrades a single panel, not the page. Successful reports
-are cached (optional Upstash) for 6h; **partial/failed reports are never cached** — the same
-principle used in the sibling Whatson project.
+- **Geocoding is the only hard dependency.** The three data layers **fail independently**
+  (`Promise.allSettled`) — one outage degrades a single panel, not the page.
+- **Only fully-successful reports are cached** (6 h). Partial/failed results are never cached.
+- **School-name search:** `GET /api/school-search?q=` → `searchSchools()` ranks GIAS + nurseries
+  (exact > prefix > "The "-prefix > substring); picking a result runs the area report at its
+  postcode and opens its card.
+- **Map overlay layers** (the `/map` explorer) are separate point-grid endpoints:
+  `/api/crime-points`, `/api/deprivation-points`, `/api/flood` — each samples a grid in the radius
+  and bulk reverse-geocodes via postcodes.io (no boundary polygons bundled).
 
-## 3. File map
+---
+
+## 5. Data files (`src/data/`)
+
+All committed; all regenerated by an ETL (§6). Sizes approximate.
+
+| File | Keyed by | Built by | Contents |
+|------|----------|----------|----------|
+| `gias.json` | (array) | `etl:gias` | school pins: name, postcode, phase, lat/lng, **pupils, gender, type, religion, age range, admissions** |
+| `nurseries.json` | (array) | `etl:nurseries` | nursery pins: name, postcode, lat/lng, Ofsted EY grade + sub-grades, places |
+| `ofsted-by-urn.json` | URN | `etl:schools` | overall Ofsted grade, date, sub-judgements |
+| `ks4-by-urn.json` | URN | `etl:ks4` | Progress 8, Attainment 8, **% grade 5+/4+ in Eng & Maths**, EBacc, disadvantaged P8 |
+| `ks5-by-urn.json` | URN | `etl:ks5` | A-level avg grade, points/entry, AAB+, cohort |
+| `ks2-by-urn.json` | URN | `etl:ks2` | RWM expected/higher %, reading/writing/maths progress |
+| `census-by-urn.json` | URN | `etl:census` | % FSM, EAL, SEN (EHCP / support) |
+| `destinations-by-urn.json` | URN | `etl:destinations` | KS4 + KS5 sustained destinations (education/appren/employment/HE) |
+| `parentview-by-urn.json` | URN | `etl:parentview` | full Ofsted Parent View survey (all questions, % pos/neg) |
+| `workforce-by-urn.json` | URN | `etl:workforce` | pupil:teacher ratio, teacher FTE (latest year) |
+| `finance-by-urn.json` | URN | `etl:finance` | spend per pupil, revenue reserve, in-year balance |
+| `imd-domains-by-lsoa.json` | LSOA code | `etl:imd` | IMD-2019 decile for each of the 7 domains |
+| `benchmarks.json` | — | `etl:benchmarks` | sampled national crime & price distributions (for percentiles) |
+
+---
+
+## 6. ETL catalogue (`scripts/etl/*.mjs`)
+
+Each script is self-contained: `npm run etl:<name>`. Most also accept a year or a local file as
+an argument (see the script header). They write straight into `src/data/`. **The exact source
+column codes live in each script's header docstring** — the table below is the map.
+
+> **Naming gotcha:** `etl:schools` (`build-schools.mjs`) builds **Ofsted ratings**
+> (`ofsted-by-urn.json`), *not* the school register. The school **register/pins** are
+> `etl:gias` (`build-gias.mjs`). Historical name; don't confuse them.
+
+| Command | Output | Source |
+|---------|--------|--------|
+| `etl:gias` | `gias.json` | GIAS bulk "all establishments" CSV (`ea-edubase-api-prod.azurewebsites.net/.../edubasealldataYYYYMMDD.csv`). Open schools only; phase mapped; Easting/Northing → WGS84 via `osgbToWgs84`. Keeps NumberOfPupils, Gender, TypeOfEstablishment, ReligiousCharacter, Statutory{Low,High}Age, AdmissionsPolicy. |
+| `etl:nurseries` | `nurseries.json` | Ofsted "Childcare providers and inspections" MI (Early Years register), gov.uk statistical-data-sets. Active non-domestic EY settings; childminders dropped; postcode-geocoded via postcodes.io. |
+| `etl:schools` | `ofsted-by-urn.json` | Ofsted "state-funded schools inspections and outcomes" MI **xlsx** (GIAS has no Ofsted column). Overall grade + sub-judgements. |
+| `etl:ks4` | `ks4-by-urn.json` | DfE **Compare School Performance** `download-data?filters=KS4` (CSV). `P8MEA`, `ATT8SCR`, `PTL2BASICS_95/_94`, `PTEBACC_*`, `P8MEA_FSM6CLA1A`. |
+| `etl:ks5` | `ks5-by-urn.json` | Compare School Performance `filters=KS5`. A-level points/grade/AAB+/cohort. |
+| `etl:ks2` | `ks2-by-urn.json` | Compare School Performance `filters=KS2`. `PTRWM_EXP/HIGH`, `READPROG/WRITPROG/MATPROG`. |
+| `etl:census` | `census-by-urn.json` | Compare School Performance `filters=CENSUS`. `PNUMFSMEVER`, `PNUMEAL`, `PSENELSE`, `PSENELK`. |
+| `etl:destinations` | `destinations-by-urn.json` | Compare School Performance `filters=KS4DESTINATION` / `KS5DESTINATION`. |
+| `etl:parentview` | `parentview-by-urn.json` | Ofsted "Parent View: management information" **xlsx**, "School Level Data" sheet. |
+| `etl:workforce` | `workforce-by-urn.json` | **EES** (Explore Education Statistics) data set *"Pupil to teacher ratios - school level"* `f63c85d9-…`, CSV at `explore-education-statistics.service.gov.uk/data-catalogue/data-set/{id}/csv` (~62 MB, all years/geographies → keep `geographic_level=School`, latest year per URN). |
+| `etl:finance` | `finance-by-urn.json` | **FBIT** (Financial Benchmarking & Insights Tool) workbooks `financial-benchmarking-and-insights-tool.education.gov.uk/files/CFR_<yr>_Full_Data_Workbook.xlsx` (maintained) + `AAR_<yr>_download.xlsx` (academies). Both pre-compute Total Expenditure / Revenue Reserve / In-year Balance + pupils; AAR multi-trust rows deduped by URN. |
+| `etl:imd` | `imd-domains-by-lsoa.json` | **MHCLG** English Indices of Deprivation 2019, **File 7** ("all ranks, deciles and scores"), CSV at `assets.publishing.service.gov.uk/media/5dc407b4…/File_7_…csv`. Keeps the 7 domain deciles by LSOA-2011 code. |
+| `etl:benchmarks` | `benchmarks.json` | Samples N random English postcodes (postcodes.io) → police.uk crime counts + Land Registry LA average prices → sorted national distributions. `N=300 npm run etl:benchmarks`. |
+
+**Two DfE platforms are confusingly distinct** (this ate a session — see §9): KS2/KS4/KS5/CENSUS
+come from *Compare School Performance*; **workforce** is on *EES*; **finance** is on *FBIT*. They
+are not interchangeable and use different download mechanisms.
+
+---
+
+## 7. Code map
 
 ```
 src/
   app/
-    layout.tsx              header/footer, metadata, global theme
-    page.tsx                renders <Dashboard/>
-    api/area/route.ts       orchestrates the four sources → AreaReport
-    globals.css             Tailwind v4 + light theme tokens
+    page.tsx              → <Dashboard/>            (home: postcode/school search → report)
+    compare/page.tsx      → <Compare/>              (compare several areas side by side)
+    map/page.tsx          → <MapExplorer/>          (Mapbox explorer with overlay layers)
+    layout.tsx, globals.css
+    api/
+      area/route.ts            orchestrates geocode + schools + crime + prices → AreaReport (cached 6h)
+      school-search/route.ts   searchSchools() autocomplete
+      crime-points/route.ts    point-grid crime layer (police.uk)
+      deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
+      flood/route.ts           EA flood-risk lookup
+  lib/   (one concern each)
+    geocode.ts      postcode → centre + AreaFacts (IMD overall + domains)
+    schools.ts      fetchSchools() (GIAS+nurseries, URN-enriched), searchSchools(), all *-by-urn maps
+    imd.ts          imdDomainsForLsoa(code)
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()  ·  flood.ts  fetchFlood()
+    benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
+    phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
+    schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
+    routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales
+    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  types.ts  all shared types
   components/
-    Dashboard.tsx           client: search, loading/error, layout (Hero, Report, Legend…)
-    PostcodeSearch.tsx      input + example chips
-    AreaMap.tsx             Leaflet map, school pins coloured by Ofsted
-    SchoolsPanel.tsx        list within radius, distance, rating badges
-    CrimePanel.tsx          total, vs-average band, category bars
-    PricePanel.tsx          average, by-year bars, recent sales
-    Card.tsx / RatingBadge.tsx
-  lib/
-    geocode.ts  schools.ts  crime.ts  prices.ts   (one module per source)
-    cache.ts    (optional Redis)  ratings.ts  distance.ts  format.ts  types.ts
-  data/
-    ofsted-by-urn.json      ETL output (ships empty)
-scripts/etl/build-schools.mjs   GIAS → ofsted-by-urn.json
+    Dashboard.tsx        search, loading/error, Map/List toggle, Report + SidePanels
+    AreaMap.tsx          Leaflet map: radius ring + school pins (popup name → detail drawer)
+    SchoolControls.tsx   phase chips + collapsible Filters (Ofsted/gender/faith/grammar)
+    PhaseChips.tsx       the phase chip row (used inside SchoolControls)
+    SchoolsPanel.tsx     league-table list: sort + shortlist (★, localStorage)
+    SchoolCard.tsx       list card (pills: Ofsted, P8, GCSE%, Parent View; pupils in meta)
+    SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
+                         Pupil composition, Workforce, Finances, Parent View (full breakdown)
+    DeprivationPanel.tsx the 7 IMD domains as colour-graded deciles
+    CrimePanel · PricePanel · PropertyChecks · RouteSelector · PostcodeSearch
+    MapExplorer · MapboxMap · LayerControl   (the /map page)
+    Compare · CompareTable                   (the /compare page)
+    Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge   (primitives)
 ```
 
-## 4. Data sources & the two-bucket reality
+`AreaMap` is **keyed on `centre + radius + layout + filter signature`** so the (mount-only) Leaflet
+map remounts and re-fits when any of those change.
 
-The brief's sources split into two very different shapes, which dictates build order:
+---
 
-- **Live, no-key, query-on-demand** — postcodes.io, Overpass, police.uk, Land Registry REST.
-  No database needed. **These power the MVP.**
-- **Bulk downloads needing an ETL + PostGIS** — GIAS+Ofsted, DfE performance tables, IMD,
-  Ofcom broadband, EA flood polygons. Heavier; phased in next.
+## 8. Features (dashboard)
 
-Note: postcodes.io already returns the **IMD deprivation rank** per postcode, so a basic
-deprivation signal is live today without the bulk IMD ingest.
+- **Search:** postcode **or** school name (autocomplete); adjustable **radius** (½–5 mi).
+- **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar)
+  that drive the **map pins and the list together**.
+- **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,
+  Parent View; **shortlist** (★, localStorage). Metric sorts fall back to Ofsted then distance.
+- **School detail drawer:** Details (type/age/pupils/gender/faith/selective), Ofsted + sub-grades,
+  GCSE (incl. 5+/4+ E&M), A-level, KS2, Destinations, Pupil composition, **Workforce**,
+  **Finances** (surplus green / deficit red), full **Parent View** 14-question breakdown.
+- **Area panels:** **Deprivation (IMD 2019)** 7-domain breakdown, Crime (vs national percentile),
+  Property prices (median + by-year + recent sales), Property checks (EA flood), and a per-area IMD
+  chip. **Compare** several postcodes side by side. **`/map`** explorer with overlay layers.
 
-### Caveats (kept honest in the UI)
-- **Ofsted**: locations are OSM; ratings need the GIAS ETL (gov endpoint was 5xx at build time).
-- **Crime**: police.uk returns a fixed ~1-mile radius for the latest published month
-  (~2-month lag). "× average" is a *geographic* benchmark (~9.4 crimes/mo/sq mile); urban areas
-  run higher. Police Scotland coverage on police.uk is limited — examples are English postcodes.
-- **Prices**: exact-postcode sales only for now; a postcode-sector trend needs aggregation.
+---
 
-## 5. Design decisions
+## 9. Data-sourcing gotchas (read before re-sourcing anything)
 
-- **Leaflet, not Mapbox (yet).** Free/open, no token, already proven in the sibling repo, and
-  fine for pins + a ring + future choropleths. Revisit Mapbox GL when vector-tile heatmaps or
-  the B2B embeddable widget justify the token + usage billing.
-- **Light, map-first, "Monzo not gov.uk".** Card-based, rounded, mobile-first (panels stack
-  under the map below `lg`).
-- **No fabricated data.** Where a source is down or unmatched, the UI says so.
+These cost real time to discover — don't re-learn them:
 
-## 6. Roadmap → the rest of the brief's MVP
+- **gov.uk / DfE / Ofsted / EES / FBIT WAF-block plain `curl` / `WebFetch` (403).** Use **node
+  `fetch` with a browser `User-Agent`** (every ETL does). A `curl -I` / HEAD request also 403s even
+  with a UA — use GET.
+- **Three different DfE platforms, not interchangeable:** `compare-school-performance.service.gov.uk
+  /download-data?filters=` serves only **KS2 / KS4 / KS5 / CENSUS** (+ `KS4DESTINATION` /
+  `KS5DESTINATION`). `WORKFORCE` / `SWF` / `CFR` / `FINANCE` / `SPINE` / `ABSENCE` return 404/400 —
+  **workforce lives on EES**, **finance on FBIT** (two xlsx regimes: CFR maintained + AAR academies).
+- **`/api/area` caches successful reports for ~6 h by `postcode+radius`.** To verify a fresh deploy,
+  query a **cache key you haven't used since the deploy** (a new postcode or a different radius) —
+  otherwise you get the pre-deploy report. (A no-op without Redis env vars.)
+- **postcodes.io gives the LSOA *code* under `codes.lsoa`**; `result.lsoa` is the *name*. The IMD
+  domains join needs the code.
+- **`xlsx` is a project dependency** — use `import * as XLSX from "xlsx"; XLSX.read(buf, {type:"buffer"})`
+  for the Ofsted/Parent View/FBIT workbooks.
+- **Catchment areas** (the one big remaining gap) need **restricted NPD pupil-residence microdata**
+  via the ONS Secure Research Service — *not* free/open. Only approximable. Don't promise a clean build.
 
-1. **Ofsted ratings live** — run/host the GIAS ETL; add DfE KS2/GCSE/A-level trends (join by URN).
-2. **PostGIS/Supabase** — ingest GIAS, IMD, Land Registry, Ofcom, EA flood; move spatial
-   queries server-side; precompute price trends by sector.
-3. **Heatmap toggle layers** — crime, deprivation, prices, flood (Leaflet choropleth/heat first).
-4. **Broadband** — Ofcom Connected Nations lookup by postcode.
-5. **Amenities** — extend the existing Overpass call (parks, GP surgeries, supermarkets, transport).
-6. **School comparison table** — compare schools within X miles (data already in the report).
-7. **Catchment (phase 2)** — replace distance rings with real/estimated catchment polygons.
-8. **Rightmove browser extension** — reuse `/api/area` as the data API; inject a compact panel.
-9. **Monetisation hooks** — free vs subscription gating; `/api/area` as the B2B widget endpoint.
+For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
+`tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
+in-tool browser preview is sandboxed and can't load this app).
 
-## 7. Caching & config
+---
 
-Optional Upstash Redis via `KV_REST_API_URL` / `KV_REST_API_TOKEN` (see `.env.local.example`).
-Absent ⇒ caching is a no-op and the app hits live APIs directly. Deployable as-is to Vercel.
+## 10. Run, refresh, deploy
+
+```bash
+npm install
+npm run dev            # http://localhost:3000  (no keys needed; /map needs NEXT_PUBLIC_MAPBOX_TOKEN)
+npm run build          # production build
+npm run lint           # ESLint (a few pre-existing warnings in MapboxMap/PropertyChecks are known)
+node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json   # typecheck
+```
+
+- **Refresh data:** re-run the relevant `npm run etl:*` when the DfE/Ofsted/MHCLG source publishes a
+  newer year, then **commit the regenerated JSON** and push. ETL outputs are committed artifacts.
+- **Caching config:** Upstash via `KV_REST_API_URL` / `KV_REST_API_TOKEN` (see `.env.local.example`).
+- **Deploy:** push to `main` → Vercel builds and deploys automatically. Use the bare production URL,
+  not `…-<hash>.vercel.app` preview URLs (they pin to old commits).
+
+---
+
+## 11. Roadmap
+
+**Shipped — school-card parity with Locrating's free tier + more:** register-based pins, Ofsted +
+sub-grades, KS2/GCSE/A-level (incl. GCSE 5+ E&M), Parent View full breakdown, destinations, pupil
+composition, **workforce**, **finances**, GIAS metadata (pupils/gender/type/faith/grammar) + map
+filters, **IMD 7-domain deprivation breakdown**, crime vs benchmark, sold-price trends, EA flood,
+compare, Map/List, search-by-name.
+
+**Remaining (free data):** per-domain IMD **map layers** (recolour the map by a chosen domain —
+extends `/api/deprivation-points`); **amenities/POIs** (Overpass); **Defra noise**; **Ofcom
+broadband**; richer **crime filters** by category/time.
+
+**Gated:** **catchment areas** (restricted NPD microdata — §9).
+
+---
+
+## 12. About `pipelines/` and `supabase/`
+
+Those folders describe an **alternative Python + Postgres/PostGIS** ingestion approach that is **not
+the live data path.** The running app uses the **Node ETLs + committed JSON** documented above (no
+database). Treat `pipelines/` as exploratory/superseded unless a deliberate decision is made to move
+spatial data into Postgres.

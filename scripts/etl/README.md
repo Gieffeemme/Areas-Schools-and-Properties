@@ -1,32 +1,45 @@
-# ETL — Ofsted ratings
+# ETL scripts
 
-`build-schools.mjs` builds `src/data/ofsted-by-urn.json` from Ofsted's official **state-funded
-schools inspections and outcomes** management information (xlsx), keyed by URN. (GIAS, the
-schools register, does **not** contain Ofsted grades — they live in this separate Ofsted dataset.)
+Each script builds one committed JSON file in `src/data/` from a free/official UK source. They are
+self-contained Node scripts — run via `npm run etl:<name>`. There is **no database**; the app reads
+these JSON files directly and joins them by **URN** (schools) or **LSOA code** (deprivation).
 
-```json
-{ "100000": { "rating": "Outstanding", "date": "2018-05-16", "name": "City of London School" } }
-```
+Full catalogue with exact source URLs, column codes, and how the data is used:
+**[`../../DOCUMENTATION.md`](../../DOCUMENTATION.md) §5–§6.**
 
-The app joins these onto live OpenStreetMap school pins by **URN** (OSM tag `ref:edubase`).
-Until this file is populated, the UI shows ratings as "not loaded" rather than guessing.
+| Command | Output | What |
+|---------|--------|------|
+| `npm run etl:gias` | `gias.json` | school **register/pins** + metadata (pupils, gender, type, faith, age, admissions) |
+| `npm run etl:nurseries` | `nurseries.json` | nursery pins from the Ofsted Early Years register |
+| `npm run etl:schools` | `ofsted-by-urn.json` | **Ofsted ratings** + sub-grades (⚠️ *not* the register — that's `etl:gias`) |
+| `npm run etl:ks4` | `ks4-by-urn.json` | GCSE: Progress 8, Attainment 8, % grade 5+/4+ Eng & Maths, EBacc |
+| `npm run etl:ks5` | `ks5-by-urn.json` | A-level: points/entry, grade, AAB+, cohort |
+| `npm run etl:ks2` | `ks2-by-urn.json` | KS2: RWM expected/higher, reading/writing/maths progress |
+| `npm run etl:census` | `census-by-urn.json` | pupil characteristics: FSM, EAL, SEN |
+| `npm run etl:destinations` | `destinations-by-urn.json` | KS4 + KS5 sustained destinations |
+| `npm run etl:parentview` | `parentview-by-urn.json` | full Ofsted Parent View survey |
+| `npm run etl:workforce` | `workforce-by-urn.json` | pupil:teacher ratio, teacher FTE (EES) |
+| `npm run etl:finance` | `finance-by-urn.json` | spend/pupil, revenue reserve, in-year balance (FBIT) |
+| `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) |
+| `npm run etl:benchmarks` | `benchmarks.json` | sampled national crime & price distributions |
 
-## Run
+## Conventions & gotchas
 
-```bash
-npm run etl:schools                                   # download today's GIAS CSV from gov.uk
-GIAS_CSV_URL="https://…/edubasealldataYYYYMMDD.csv" npm run etl:schools
-node scripts/etl/build-schools.mjs ~/Downloads/edubasealldata.csv   # use a local file
-```
+- **gov.uk / DfE / Ofsted / EES / FBIT WAF-block plain `curl` (403).** The scripts fetch with a
+  **browser `User-Agent`** via node `fetch`. A `HEAD`/`curl -I` request 403s even with a UA — use GET.
+- Most performance scripts accept a **year** or a **local file** argument, e.g.
+  `node scripts/etl/build-ks4.mjs 2021-2022` or `node scripts/etl/build-ks4.mjs ./england_ks4final.csv`.
+- **`etl:schools` builds Ofsted ratings, `etl:gias` builds the register.** Don't confuse them.
+- **Three DfE platforms:** KS2/KS4/KS5/CENSUS/destinations → *Compare School Performance*;
+  workforce → *Explore Education Statistics*; finance → *Financial Benchmarking & Insights Tool*.
+  They are not interchangeable (see DOCUMENTATION.md §9).
 
-## If the download fails
+## Refreshing
 
-The gov.uk GIAS endpoint is date-stamped and occasionally returns `5xx`. When that happens,
-download **"Establishment fields CSV (all establishments)"** by hand from
-<https://get-information-schools.service.gov.uk/Downloads> and pass the path as an argument.
+Re-run the relevant `etl:*` when the source publishes a newer year, then **commit the regenerated
+JSON** and push (`main` auto-deploys). The JSON outputs are committed artifacts, not gitignored.
 
-## Next steps for richer school data
+## If a gov.uk download fails
 
-- KS2 / GCSE / A-level performance: DfE "compare school performance" annual CSVs (join by URN).
-- Improve OSM↔GIAS coverage for schools that lack `ref:edubase` (fuzzy match on name + postcode).
-- Distinguish independent vs state, age range, and admissions from GIAS columns.
+Date-stamped endpoints occasionally 5xx. Download the file by hand (the script header has the
+source page) and pass the local path as an argument, as above.

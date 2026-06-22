@@ -1,5 +1,10 @@
 # AreaIQ data pipelines
 
+> **⚠️ Status: NOT the live data path.** Production uses **Node ETLs (`scripts/etl/*.mjs`) →
+> committed JSON in `src/data/`**, with **no database** — see
+> [`../DOCUMENTATION.md`](../DOCUMENTATION.md). This Python + Postgres/PostGIS pipeline is an
+> earlier/alternative ingestion approach, kept for reference only; it does not power the app.
+
 Python ETL that loads the free/open UK datasets into Supabase (Postgres + PostGIS).
 The schema lives in [`../supabase/migrations/`](../supabase/migrations/).
 

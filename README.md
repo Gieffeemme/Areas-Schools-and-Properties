@@ -1,14 +1,12 @@
-# Locale — UK Area & School Intelligence (MVP)
+# Locale — UK Area & School Intelligence
 
-Enter a UK postcode → get a map-first dashboard of the **schools, crime, and property prices**
-around it, in ~one request, from free/open data. No login.
+Enter a UK **postcode** (or a **school name**) → a map-first dashboard of the **schools, crime,
+property prices and deprivation** around it, plus a deep per-school detail view. Free/open data,
+no login. A Locrating-style area & school platform.
 
 > Working name "Locale" is a placeholder — rename freely.
 
-This is the first vertical slice of the larger brief (a Locrating-style area/school platform).
-It deliberately nails the success condition first: _a parent enters a postcode and within
-seconds sees schools within 1 mile, crime relative to a national benchmark, and the local
-property price picture._
+**Live:** https://areas-schools-and-properties.vercel.app · push to `main` → Vercel auto-deploys.
 
 ## Quick start
 
@@ -17,40 +15,42 @@ npm install
 npm run dev          # http://localhost:3000
 ```
 
-No API keys required. Try a postcode like `SW11 6QT`, `M20 2RN`, `BS6 7XL`, or `LS6 3HN`.
+No API keys required for the dashboard (the `/map` explorer page needs `NEXT_PUBLIC_MAPBOX_TOKEN`).
+Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, or a school name.
 
 ## What's live (all real data, no fabrication)
 
-| Layer            | Source                                   | Notes |
-|------------------|------------------------------------------|-------|
-| Postcode → point | postcodes.io                             | + IMD deprivation decile, district, constituency |
-| Schools          | OpenStreetMap via Overpass               | live locations within 1 mile, any UK postcode |
-| Crime            | police.uk street-level crime             | ~1-mile radius, latest month, vs geographic average |
-| Property prices  | HM Land Registry Price Paid (linked data)| recorded sales for the exact postcode |
+| Layer | Source | Notes |
+|-------|--------|-------|
+| Postcode → point | postcodes.io | + IMD overall decile **and 7-domain breakdown**, district, region |
+| **Schools** | **GIAS register** (England) | ~20.8k open schools, precise grid-ref pins, + pupils/gender/type/faith/age/grammar |
+| **Nurseries** | **Ofsted Early Years register** | ~23k, postcode-geocoded, each Ofsted-rated |
+| **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View |
+| Crime | police.uk | ~1-mile radius, latest month, vs national percentile |
+| Property prices | HM Land Registry Price Paid | recorded sales, averages, by-year trend |
+| Deprivation | MHCLG IMD 2019 | overall + income/employment/education/health/crime/housing/living-environment deciles |
 
-### Ofsted ratings
-
-School **locations** are live. School **ratings** load from the official DfE/Ofsted dataset via
-an ETL — they are never guessed:
-
-```bash
-npm run etl:schools   # builds src/data/ofsted-by-urn.json (joined by URN)
-```
-
-Until that runs, ratings show as "not loaded". See [`scripts/etl/README.md`](scripts/etl/README.md).
-Source: Ofsted's "state-funded schools inspections and outcomes" management information (xlsx) —
-**not** GIAS, which has no Ofsted column. The latest cleanly-structured file is **as at Nov 2019**,
-so grades carry their inspection date; Ofsted retired single overall grades in Sept 2024.
+**How the data works:** schools are pins from official **registers**; every school's **DfE URN** is
+the join key to all the enrichment datasets (and **LSOA code** joins the IMD domains). There is
+**no database** — all data is committed JSON in `src/data/`, built by Node ETLs in `scripts/etl/`.
+See **[`DOCUMENTATION.md`](DOCUMENTATION.md)** for the full architecture, the ETL catalogue (what
+each dataset is, its source, and how to refresh it), and the data-sourcing gotchas.
 
 ## Honesty by design
 
-- Every panel names its data source.
-- The 1-mile ring is a **distance guide, not a catchment boundary** (catchment is phase 2).
-- Crime "× average" is a **geographic** benchmark, flagged as approximate.
-- Failed/partial upstream responses are surfaced (not hidden) and never cached.
+- Every panel names its data source; failed/partial upstream responses are surfaced, not hidden,
+  and never cached.
+- The radius ring is a **distance guide, not a catchment boundary** (catchment needs restricted
+  data — see `DOCUMENTATION.md` §9/§11).
+- Crime "vs average" is a **national percentile** benchmark; school grades carry their inspection
+  date (Ofsted retired single overall grades in Sept 2024).
 
 ## Stack
 
-Next.js 16 · React 19 · TypeScript · Tailwind 4 · Leaflet (OpenStreetMap/CARTO tiles) ·
-optional Upstash Redis caching. See [`DOCUMENTATION.md`](DOCUMENTATION.md) for architecture,
-the full feature roadmap from the brief, and design decisions (incl. Leaflet-vs-Mapbox).
+Next.js 16 · React 19 · TypeScript · Tailwind 4 · Leaflet (dashboard) + Mapbox GL (`/map`) ·
+optional Upstash Redis caching. Full details, file map and roadmap in
+**[`DOCUMENTATION.md`](DOCUMENTATION.md)**.
+```
+npm run lint     # ESLint        ·  npm run build  # production build
+npm run etl:gias # refresh a dataset (see DOCUMENTATION.md §6 for the full list)
+```
