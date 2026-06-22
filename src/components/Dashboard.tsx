@@ -74,7 +74,7 @@ export default function Dashboard() {
         <p className="mt-4 text-center text-sm text-[var(--muted)]">
           or{" "}
           <a href="/compare" className="font-medium text-[var(--primary)] hover:underline">
-            compare several areas side by side →
+            compare areas or schools side by side →
           </a>
         </p>
         {error && <Banner>{error}</Banner>}

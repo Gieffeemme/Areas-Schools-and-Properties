@@ -8,6 +8,7 @@ const nextConfig: NextConfig = {
   // reads them must list them here to get them copied into its serverless function bundle.
   outputFileTracingIncludes: {
     "/api/area": ["src/data/*.json"], // fetchSchools reads gias + every URN-keyed enrichment file
+    "/api/schools": ["src/data/*.json"], // fetchSchoolsByIds builds full schools (compare view)
     "/api/school-search": ["src/data/gias.json", "src/data/nurseries.json"], // searchSchools only
     "/api/deprivation-points": ["src/data/imd-domains-by-lsoa.json"], // imdDomainsForLsoa only
   },

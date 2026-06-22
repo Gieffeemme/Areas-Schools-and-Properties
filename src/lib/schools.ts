@@ -181,6 +181,11 @@ const giasNurseryPostcodes = memo(
   () => new Set(gias().filter((g) => g.phase === "Nursery").map((g) => g.postcode)),
 );
 
+// URN → record indexes, so one setting can be resolved by id without scanning the arrays
+// (used by fetchSchoolsByIds for the compare feature).
+const giasByUrn = memo(() => new Map(gias().map((g) => [g.urn, g])));
+const nurseriesByUrn = memo(() => new Map(nurseries().map((n) => [n.urn, n])));
+
 const round1 = (n: number) => Math.round(n * 10) / 10;
 
 /**
@@ -197,59 +202,7 @@ export async function fetchSchools(
   for (const g of gias()) {
     const d = distanceMiles(centre.lat, centre.lng, g.lat, g.lng);
     if (d > radiusMiles) continue;
-    const urn = g.urn;
-    const enr = ofstedMap()[urn];
-    const ks4 = ks4Map()[urn];
-    const ks5 = ks5Map()[urn];
-    const pv = pvMap()[urn];
-    const ks2 = ks2Map()[urn];
-    const census = censusMap()[urn];
-    const dest = destMap()[urn];
-    const wf = workforceMap()[urn];
-    const fin = financeMap()[urn];
-    schools.push({
-      id: `gias/${urn}`,
-      name: g.name,
-      lat: g.lat,
-      lng: g.lng,
-      distanceMiles: round1(d),
-      urn,
-      phase: g.phase,
-      pupils: g.pupils,
-      gender: g.gender,
-      type: g.type,
-      religion: g.religion,
-      ageLow: g.ageLow,
-      ageHigh: g.ageHigh,
-      selective: g.admissions === "Selective" || undefined,
-      ofsted: enr?.rating ?? (ofstedLoaded() ? "Not rated" : "Not loaded"),
-      ofstedDate: enr?.date,
-      progress8: ks4?.p8 ?? null,
-      attainment8: ks4?.att8 ?? null,
-      gcse5EM: ks4?.em5 ?? null,
-      gcse4EM: ks4?.em4 ?? null,
-      ks4Year: ks4?.year,
-      ebaccEntry: ks4?.ebaccEntry ?? null,
-      ebacc94: ks4?.ebacc94 ?? null,
-      disadvantagedP8: ks4?.disP8 ?? null,
-      alevel: ks5 ?? null,
-      parentViewHappy: pv?.happy ?? null,
-      parentViewResponses: pv?.responses,
-      parentView: pv?.q ?? null,
-      ofstedReport: enr?.report ?? ofstedReportUrl(urn),
-      ofstedSub: enr?.sub,
-      ks2: ks2 ?? null,
-      composition: census,
-      destinations: dest,
-      pupilTeacherRatio: wf?.ptr ?? null,
-      teachersFte: wf?.teachersFte ?? null,
-      staffFte: wf?.staffFte ?? null,
-      workforceYear: wf?.year,
-      financePerPupil: fin?.perPupil ?? null,
-      financeReserve: fin?.reserve ?? null,
-      financeInYear: fin?.inYear ?? null,
-      financeYear: fin?.year,
-    });
+    schools.push(buildGiasSchool(g, round1(d)));
   }
 
   // Nurseries from the Ofsted Early Years register (~23k). Skip any that are also a GIAS state
@@ -258,22 +211,7 @@ export async function fetchSchools(
     if (giasNurseryPostcodes().has(n.postcode)) continue;
     const d = distanceMiles(centre.lat, centre.lng, n.lat, n.lng);
     if (d > radiusMiles) continue;
-    schools.push({
-      id: `ey/${n.urn}`,
-      name: n.name,
-      lat: n.lat,
-      lng: n.lng,
-      distanceMiles: round1(d),
-      phase: "Nursery",
-      ofsted: n.rating ?? "Not rated",
-      ofstedDate: n.date,
-      ofstedSub: n.sub,
-      reportCard: reportCardMap()[n.urn] ?? null,
-      // EY register deep-links to the live provider page (type 16), which carries the new
-      // report-card grade the bulk MI hasn't published yet — so a re-inspection shows there.
-      ofstedReport: ofstedEarlyYearsUrl(n.urn),
-      places: n.places,
-    });
+    schools.push(buildNurserySchool(n, round1(d)));
   }
 
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
@@ -309,4 +247,102 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
   }
   scored.sort((a, b) => a.score - b.score || a.m.name.length - b.m.name.length);
   return scored.slice(0, limit).map((s) => s.m);
+}
+
+/** Build a full School from a GIAS record (+ all URN-keyed enrichments). `dist` is the distance from
+ *  the search centre, or 0 when there is none (the compare feature). */
+function buildGiasSchool(g: GiasRecord, dist: number): School {
+  const urn = g.urn;
+  const enr = ofstedMap()[urn];
+  const ks4 = ks4Map()[urn];
+  const ks5 = ks5Map()[urn];
+  const pv = pvMap()[urn];
+  const ks2 = ks2Map()[urn];
+  const census = censusMap()[urn];
+  const dest = destMap()[urn];
+  const wf = workforceMap()[urn];
+  const fin = financeMap()[urn];
+  return {
+    id: `gias/${urn}`,
+    name: g.name,
+    lat: g.lat,
+    lng: g.lng,
+    distanceMiles: dist,
+    urn,
+    phase: g.phase,
+    pupils: g.pupils,
+    gender: g.gender,
+    type: g.type,
+    religion: g.religion,
+    ageLow: g.ageLow,
+    ageHigh: g.ageHigh,
+    selective: g.admissions === "Selective" || undefined,
+    ofsted: enr?.rating ?? (ofstedLoaded() ? "Not rated" : "Not loaded"),
+    ofstedDate: enr?.date,
+    progress8: ks4?.p8 ?? null,
+    attainment8: ks4?.att8 ?? null,
+    gcse5EM: ks4?.em5 ?? null,
+    gcse4EM: ks4?.em4 ?? null,
+    ks4Year: ks4?.year,
+    ebaccEntry: ks4?.ebaccEntry ?? null,
+    ebacc94: ks4?.ebacc94 ?? null,
+    disadvantagedP8: ks4?.disP8 ?? null,
+    alevel: ks5 ?? null,
+    parentViewHappy: pv?.happy ?? null,
+    parentViewResponses: pv?.responses,
+    parentView: pv?.q ?? null,
+    ofstedReport: enr?.report ?? ofstedReportUrl(urn),
+    ofstedSub: enr?.sub,
+    ks2: ks2 ?? null,
+    composition: census,
+    destinations: dest,
+    pupilTeacherRatio: wf?.ptr ?? null,
+    teachersFte: wf?.teachersFte ?? null,
+    staffFte: wf?.staffFte ?? null,
+    workforceYear: wf?.year,
+    financePerPupil: fin?.perPupil ?? null,
+    financeReserve: fin?.reserve ?? null,
+    financeInYear: fin?.inYear ?? null,
+    financeYear: fin?.year,
+  };
+}
+
+/** Build a full School from an Ofsted Early Years (nursery) record. */
+function buildNurserySchool(n: NurseryRecord, dist: number): School {
+  return {
+    id: `ey/${n.urn}`,
+    name: n.name,
+    lat: n.lat,
+    lng: n.lng,
+    distanceMiles: dist,
+    phase: "Nursery",
+    ofsted: n.rating ?? "Not rated",
+    ofstedDate: n.date,
+    ofstedSub: n.sub,
+    reportCard: reportCardMap()[n.urn] ?? null,
+    // EY register deep-links to the live provider page (type 16), which carries the new
+    // report-card grade the bulk MI hasn't published yet — so a re-inspection shows there.
+    ofstedReport: ofstedEarlyYearsUrl(n.urn),
+    places: n.places,
+  };
+}
+
+/** Full School objects for specific ids ("gias/{urn}" | "ey/{urn}"), for the compare feature.
+ *  Distance is 0 (no search centre); unresolvable ids are skipped; order follows `ids`. */
+export function fetchSchoolsByIds(ids: string[]): School[] {
+  const out: School[] = [];
+  for (const id of ids) {
+    const slash = id.indexOf("/");
+    if (slash < 0) continue;
+    const kind = id.slice(0, slash);
+    const urn = id.slice(slash + 1);
+    if (kind === "gias") {
+      const g = giasByUrn().get(urn);
+      if (g) out.push(buildGiasSchool(g, 0));
+    } else if (kind === "ey") {
+      const n = nurseriesByUrn().get(urn);
+      if (n) out.push(buildNurserySchool(n, 0));
+    }
+  }
+  return out;
 }
