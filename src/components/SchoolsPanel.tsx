@@ -22,7 +22,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 ];
 
 // "Best" first; schools missing the metric sink below those that have it. Within an equal or
-// absent metric, a better Ofsted grade wins, then nearer distance — so e.g. a Parent View sort
+// absent metric, a better Ofsted grade wins, then nearer distance - so e.g. a Parent View sort
 // no longer lists a "Good" school above an "Outstanding" one among the schools that lack a Parent
 // View score (nurseries and preschools aren't in the survey at all).
 function comparator(key: SortKey): (a: School, b: School) => number {
@@ -51,7 +51,7 @@ function comparator(key: SortKey): (a: School, b: School) => number {
 
 const SHORTLIST_KEY = "areaintel:shortlist";
 // SchoolsPanel only renders client-side (after a search), so reading localStorage in the lazy
-// initializer is safe — no SSR pass renders it, hence no hydration mismatch.
+// initializer is safe - no SSR pass renders it, hence no hydration mismatch.
 function loadShortlist(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
@@ -184,12 +184,12 @@ export default function SchoolsPanel({
       {ofstedLoaded ? (
         <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
           Ofsted grades come from Ofsted’s published bulk data; new report cards (from Nov 2025)
-          aren’t included yet, so a recently re-inspected setting may show an older grade — open its
+          aren’t included yet, so a recently re-inspected setting may show an older grade - open its
           report to check. Independent schools aren’t Ofsted-rated.
         </p>
       ) : schools.length > 0 ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
-          Ofsted grades aren’t loaded — run{" "}
+          Ofsted grades aren’t loaded - run{" "}
           <code className="rounded bg-amber-100 px-1 font-mono">npm run etl:schools</code>.
         </p>
       ) : null}

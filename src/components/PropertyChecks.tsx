@@ -23,7 +23,7 @@ export default function PropertyChecks({ centre }: { centre: LatLng }) {
 
   const checks: Check[] = [
     floodCheck(flood),
-    { label: "Sold price history", status: "live", note: "HM Land Registry — see the prices panel" },
+    { label: "Sold price history", status: "live", note: "HM Land Registry - see the prices panel" },
     { label: "EPC & energy cost", status: "soon", note: "MHCLG EPC register" },
     { label: "Tenure (freehold / leasehold)", status: "soon", note: "HM Land Registry" },
     { label: "Council tax band", status: "soon", note: "VOA" },
@@ -61,10 +61,10 @@ export default function PropertyChecks({ centre }: { centre: LatLng }) {
 
 function floodCheck(flood: FloodSummary | null | "loading"): Check {
   if (flood === "loading") {
-    return { label: "Flood risk", status: "soon", note: "Environment Agency — checking…" };
+    return { label: "Flood risk", status: "soon", note: "Environment Agency - checking…" };
   }
   if (!flood) {
-    return { label: "Flood risk", status: "soon", note: "Environment Agency — temporarily unavailable" };
+    return { label: "Flood risk", status: "soon", note: "Environment Agency - temporarily unavailable" };
   }
   const where =
     flood.status === "warning-area"
@@ -77,7 +77,7 @@ function floodCheck(flood: FloodSummary | null | "loading"): Check {
     flood.activeWarnings > 0
       ? ` · ${flood.activeWarnings} active ${(flood.topSeverity ?? "warning").toLowerCase()} now`
       : "";
-  return { label: "Flood risk", status: "live", note: `Environment Agency — ${where}${name}${active}` };
+  return { label: "Flood risk", status: "live", note: `Environment Agency - ${where}${name}${active}` };
 }
 
 function truncate(s: string): string {

@@ -5,7 +5,7 @@ const SPARQL = "http://landregistry.data.gov.uk/landregistry/query";
 
 // The Price Paid linked-data API only matches an EXACT postcode, which is blank for most postcodes.
 // When that's sparse we widen to the postcode sector (e.g. "SW2 1") via the SPARQL endpoint's
-// STRSTARTS filter — still HM Land Registry, just a usable amount of history.
+// STRSTARTS filter - still HM Land Registry, just a usable amount of history.
 const MIN_EXACT = 6;
 const SECTOR_LIMIT = 250;
 

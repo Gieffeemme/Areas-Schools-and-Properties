@@ -15,7 +15,7 @@ export interface SchoolFilters {
   faith: "any" | "faith" | "secular";
   selective: boolean; // grammar (selective) admissions only
   rating: "any" | "good" | "outstanding";
-  // Whether to include each non-mainstream kind — all on by default (we don't hide real schools);
+  // Whether to include each non-mainstream kind - all on by default (we don't hide real schools);
   // unchecking a kind that's present removes it from the map + list together.
   showSpecial: boolean;
   showIndependent: boolean;
@@ -61,7 +61,7 @@ export function applyFilters(schools: School[], f: SchoolFilters): School[] {
   return schools.filter((s) => matchesFilters(s, eff));
 }
 
-// Which secondary filters are worth offering for this result set — hide controls that can't
+// Which secondary filters are worth offering for this result set - hide controls that can't
 // distinguish anything (e.g. no faith schools nearby, or every school is mixed).
 export function filterAvailability(schools: School[]): {
   genders: string[];

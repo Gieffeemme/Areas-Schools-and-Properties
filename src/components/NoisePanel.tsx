@@ -2,7 +2,7 @@ import { NoiseSource, NoiseSummary } from "@/lib/types";
 
 // Display bands for the modelled dB level. Breakpoints follow the standard END noise-map legend
 // (55/65/75 for Lden, 50/60/70 for Lnight). A null metric is below the mapping threshold (40 dB Lden
-// / 35 dB Lnight) — no significant source of that kind at this point.
+// / 35 dB Lnight) - no significant source of that kind at this point.
 type Band = { label: string; cls: string };
 const LOW: Band = { label: "Low", cls: "bg-emerald-100 text-emerald-800" };
 const MODERATE: Band = { label: "Moderate", cls: "bg-amber-100 text-amber-800" };
@@ -45,7 +45,7 @@ export default function NoisePanel({ noise }: { noise: NoiseSummary | null }) {
       <Head sub="at this location" />
       {allQuiet ? (
         <p className="mt-2 text-sm text-[var(--muted)]">
-          No significant road or rail noise is mapped here — modelled levels are below the 40 dB
+          No significant road or rail noise is mapped here - modelled levels are below the 40 dB
           daytime / 35 dB night-time threshold.
         </p>
       ) : (
@@ -56,7 +56,7 @@ export default function NoisePanel({ noise }: { noise: NoiseSummary | null }) {
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Source: Defra strategic noise mapping (Round 4, {noise.year}). Modelled level at the searched
-        point — Lden is the day–evening–night average, Lnight the night-time level. Areas quieter than
+        point - Lden is the day–evening–night average, Lnight the night-time level. Areas quieter than
         40 dB (35 dB at night) aren’t mapped.
       </p>
     </section>

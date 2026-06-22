@@ -1,4 +1,4 @@
-// Ofsted Parent View happiness — % who agree "My child is happy at this school".
+// Ofsted Parent View happiness - % who agree "My child is happy at this school".
 // Outlined pill (matches Progress8Badge) with a smiley + colour band.
 export default function ParentViewBadge({
   pct,
@@ -17,7 +17,7 @@ export default function ParentViewBadge({
           : { color: "#dc2626", face: "🙁" };
   return (
     <span
-      title={`Parent View — "My child is happy at this school": ${pct}% agree${
+      title={`Parent View - "My child is happy at this school": ${pct}% agree${
         responses != null ? ` (${responses} responses)` : ""
       }`}
       className="inline-flex shrink-0 items-center gap-0.5 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-semibold"

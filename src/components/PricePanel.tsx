@@ -39,7 +39,7 @@ export default function PricePanel({
       <p className="mt-1 text-xs text-[var(--muted)]">median sold price (all on record)</p>
       {sector && (
         <p className="mt-1 text-[11px] text-[var(--muted)]">
-          Exact-postcode sales were sparse — showing the wider {prices.area} sector.
+          Exact-postcode sales were sparse - showing the wider {prices.area} sector.
         </p>
       )}
 
@@ -94,7 +94,7 @@ function Source({
 }) {
   return (
     <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-      Source: HM Land Registry Price Paid — recorded sales for{" "}
+      Source: HM Land Registry Price Paid - recorded sales for{" "}
       {scope === "sector" ? "the surrounding postcode sector" : "this exact postcode"}.
       {benchmark
         ? ` Percentile is local-authority average vs a sample of ${benchmark.sampleSize} English authorities.`

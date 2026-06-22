@@ -5,9 +5,9 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Locale — UK area & school intelligence",
+  title: "Locale - UK area & school intelligence",
   description:
-    "Enter a UK postcode and see schools, crime, and property prices nearby — from free, open data. No login.",
+    "Enter a UK postcode and see schools, crime, and property prices nearby - from free, open data. No login.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -43,10 +43,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-8 border-t border-[var(--border)] py-5">
           <div className="mx-auto max-w-6xl space-y-1 px-4 text-xs text-[var(--muted)]">
             <p>
-              Data: postcodes.io · OpenStreetMap · police.uk · HM Land Registry · DfE · Ofsted —
+              Data: postcodes.io · OpenStreetMap · police.uk · HM Land Registry · DfE · Ofsted -
               free / open sources.
             </p>
-            <p>Figures are indicative — verify before making decisions.</p>
+            <p>Figures are indicative - verify before making decisions.</p>
+            <p>© Copyright GFM, 2026</p>
           </div>
         </footer>
       </body>

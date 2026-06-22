@@ -61,7 +61,7 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
       text: def.text,
       pos: d.pos,
       neg: d.neg,
-      note: def.naLabel && d.na != null ? `Not applicable for ${d.na}% — ${def.naLabel}` : undefined,
+      note: def.naLabel && d.na != null ? `Not applicable for ${d.na}% - ${def.naLabel}` : undefined,
     });
   }
   const rec = pv["14"];
@@ -74,7 +74,7 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
   const rc = s.reportCard ?? null;
   const grade = gradeDisplay(rc, s.ofsted);
-  // Independent schools are ISI-inspected, not Ofsted — show that honestly instead of "Not rated".
+  // Independent schools are ISI-inspected, not Ofsted - show that honestly instead of "Not rated".
   const indie = s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   const year = rc?.inspectionDate
     ? Number(rc.inspectionDate.slice(0, 4))
@@ -118,7 +118,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--primary)] hover:underline"
-                  title={dfeHref ? "DfE — compare school performance" : "Ofsted report"}
+                  title={dfeHref ? "DfE - compare school performance" : "Ofsted report"}
                 >
                   {s.name}
                 </a>
@@ -199,7 +199,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               </>
             ) : indie ? (
               <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
-                Independent school — inspected by the Independent Schools Inspectorate (ISI), not within
+                Independent school - inspected by the Independent Schools Inspectorate (ISI), not within
                 the state Ofsted framework, so we don’t hold an Ofsted grade or DfE performance data for
                 it. Use the link below for any published inspection report.
               </p>
@@ -220,7 +220,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 {s.phase === "Nursery" && (
                   <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
                     Grade is from Ofsted’s bulk data. Their new report cards (from Nov 2025) aren’t
-                    published in bulk yet, so a recent re-inspection may not show here — open the live
+                    published in bulk yet, so a recent re-inspection may not show here - open the live
                     report to check.
                   </p>
                 )}
@@ -244,11 +244,11 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 <Stat label="Grade 5+ Eng & Maths" value={pct(s.gcse5EM)} color={tint(s.gcse5EM, pctColor)} />
                 <Stat label="Grade 4+ Eng & Maths" value={pct(s.gcse4EM)} color={tint(s.gcse4EM, pctColor)} />
                 <Stat label="Progress 8" value={signed(s.progress8)} color={tint(s.progress8, p8Color)} />
-                <Stat label="Attainment 8" value={s.attainment8 != null ? String(s.attainment8) : "—"} />
+                <Stat label="Attainment 8" value={s.attainment8 != null ? String(s.attainment8) : "-"} />
                 <Stat label="EBacc entry" value={pct(s.ebaccEntry)} color={tint(s.ebaccEntry, pctColor)} />
                 <Stat label="EBacc grades 9–4" value={pct(s.ebacc94)} color={tint(s.ebacc94, pctColor)} />
                 <Stat
-                  label="Progress 8 — disadvantaged"
+                  label="Progress 8 - disadvantaged"
                   value={signed(s.disadvantagedP8)}
                   color={tint(s.disadvantagedP8, p8Color)}
                 />
@@ -261,12 +261,12 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <Stat
                   label="Average grade"
-                  value={al.grade ?? "—"}
+                  value={al.grade ?? "-"}
                   color={al.grade ? gradeColor(al.grade) : undefined}
                 />
-                <Stat label="Points per entry" value={al.aps != null ? al.aps.toFixed(2) : "—"} />
+                <Stat label="Points per entry" value={al.aps != null ? al.aps.toFixed(2) : "-"} />
                 <Stat label="AAB+ (2 facilitating)" value={pct(al.aabFac)} />
-                <Stat label="A-level cohort" value={al.pupils != null ? String(al.pupils) : "—"} />
+                <Stat label="A-level cohort" value={al.pupils != null ? String(al.pupils) : "-"} />
               </div>
             </Section>
           )}
@@ -317,7 +317,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                 <Stat label="FSM (last 6 yrs)" value={pct(comp.fsm)} />
                 <Stat label="EAL" value={pct(comp.eal)} />
-                <Stat label="SEN — EHC plan" value={pct(comp.senEhcp)} />
+                <Stat label="SEN - EHC plan" value={pct(comp.senEhcp)} />
                 <Stat label="SEN support" value={pct(comp.senSupport)} />
               </div>
             </Section>
@@ -328,15 +328,15 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <Stat
                   label="Pupil:teacher ratio"
-                  value={s.pupilTeacherRatio != null ? String(s.pupilTeacherRatio) : "—"}
+                  value={s.pupilTeacherRatio != null ? String(s.pupilTeacherRatio) : "-"}
                 />
                 <Stat
                   label="Teachers (FTE)"
-                  value={s.teachersFte != null ? s.teachersFte.toFixed(1) : "—"}
+                  value={s.teachersFte != null ? s.teachersFte.toFixed(1) : "-"}
                 />
                 <Stat
                   label="Total staff (FTE)"
-                  value={s.staffFte != null ? s.staffFte.toFixed(1) : "—"}
+                  value={s.staffFte != null ? s.staffFte.toFixed(1) : "-"}
                 />
               </div>
             </Section>
@@ -347,16 +347,16 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
                 <Stat
                   label="Spend per pupil"
-                  value={s.financePerPupil != null ? gbp(s.financePerPupil) : "—"}
+                  value={s.financePerPupil != null ? gbp(s.financePerPupil) : "-"}
                 />
                 <Stat
                   label="Revenue reserve"
-                  value={s.financeReserve != null ? gbp(s.financeReserve) : "—"}
+                  value={s.financeReserve != null ? gbp(s.financeReserve) : "-"}
                   color={balanceColor(s.financeReserve)}
                 />
                 <Stat
                   label="In-year balance"
-                  value={s.financeInYear != null ? gbp(s.financeInYear) : "—"}
+                  value={s.financeInYear != null ? gbp(s.financeInYear) : "-"}
                   color={balanceColor(s.financeInYear)}
                 />
               </div>
@@ -370,7 +370,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             <Section
               title="Parent View"
               href={s.urn ? parentViewUrl(s.urn) : undefined}
-              linkTitle="Ofsted Parent View — read parent reviews"
+              linkTitle="Ofsted Parent View - read parent reviews"
             >
               <div className="flex flex-wrap items-end gap-x-8 gap-y-2">
                 <div>
@@ -436,7 +436,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
 function Section({
   title,
   href,
-  linkTitle = "DfE — compare school performance",
+  linkTitle = "DfE - compare school performance",
   children,
 }: {
   title: string;
@@ -533,10 +533,10 @@ function areaSummary(areas: Partial<Record<ReportCardBand, number>>): string {
 }
 
 function signed(v: number | null | undefined): string {
-  return v == null ? "—" : `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
+  return v == null ? "-" : `${v > 0 ? "+" : ""}${v.toFixed(2)}`;
 }
 function pct(v: number | null | undefined): string {
-  return v == null ? "—" : `${v}%`;
+  return v == null ? "-" : `${v}%`;
 }
 function gbp(n: number): string {
   const v = Math.round(n);

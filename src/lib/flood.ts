@@ -13,7 +13,7 @@ interface AreaItem {
 
 /**
  * Environment Agency flood-risk signal for a point: which designated flood area (if any) actually
- * contains it — by point-in-polygon, not just proximity — plus any warnings in force nearby.
+ * contains it - by point-in-polygon, not just proximity - plus any warnings in force nearby.
  * Free, key-free flood-monitoring API.
  */
 export async function fetchFlood(centre: LatLng): Promise<FloodSummary> {
@@ -21,7 +21,7 @@ export async function fetchFlood(centre: LatLng): Promise<FloodSummary> {
   const candidates = ((list.items ?? []) as AreaItem[])
     .filter((a) => a.polygon)
     .sort((a, b) => near(centre, a) - near(centre, b))
-    .slice(0, 6); // nearest few — enough to cover the point without fetching every polygon
+    .slice(0, 6); // nearest few - enough to cover the point without fetching every polygon
 
   const containing = (
     await Promise.all(

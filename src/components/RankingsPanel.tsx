@@ -53,7 +53,7 @@ export default function RankingsPanel({ report }: { report: AreaReport }) {
               <div className="flex items-baseline justify-between gap-2 text-sm">
                 <dt className="text-[var(--muted)]">{r.label}</dt>
                 <dd className="font-semibold" style={r.neutral ? undefined : { color }}>
-                  {r.value ?? "—"}
+                  {r.value ?? "-"}
                 </dd>
               </div>
               {r.score != null && (

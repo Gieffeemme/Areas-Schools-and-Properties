@@ -27,7 +27,7 @@ export interface PhaseTab {
   count: number;
 }
 
-// Derives the chip tabs (All + each non-empty phase), plus the *effective* filter — which falls
+// Derives the chip tabs (All + each non-empty phase), plus the *effective* filter - which falls
 // back to "all" when the requested phase is empty or fewer than two phases exist (nothing to
 // filter between). Map pins and the list both use effFilter so they always stay in sync.
 export function phaseTabs(

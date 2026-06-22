@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   const cached = await cacheGet<AreaReport>(cacheKey);
   if (cached) return NextResponse.json(cached);
 
-  // Geocoding is the one hard dependency — if it fails, there's nothing to show.
+  // Geocoding is the one hard dependency - if it fails, there's nothing to show.
   let geo: GeocodeResult | null = null;
   try {
     geo = await geocodePostcode(postcode);
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
   }
   const { centre, facts } = geo;
 
-  // The three data layers run in parallel and fail independently — one outage shouldn't
+  // The three data layers run in parallel and fail independently - one outage shouldn't
   // blank the whole dashboard.
   // Defra strategic noise is England-only; skip the lookup elsewhere (geocoding is UK-wide) so we
   // neither show a false "quiet" nor a spurious error for Scotland/Wales/NI.
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     generatedAt: new Date().toISOString(),
   };
 
-  // Only cache a fully successful report — never freeze a partial/failed result.
+  // Only cache a fully successful report - never freeze a partial/failed result.
   if (errors.length === 0) await cacheSet(cacheKey, report, CACHE_TTL_SECONDS);
 
   return NextResponse.json(report);

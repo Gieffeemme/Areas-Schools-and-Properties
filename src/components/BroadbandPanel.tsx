@@ -1,7 +1,7 @@
 import { BroadbandSummary } from "@/lib/types";
 
 export default function BroadbandPanel({ broadband }: { broadband: BroadbandSummary | null }) {
-  if (!broadband) return null; // no LA match (e.g. an outcode-only search) — hide the panel
+  if (!broadband) return null; // no LA match (e.g. an outcode-only search) - hide the panel
 
   const rows = [
     { label: "Superfast (30+ Mbit/s)", value: broadband.superfast },
@@ -21,7 +21,7 @@ export default function BroadbandPanel({ broadband }: { broadband: BroadbandSumm
           <div key={r.label}>
             <div className="flex items-baseline justify-between gap-2 text-sm">
               <dt className="text-[var(--muted)]">{r.label}</dt>
-              <dd className="font-semibold tabular-nums">{r.value == null ? "—" : `${r.value}%`}</dd>
+              <dd className="font-semibold tabular-nums">{r.value == null ? "-" : `${r.value}%`}</dd>
             </div>
             {r.value != null && (
               <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
@@ -40,7 +40,7 @@ export default function BroadbandPanel({ broadband }: { broadband: BroadbandSumm
         </p>
       )}
       <p className="mt-2 text-[11px] leading-relaxed text-[var(--muted)]">
-        Source: Ofcom Connected Nations 2024 — % of premises across {titleCase(broadband.laName)}.
+        Source: Ofcom Connected Nations 2024 - % of premises across {titleCase(broadband.laName)}.
       </p>
     </section>
   );

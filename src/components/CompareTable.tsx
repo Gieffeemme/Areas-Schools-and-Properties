@@ -171,7 +171,7 @@ function Td({
 }
 
 function Muted() {
-  return <span className="text-[var(--muted)]">—</span>;
+  return <span className="text-[var(--muted)]">-</span>;
 }
 
 // Best (rated) setting near an area, ranked across both the legacy and report-card scales.

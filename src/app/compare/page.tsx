@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Compare from "@/components/Compare";
 
 export const metadata: Metadata = {
-  title: "Compare areas or schools — Locale",
+  title: "Compare areas or schools - Locale",
   description:
     "Compare UK areas or schools side by side: Ofsted, exam results, Parent View, crime, property prices and deprivation.",
 };

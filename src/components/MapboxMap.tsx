@@ -86,7 +86,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
           },
         });
 
-        // Deprivation (IMD) surface — sampled IMD deciles as a heatmap weighted so the most-deprived
+        // Deprivation (IMD) surface - sampled IMD deciles as a heatmap weighted so the most-deprived
         // deciles burn hottest. Inserted beneath the school pins so they stay visible and clickable.
         map.addSource("deprivation", { type: "geojson", data: deprivationPoints ?? EMPTY });
         map.addLayer(
@@ -97,7 +97,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
               "heatmap-weight": ["interpolate", ["linear"], ["get", domainProp(imdDomain)], 1, 1, 10, 0.08],
               "heatmap-radius": 32,
               "heatmap-opacity": 0.7,
-              // Indigo ramp — distinct from the amber/red crime heatmap.
+              // Indigo ramp - distinct from the amber/red crime heatmap.
               "heatmap-color": [
                 "interpolate", ["linear"], ["heatmap-density"],
                 0, "rgba(0,0,0,0)", 0.2, "#c7d2fe", 0.45, "#818cf8", 0.7, "#6366f1", 1, "#3730a3",

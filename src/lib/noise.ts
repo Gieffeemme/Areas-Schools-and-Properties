@@ -1,6 +1,6 @@
 import { LatLng, NoiseSource, NoiseSummary } from "./types";
 
-// Environmental noise at a point, from Defra's strategic noise maps (Round 4 — a 2021 snapshot for
+// Environmental noise at a point, from Defra's strategic noise maps (Round 4 - a 2021 snapshot for
 // England) served as GeoServer WMS rasters. Live point-query (no committed dataset); the assembled
 // area report is what gets cached (Upstash, 6 h). We deliberately DON'T cache the individual WMS
 // reads (`no-store`): a definitive reading and a transient empty response are both HTTP 200, so
@@ -56,7 +56,7 @@ function infoUrl(wms: string, layer: string, centre: LatLng): string {
 // sentinel means "no modelled noise here". So:
 //   number > 0  → modelled dB at the point
 //   null        → 0 / negative sentinel = genuinely no modelled noise at this point
-//   undefined   → the read yielded no value — network/HTTP/JSON error, OR an empty/absent feature.
+//   undefined   → the read yielded no value - network/HTTP/JSON error, OR an empty/absent feature.
 //                 Inside England an empty collection is a transient server blip (rural England still
 //                 returns a 0 feature), never real "quiet", so the caller retries (see queryLayer);
 //                 an all-undefined result is surfaced as a service outage, not a silent quiet area.
@@ -81,7 +81,7 @@ async function readPixel(url: string, signal: AbortSignal): Promise<number | nul
   return v > 0 ? Math.round(v) : null;
 }
 
-// Resolves to number | null (both definitive) or undefined when every attempt failed — the caller
+// Resolves to number | null (both definitive) or undefined when every attempt failed - the caller
 // distinguishes a single failed metric from a wholesale outage. Never rejects. Up to 3 attempts to
 // ride out a transient empty/blip; readPixel uses no-store, so each attempt re-hits the origin, and
 // an aborted (timed-out) signal makes the remaining attempts fail fast rather than hang.
@@ -103,7 +103,7 @@ export async function fetchNoise(centre: LatLng): Promise<NoiseSummary> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 12000);
   try {
-    // [roadLden, roadLnight, railLden, railLnight] — queryLayer never rejects.
+    // [roadLden, roadLnight, railLden, railLnight] - queryLayer never rejects.
     const results = await Promise.all(
       SOURCES.flatMap((s) => [
         queryLayer(s.wms, s.lden, centre, ctrl.signal),

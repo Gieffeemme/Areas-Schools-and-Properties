@@ -4,7 +4,7 @@ import { imdDomainsForLsoa } from "@/lib/imd";
 // Returns a deprivation (IMD) surface as a GeoJSON FeatureCollection for the area around a point.
 // We sample a grid of locations inside the search radius and reverse-geocode them in ONE bulk call
 // to postcodes.io, tagging each with its LSOA's English IMD 2019 decile (1 = most deprived).
-// No bundled dataset or LSOA boundaries needed — the same live source the area lookup already uses.
+// No bundled dataset or LSOA boundaries needed - the same live source the area lookup already uses.
 
 const ENGLAND_LSOA_COUNT = 32844; // matches the decile derivation in lib/geocode.ts
 
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
       .map((g) => {
         const r = g.result?.[0];
         const rank = r?.index_of_multiple_deprivation;
-        // English IMD only — postcodes.io exposes no comparable rank for the other nations.
+        // English IMD only - postcodes.io exposes no comparable rank for the other nations.
         if (!r || r.country !== "England" || typeof rank !== "number") return null;
         const overall = decileFromRank(rank);
         // Per-domain deciles for this point's LSOA drive the per-domain heatmap; fall back to the

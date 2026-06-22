@@ -6,7 +6,7 @@ import { ofstedReportUrl, ofstedEarlyYearsUrl } from "./links";
 import type { ReportCard } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
-// so `next build`'s type-checker never has to infer literal types for ~26 MB of JSON — that inference
+// so `next build`'s type-checker never has to infer literal types for ~26 MB of JSON - that inference
 // OOM-hung Vercel's 8 GB build machine. next.config.ts → outputFileTracingIncludes copies these files
 // into each serverless function's trace (the read path is dynamic, so @vercel/nft can't find them on
 // its own). Each dataset is parsed once per cold start and memoised.
@@ -147,7 +147,7 @@ interface NurseryRecord {
 const nurseries = memo(() => loadData<NurseryRecord[]>("nurseries.json"));
 
 // New-framework (Nov 2025+) EY report cards, scraped from the live provider pages by etl:report-cards
-// (the bulk MI doesn't carry them yet). Optional — an empty map until the ETL has produced the file.
+// (the bulk MI doesn't carry them yet). Optional - an empty map until the ETL has produced the file.
 const reportCardMap = memo<Record<string, ReportCard>>(() => {
   try {
     return loadData<Record<string, ReportCard>>("report-cards-by-urn.json");
@@ -156,7 +156,7 @@ const reportCardMap = memo<Record<string, ReportCard>>(() => {
   }
 });
 
-// GIAS — the DfE register of every school in England (build-gias.mjs, postcode-geocoded). The
+// GIAS - the DfE register of every school in England (build-gias.mjs, postcode-geocoded). The
 // authoritative source of school pins + phase, replacing OpenStreetMap (which missed schools and
 // guessed phase). URN is native, so every school joins to the enrichment data above.
 interface GiasRecord {
@@ -177,7 +177,7 @@ interface GiasRecord {
 }
 const gias = memo(() => loadData<GiasRecord[]>("gias.json"));
 // State nursery schools appear in GIAS too; dedupe them against the EY register by postcode so a
-// setting in both isn't listed twice (GIAS wins — it carries a school-framework Ofsted grade).
+// setting in both isn't listed twice (GIAS wins - it carries a school-framework Ofsted grade).
 const giasNurseryPostcodes = memo(
   () => new Set(gias().filter((g) => g.phase === "Nursery").map((g) => g.postcode)),
 );
@@ -192,7 +192,7 @@ const round1 = (n: number) => Math.round(n * 10) / 10;
 /**
  * Schools within `radiusMiles` of a point, from the GIAS register (enriched by URN with Ofsted,
  * KS2/KS4/KS5, Parent View, census and destinations), plus nurseries from the Ofsted Early Years
- * register. Both are committed, geocoded datasets — no live API call.
+ * register. Both are committed, geocoded datasets - no live API call.
  */
 export async function fetchSchools(
   centre: LatLng,
@@ -323,7 +323,7 @@ function buildNurserySchool(n: NurseryRecord, dist: number): School {
     ofstedSub: n.sub,
     reportCard: reportCardMap()[n.urn] ?? null,
     // EY register deep-links to the live provider page (type 16), which carries the new
-    // report-card grade the bulk MI hasn't published yet — so a re-inspection shows there.
+    // report-card grade the bulk MI hasn't published yet - so a re-inspection shows there.
     ofstedReport: ofstedEarlyYearsUrl(n.urn),
     places: n.places,
   };

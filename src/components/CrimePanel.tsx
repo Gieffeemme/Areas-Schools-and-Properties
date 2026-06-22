@@ -24,7 +24,7 @@ export default function CrimePanel({
       <div className={WRAP}>
         <Head sub="Within ~1 mile" />
         <p className="mt-2 text-sm text-white/60">
-          No police.uk crime data is published for this area — some forces (e.g. Greater Manchester)
+          No police.uk crime data is published for this area - some forces (e.g. Greater Manchester)
           don’t supply street-level data.
         </p>
       </div>

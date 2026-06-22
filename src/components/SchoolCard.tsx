@@ -5,7 +5,7 @@ import { happyColor, p8Color, pctColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl } from "@/lib/links";
 import Pill from "./Pill";
 
-const KIND_NEUTRAL = "#64748b"; // slate — a category tag, not a quality colour
+const KIND_NEUTRAL = "#64748b"; // slate - a category tag, not a quality colour
 
 const OFSTED_SHORT: Record<OfstedRating, string> = {
   Outstanding: "Outstanding",
@@ -13,7 +13,7 @@ const OFSTED_SHORT: Record<OfstedRating, string> = {
   "Requires improvement": "RI",
   Inadequate: "Inadequate",
   "Not rated": "Not rated",
-  "Not loaded": "—",
+  "Not loaded": "-",
 };
 
 export default function SchoolCard({
@@ -28,7 +28,7 @@ export default function SchoolCard({
   onToggleShortlist?: () => void;
 }) {
   const grade = gradeDisplay(s.reportCard, s.ofsted);
-  // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade — show
+  // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade - show
   // "Independent" rather than a misleading "Not rated". Special/alternative get a neutral type tag.
   const indie = s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   const kindTag = s.kind && s.kind !== "independent" ? KIND_LABEL[s.kind] : null;
@@ -40,7 +40,7 @@ export default function SchoolCard({
   const stale = !s.reportCard && year != null && new Date().getFullYear() - year > 4;
   // Schools link to DfE compare-school-performance; nurseries (no DfE URN) to their Ofsted report.
   const nameHref = s.urn ? dfePerformanceUrl(s.urn) : s.ofstedReport;
-  const nameTitle = s.urn ? "DfE — compare school performance" : "Ofsted report";
+  const nameTitle = s.urn ? "DfE - compare school performance" : "Ofsted report";
 
   return (
     <div
@@ -112,7 +112,7 @@ export default function SchoolCard({
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <Pill
           color={indie ? KIND_NEUTRAL : grade.colour}
-          title={indie ? "Independent — inspected by ISI, not Ofsted" : `Ofsted: ${grade.label}`}
+          title={indie ? "Independent - inspected by ISI, not Ofsted" : `Ofsted: ${grade.label}`}
         >
           {indie ? "Independent" : grade.isReportCard ? grade.label : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
         </Pill>

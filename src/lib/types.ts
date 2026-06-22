@@ -19,14 +19,14 @@ export type OfstedRating =
 export interface PvQuestion {
   pos?: number; // % positive (Strongly agree + Agree); for Q14, % who would recommend
   neg?: number; // % negative (Strongly disagree + Disagree)
-  na?: number; // % "not applicable" — Q4 "not been bullied", Q6 "no concerns raised"
+  na?: number; // % "not applicable" - Q4 "not been bullied", Q6 "no concerns raised"
   yes?: number; // Q7a only: % of parents reporting their child has SEND
 }
 // Keyed by question id: "1".."6","7a","7b","8".."14". Suppressed questions are absent.
 export type ParentView = Record<string, PvQuestion>;
 
 export interface School {
-  id: string; // "node/123" — OSM type/id
+  id: string; // "node/123" - OSM type/id
   name: string;
   lat: number;
   lng: number;
@@ -51,11 +51,11 @@ export interface School {
   gcse5EM?: number | null; // % achieving grade 5+ in English & Maths (headline "strong pass")
   gcse4EM?: number | null; // % achieving grade 4+ in English & Maths ("standard pass")
   ks4Year?: string; // e.g. "2022/23"
-  pupilTeacherRatio?: number | null; // pupils per teacher (FTE) — DfE School Workforce Census
+  pupilTeacherRatio?: number | null; // pupils per teacher (FTE) - DfE School Workforce Census
   teachersFte?: number | null; // teaching staff, full-time equivalent
   staffFte?: number | null; // all staff (teachers + support), full-time equivalent
   workforceYear?: string; // e.g. "2023/24"
-  financePerPupil?: number | null; // total expenditure per pupil (£) — DfE school finance
+  financePerPupil?: number | null; // total expenditure per pupil (£) - DfE school finance
   financeReserve?: number | null; // revenue reserve (£); negative = in deficit
   financeInYear?: number | null; // in-year balance (£)
   financeYear?: string; // e.g. "2024/25"
@@ -168,8 +168,8 @@ export interface PriceSummary {
   area: string; // display label for that geography, e.g. "SW2 1AA" or "SW2 1"
   sales: PriceSale[]; // most recent first (trimmed)
   count: number; // total sales returned
-  averagePrice: number | null; // mean — feeds the national price benchmark
-  medianPrice: number | null; // median — the headline figure (robust to commercial outliers)
+  averagePrice: number | null; // mean - feeds the national price benchmark
+  medianPrice: number | null; // median - the headline figure (robust to commercial outliers)
   byYear: PriceYear[];
 }
 

@@ -4,7 +4,7 @@ import { useRef, useState } from "react";
 import { SchoolMatch } from "@/lib/types";
 
 const EXAMPLES = ["SW11 6QT", "LS6 3HN", "S11 9AR", "L18 1JU"];
-// Full or partial UK postcode — if it looks like one, we run an area search rather than name search.
+// Full or partial UK postcode - if it looks like one, we run an area search rather than name search.
 const POSTCODE = /^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$/;
 
 export default function PostcodeSearch({

@@ -51,7 +51,7 @@ export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Prop
         maxZoom: 19,
       }).addTo(map);
 
-      // 1-mile distance guide — subtle, dashed
+      // 1-mile distance guide - subtle, dashed
       L.circle([centre.lat, centre.lng], {
         radius: radiusMetres,
         color: "#6366f1",
@@ -74,7 +74,7 @@ export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Prop
         .bindPopup("<strong>Your location</strong>");
 
       // School pins, coloured by Ofsted rating. The name is a button that opens
-      // the full detail drawer (via onSelect) — same as clicking a list card.
+      // the full detail drawer (via onSelect) - same as clicking a list card.
       schools.forEach((s) => {
         const g = gradeDisplay(s.reportCard, s.ofsted);
         const color = g.colour;

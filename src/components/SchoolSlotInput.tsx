@@ -22,7 +22,7 @@ export default function SchoolSlotInput({
   const ctrl = useRef<AbortController | null>(null);
 
   // Sync the text when a selection arrives from outside (e.g. hydrated from the URL). Only on a real
-  // selection — clearing (value=null) leaves whatever the user is typing intact.
+  // selection - clearing (value=null) leaves whatever the user is typing intact.
   useEffect(() => {
     if (value) setQ(value.name);
   }, [value]);

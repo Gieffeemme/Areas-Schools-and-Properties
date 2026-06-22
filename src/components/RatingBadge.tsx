@@ -8,7 +8,7 @@ const SHORT: Record<OfstedRating, string> = {
   "Requires improvement": "RI",
   Inadequate: "Inadequate",
   "Not rated": "Not rated",
-  "Not loaded": "—",
+  "Not loaded": "-",
 };
 
 export default function RatingBadge({

@@ -32,7 +32,7 @@ export default function DeprivationPanel({ facts }: { facts: AreaFacts }) {
         )}
       </header>
       <p className="mb-3 text-[11px] leading-snug text-[var(--muted)]">
-        Decile within England — <strong>1</strong> = most deprived 10%, <strong>10</strong> = least,
+        Decile within England - <strong>1</strong> = most deprived 10%, <strong>10</strong> = least,
         for this LSOA neighbourhood.
       </p>
       <ul className="space-y-2">
@@ -50,7 +50,7 @@ export default function DeprivationPanel({ facts }: { facts: AreaFacts }) {
                 )}
               </div>
               <span className="w-7 shrink-0 text-right font-semibold tabular-nums">
-                {d != null ? d : "—"}
+                {d != null ? d : "-"}
               </span>
             </li>
           );

@@ -49,7 +49,7 @@ export async function fetchCrime(centre: LatLng): Promise<CrimeSummary> {
   // Common case: the latest month police.uk publishes globally.
   let crimes = await fetchCrimesAt(centre);
 
-  // Some forces lag that global latest month and return empty — fall back across recent
+  // Some forces lag that global latest month and return empty - fall back across recent
   // months and take the newest one that actually has data.
   if (crimes.length === 0) {
     const results = await Promise.all(recentMonths(4).map((m) => fetchCrimesAt(centre, m)));

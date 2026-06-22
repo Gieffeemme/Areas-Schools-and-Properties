@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 // Returns police.uk street-level crime as a GeoJSON FeatureCollection for the ~1-mile circle
-// around a point — used to render the crime heatmap layer (no database needed).
+// around a point - used to render the crime heatmap layer (no database needed).
 
 interface PoliceCrime {
   category: string;

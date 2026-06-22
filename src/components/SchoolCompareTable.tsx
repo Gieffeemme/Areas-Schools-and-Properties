@@ -125,7 +125,7 @@ export default function SchoolCompareTable({
             ))}
           </MetricRow>
 
-          <MetricRow label="Parent View — happy">
+          <MetricRow label="Parent View - happy">
             {schools.map((s, i) => (
               <Td key={i} best={i === pvBest}>{pct(s.parentViewHappy)}</Td>
             ))}
@@ -150,7 +150,7 @@ export default function SchoolCompareTable({
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Green = strongest in the row. Many metrics apply only to certain phases (GCSE to secondaries,
-        KS2 to primaries, etc.), so “—” means not applicable. Ofsted shows the new report-card band
+        KS2 to primaries, etc.), so “-” means not applicable. Ofsted shows the new report-card band
         where one exists, otherwise the legacy grade.
       </p>
     </div>
@@ -184,7 +184,7 @@ function Td({ children, best }: { children: React.ReactNode; best?: boolean }) {
 }
 
 function Muted() {
-  return <span className="text-[var(--muted)]">—</span>;
+  return <span className="text-[var(--muted)]">-</span>;
 }
 
 function inspYear(s: School): number | null {
