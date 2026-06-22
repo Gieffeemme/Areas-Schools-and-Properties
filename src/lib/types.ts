@@ -47,6 +47,9 @@ export interface School {
   gcse5EM?: number | null; // % achieving grade 5+ in English & Maths (headline "strong pass")
   gcse4EM?: number | null; // % achieving grade 4+ in English & Maths ("standard pass")
   ks4Year?: string; // e.g. "2022/23"
+  pupilTeacherRatio?: number | null; // pupils per teacher (FTE) — DfE School Workforce Census
+  teachersFte?: number | null; // teaching staff, full-time equivalent
+  workforceYear?: string; // e.g. "2023/24"
   parentViewHappy?: number | null; // % agree "My child is happy" (Ofsted Parent View)
   parentViewResponses?: number;
   parentView?: ParentView | null; // full survey breakdown, keyed by question id ("1".."14","7a","7b")

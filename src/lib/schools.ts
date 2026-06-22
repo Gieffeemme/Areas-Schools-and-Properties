@@ -7,6 +7,7 @@ import parentviewByUrn from "@/data/parentview-by-urn.json";
 import ks2ByUrn from "@/data/ks2-by-urn.json";
 import censusByUrn from "@/data/census-by-urn.json";
 import destinationsByUrn from "@/data/destinations-by-urn.json";
+import workforceByUrn from "@/data/workforce-by-urn.json";
 import nurseriesData from "@/data/nurseries.json";
 import giasData from "@/data/gias.json";
 import { ofstedReportUrl } from "./links";
@@ -99,6 +100,13 @@ interface DestRecord {
 }
 const destMap = destinationsByUrn as Record<string, DestRecord>;
 
+interface WorkforceRecord {
+  ptr: number | null; // pupils per (qualified) teacher, FTE
+  teachersFte: number | null; // teaching staff, full-time equivalent
+  year: string;
+}
+const workforceMap = workforceByUrn as Record<string, WorkforceRecord>;
+
 // Ofsted Early Years register (postcode-geocoded by the nurseries ETL). Authoritative, England-wide.
 interface NurseryRecord {
   urn: string;
@@ -162,6 +170,7 @@ export async function fetchSchools(
     const ks2 = ks2Map[urn];
     const census = censusMap[urn];
     const dest = destMap[urn];
+    const wf = workforceMap[urn];
     schools.push({
       id: `gias/${urn}`,
       name: g.name,
@@ -196,6 +205,9 @@ export async function fetchSchools(
       ks2: ks2 ?? null,
       composition: census,
       destinations: dest,
+      pupilTeacherRatio: wf?.ptr ?? null,
+      teachersFte: wf?.teachersFte ?? null,
+      workforceYear: wf?.year,
     });
   }
 

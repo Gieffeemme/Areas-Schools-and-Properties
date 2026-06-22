@@ -16,7 +16,8 @@
     "etl:nurseries": "node scripts/etl/build-nurseries.mjs",
     "etl:gias": "node scripts/etl/build-gias.mjs",
     "etl:census": "node scripts/etl/build-census.mjs",
-    "etl:destinations": "node scripts/etl/build-destinations.mjs"
+    "etl:destinations": "node scripts/etl/build-destinations.mjs",
+    "etl:workforce": "node scripts/etl/build-workforce.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

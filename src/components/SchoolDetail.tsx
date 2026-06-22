@@ -89,6 +89,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const comp = s.composition;
   const hasComp =
     !!comp && (comp.fsm != null || comp.eal != null || comp.senEhcp != null || comp.senSupport != null);
+  const hasWorkforce = s.pupilTeacherRatio != null || s.teachersFte != null;
   const pv = s.parentView ?? null;
   const pvList = pv ? pvRows(pv) : [];
   const recommend = pv?.["14"]?.pos;
@@ -269,6 +270,21 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             </Section>
           )}
 
+          {hasWorkforce && (
+            <Section title={`Workforce${s.workforceYear ? ` · ${s.workforceYear}` : ""}`}>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                <Stat
+                  label="Pupil:teacher ratio"
+                  value={s.pupilTeacherRatio != null ? String(s.pupilTeacherRatio) : "—"}
+                />
+                <Stat
+                  label="Teachers (FTE)"
+                  value={s.teachersFte != null ? s.teachersFte.toFixed(1) : "—"}
+                />
+              </div>
+            </Section>
+          )}
+
           {typeof s.parentViewHappy === "number" && (
             <Section
               title="Parent View"
@@ -328,7 +344,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
 
           <p className="text-[11px] leading-relaxed text-[var(--muted)]">
             Coming next: catchment area and multi-year trends. Sources: GIAS, DfE performance
-            tables, Ofsted, postcodes.io.
+            tables, School Workforce Census, Ofsted, postcodes.io.
           </p>
         </div>
       </div>
