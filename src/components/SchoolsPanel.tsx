@@ -4,14 +4,26 @@ import { useMemo, useState } from "react";
 import { School } from "@/lib/types";
 import SchoolCard from "./SchoolCard";
 
-type PhaseFilter = "all" | "primary" | "secondary";
+type PhaseFilter = "all" | "nursery" | "primary" | "secondary" | "sixthform" | "allthrough";
 
-// All-through schools serve both phases, so they count under Primary and Secondary.
+// All-through schools serve every phase, so they also count under primary/secondary/sixth-form.
 function matches(s: School, f: PhaseFilter): boolean {
+  const p = s.phase;
   if (f === "all") return true;
-  if (f === "primary") return s.phase === "Primary" || s.phase === "All-through";
-  return s.phase === "Secondary" || s.phase === "All-through";
+  if (f === "nursery") return p === "Nursery";
+  if (f === "primary") return p === "Primary" || p === "All-through";
+  if (f === "secondary") return p === "Secondary" || p === "All-through";
+  if (f === "sixthform") return p === "Sixth form" || p === "College" || p === "All-through";
+  return p === "All-through"; // allthrough
 }
+
+const CATS: { key: PhaseFilter; label: string }[] = [
+  { key: "nursery", label: "Nursery" },
+  { key: "primary", label: "Primary" },
+  { key: "secondary", label: "Secondary" },
+  { key: "sixthform", label: "Sixth form / college" },
+  { key: "allthrough", label: "All-through" },
+];
 
 export default function SchoolsPanel({
   schools,
@@ -25,19 +37,25 @@ export default function SchoolsPanel({
   onSelect?: (s: School) => void;
 }) {
   const [filter, setFilter] = useState<PhaseFilter>("all");
-  const primaryCount = useMemo(() => schools.filter((s) => matches(s, "primary")).length, [schools]);
-  const secondaryCount = useMemo(() => schools.filter((s) => matches(s, "secondary")).length, [schools]);
-  // Only offer the filter when there's actually a mix to split.
-  const canFilter = primaryCount > 0 && secondaryCount > 0;
+  const counts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const cat of CATS) c[cat.key] = schools.filter((s) => matches(s, cat.key)).length;
+    return c;
+  }, [schools]);
+  const active = CATS.filter((c) => counts[c.key] > 0);
+  // Only offer the filter when there are at least two distinct categories to split.
+  const canFilter = active.length >= 2;
+  // If the selected category is empty for this result set (e.g. after a new search), fall back to All.
+  const effFilter: PhaseFilter =
+    canFilter && filter !== "all" && counts[filter] > 0 ? filter : "all";
   const shown = useMemo(
-    () => (canFilter && filter !== "all" ? schools.filter((s) => matches(s, filter)) : schools),
-    [schools, filter, canFilter],
+    () => (effFilter === "all" ? schools : schools.filter((s) => matches(s, effFilter))),
+    [schools, effFilter],
   );
 
   const tabs: { key: PhaseFilter; label: string; count: number }[] = [
     { key: "all", label: "All", count: schools.length },
-    { key: "primary", label: "Primary", count: primaryCount },
-    { key: "secondary", label: "Secondary", count: secondaryCount },
+    ...active.map((c) => ({ ...c, count: counts[c.key] })),
   ];
 
   return (
@@ -45,25 +63,25 @@ export default function SchoolsPanel({
       <header className="mb-2 flex items-baseline justify-between gap-2">
         <h2 className="text-sm font-semibold tracking-tight">Schools</h2>
         <span className="text-xs text-[var(--muted)]">
-          {filter !== "all" && canFilter
+          {effFilter !== "all"
             ? `${shown.length} of ${schools.length} · ${radiusMiles} mi`
             : `${schools.length} within ${radiusMiles} mile${radiusMiles === 1 ? "" : "s"}`}
         </span>
       </header>
 
       {canFilter && (
-        <div className="mb-2 inline-flex overflow-hidden rounded-lg border border-[var(--border)] bg-white text-xs">
+        <div className="mb-2 flex flex-wrap gap-1 text-xs">
           {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setFilter(t.key)}
-              className={`px-2.5 py-1 transition ${
-                filter === t.key
-                  ? "bg-[var(--primary)] font-semibold text-white"
-                  : "text-[var(--muted)] hover:bg-slate-50"
+              className={`rounded-md border px-2 py-1 transition ${
+                effFilter === t.key
+                  ? "border-[var(--primary)] bg-[var(--primary)] font-semibold text-white"
+                  : "border-[var(--border)] bg-white text-[var(--muted)] hover:bg-slate-50"
               }`}
             >
-              {t.label} <span className={filter === t.key ? "opacity-80" : "opacity-50"}>{t.count}</span>
+              {t.label} <span className={effFilter === t.key ? "opacity-80" : "opacity-50"}>{t.count}</span>
             </button>
           ))}
         </div>

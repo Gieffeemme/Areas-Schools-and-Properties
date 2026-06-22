@@ -111,11 +111,17 @@ export async function fetchSchools(
   radiusMiles: number,
 ): Promise<School[]> {
   const radiusM = Math.round(radiusMiles * 1609.34);
+  // amenity=school = primary/secondary/all-through; kindergarten = nurseries; college = sixth-form
+  // & FE colleges (post-16). Together these populate the full age-range filter.
+  const AMENITIES = ["school", "kindergarten", "college"];
   const q =
     `[out:json][timeout:25];(` +
-    `node["amenity"="school"](around:${radiusM},${centre.lat},${centre.lng});` +
-    `way["amenity"="school"](around:${radiusM},${centre.lat},${centre.lng});` +
-    `relation["amenity"="school"](around:${radiusM},${centre.lat},${centre.lng});` +
+    AMENITIES.map(
+      (a) =>
+        `node["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});` +
+        `way["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});` +
+        `relation["amenity"="${a}"](around:${radiusM},${centre.lat},${centre.lng});`,
+    ).join("") +
     `);out center tags;`;
 
   const ctrl = new AbortController();
@@ -194,18 +200,36 @@ export async function fetchSchools(
   return schools;
 }
 
+// Best-effort age-range phase from OSM tags. amenity is the strongest signal (kindergarten =
+// nursery, college = post-16); otherwise infer from explicit ages, then ISCED levels.
 function phaseFromTags(tags: Record<string, string>): string | undefined {
-  const isced = tags["isced:level"];
-  if (isced) {
-    if (/[01]/.test(isced) && !/[23]/.test(isced)) return "Primary";
-    if (/[23]/.test(isced)) return "Secondary";
-  }
+  if (tags["amenity"] === "kindergarten") return "Nursery";
+  if (tags["amenity"] === "college") return "College";
+
   const min = parseInt(tags["min_age"] ?? "", 10);
   const max = parseInt(tags["max_age"] ?? "", 10);
-  if (!Number.isNaN(max)) {
-    if (max <= 11) return "Primary";
-    if (!Number.isNaN(min) && min >= 11) return "Secondary";
-    return "All-through";
+  const lo = Number.isNaN(min) ? null : min;
+  const hi = Number.isNaN(max) ? null : max;
+  if (lo != null || hi != null) {
+    if (hi != null && hi <= 5) return "Nursery";
+    if (lo != null && lo >= 16) return "Sixth form";
+    if (lo != null && hi != null && lo <= 7 && hi >= 16) return "All-through";
+    if (hi != null && hi <= 11) return "Primary";
+    if ((hi != null && hi >= 12) || (lo != null && lo >= 11)) return "Secondary";
   }
+
+  const isced = tags["isced:level"];
+  if (isced) {
+    const has = (re: RegExp) => re.test(isced);
+    if (has(/0/) && !has(/[123]/)) return "Nursery";
+    const primary = has(/1/);
+    const lower = has(/2/);
+    const upper = has(/3/);
+    if (primary && (lower || upper)) return "All-through";
+    if (upper && !primary && !lower) return "Sixth form";
+    if (lower || upper) return "Secondary";
+    if (primary) return "Primary";
+  }
+
   return tags["school:type"] || tags["operator:type"] || undefined;
 }
