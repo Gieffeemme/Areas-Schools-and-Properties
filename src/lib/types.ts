@@ -207,8 +207,20 @@ export interface AreaBenchmarks {
 }
 
 export interface SourceError {
-  source: "schools" | "crime" | "prices";
+  source: "schools" | "crime" | "prices" | "amenities";
   message: string;
+}
+
+export interface AmenityCategory {
+  key: string;
+  label: string;
+  count: number;
+  nearestMiles: number | null; // distance to the nearest of this category, within the radius
+}
+
+export interface AmenitySummary {
+  radiusMiles: number; // ~1 mile around the point (walkable "what's nearby")
+  categories: AmenityCategory[];
 }
 
 export interface AreaReport {
@@ -219,6 +231,7 @@ export interface AreaReport {
   schools: School[];
   crime: CrimeSummary | null;
   prices: PriceSummary | null;
+  amenities: AmenitySummary | null;
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)

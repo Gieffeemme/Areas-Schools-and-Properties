@@ -3,6 +3,7 @@ import { geocodePostcode, GeocodeResult } from "@/lib/geocode";
 import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
+import { fetchAmenities } from "@/lib/amenities";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
@@ -37,10 +38,11 @@ export async function GET(req: NextRequest) {
 
   // The three data layers run in parallel and fail independently — one outage shouldn't
   // blank the whole dashboard.
-  const [schoolsR, crimeR, pricesR] = await Promise.allSettled([
+  const [schoolsR, crimeR, pricesR, amenitiesR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
+    fetchAmenities(centre),
   ]);
 
   const errors: SourceError[] = [];
@@ -57,6 +59,10 @@ export async function GET(req: NextRequest) {
   if (pricesR.status === "rejected")
     errors.push({ source: "prices", message: reason(pricesR) });
 
+  const amenities = amenitiesR.status === "fulfilled" ? amenitiesR.value : null;
+  if (amenitiesR.status === "rejected")
+    errors.push({ source: "amenities", message: reason(amenitiesR) });
+
   const benchmarks: AreaBenchmarks = {
     crime: crimeBenchmark(crime?.total),
     price: priceBenchmark(prices?.averagePrice ?? null),
@@ -71,6 +77,7 @@ export async function GET(req: NextRequest) {
     schools,
     crime,
     prices,
+    amenities,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),
     errors,
