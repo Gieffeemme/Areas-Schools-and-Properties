@@ -125,6 +125,15 @@ export interface SchoolMatch {
   lng: number;
 }
 
+// A place (town / city / suburb / borough) name-search hit, from postcodes.io Places (OS Open Names).
+export interface PlaceMatch {
+  id: string;
+  name: string; // e.g. "Leeds"
+  area?: string; // disambiguator, e.g. "West Yorkshire" / "Greater London"
+  lat: number;
+  lng: number;
+}
+
 export interface FloodSummary {
   status: "warning-area" | "alert-area" | "clear"; // does an EA flood area contain the point
   areaName?: string; // description of the containing flood area
@@ -186,6 +195,7 @@ export interface ImdDomains {
 
 export interface AreaFacts {
   postcode: string;
+  label?: string; // human place name for a town/city/area search (shown instead of the postcode)
   district?: string;
   region?: string;
   country?: string; // "England" | "Scotland" | "Wales" | "Northern Ireland" (postcodes.io)

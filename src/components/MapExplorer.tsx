@@ -6,7 +6,7 @@ import MapboxMap from "./MapboxMap";
 import LayerControl from "./LayerControl";
 import SchoolCard from "./SchoolCard";
 import SchoolDetail from "./SchoolDetail";
-import { AreaReport, School, SchoolMatch } from "@/lib/types";
+import { AreaReport, PlaceMatch, School, SchoolMatch } from "@/lib/types";
 
 export default function MapExplorer() {
   const [report, setReport] = useState<AreaReport | null>(null);
@@ -28,13 +28,13 @@ export default function MapExplorer() {
   const toggleCrimeCat = (cat: string) =>
     setCrimeExcluded((prev) => (prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]));
 
-  const search = useCallback(async (postcode: string): Promise<AreaReport | null> => {
+  const load = useCallback(async (url: string): Promise<AreaReport | null> => {
     setLoading(true);
     setError(null);
     setCrime(null);
     setDeprivation(null);
     try {
-      const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=1`);
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setReport(data);
@@ -47,6 +47,16 @@ export default function MapExplorer() {
       setLoading(false);
     }
   }, []);
+
+  const search = useCallback(
+    (postcode: string) => load(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=1`),
+    [load],
+  );
+  const goToPlace = useCallback(
+    (place: PlaceMatch) =>
+      load(`/api/area?lat=${place.lat}&lng=${place.lng}&label=${encodeURIComponent(place.name)}&radius=1`),
+    [load],
+  );
 
   const goToSchool = async (m: SchoolMatch) => {
     const data = await search(m.postcode);
@@ -93,7 +103,12 @@ export default function MapExplorer() {
     <div className="flex h-[calc(100vh-57px)] flex-col">
       <div className="border-b border-[var(--border)] bg-white px-4 py-3">
         <div className="mx-auto max-w-xl">
-          <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} />
+          <PostcodeSearch
+            onSearch={search}
+            onPickSchool={goToSchool}
+            onPickPlace={goToPlace}
+            loading={loading}
+          />
         </div>
         {error && <p className="mx-auto mt-2 max-w-xl text-sm text-red-700">{error}</p>}
       </div>
@@ -132,7 +147,7 @@ export default function MapExplorer() {
         <aside className="overflow-y-auto border-t border-[var(--border)] bg-[var(--background)] p-4 lg:border-l lg:border-t-0">
           {report ? (
             <>
-              <h2 className="text-lg font-bold tracking-tight">{report.facts.postcode}</h2>
+              <h2 className="text-lg font-bold tracking-tight">{report.facts.label ?? report.facts.postcode}</h2>
               <p className="text-xs text-[var(--muted)]">
                 {[report.facts.district, report.facts.region].filter(Boolean).join(", ")}
               </p>

@@ -18,7 +18,9 @@ import SchoolControls from "./SchoolControls";
 import { RATING_COLORS } from "@/lib/ratings";
 import { SchoolFilters, DEFAULT_FILTERS, applyFilters } from "@/lib/schoolFilters";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
-import { AreaReport, OfstedRating, School, SchoolMatch, SourceError } from "@/lib/types";
+import { AreaReport, OfstedRating, PlaceMatch, School, SchoolMatch, SourceError } from "@/lib/types";
+
+type Query = { kind: "postcode"; value: string } | { kind: "place"; place: PlaceMatch };
 
 export default function Dashboard() {
   const [route, setRoute] = useState<Route>(DEFAULT_ROUTE);
@@ -27,17 +29,22 @@ export default function Dashboard() {
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
   const [radius, setRadius] = useState(1);
-  const [lastQuery, setLastQuery] = useState<string | null>(null);
+  // The last query, so a radius change re-runs the same thing (postcode/place-text, or a picked place).
+  const [lastQuery, setLastQuery] = useState<Query | null>(null);
 
-  const run = useCallback(async (postcode: string, r: number): Promise<AreaReport | null> => {
+  const run = useCallback(async (q: Query, r: number): Promise<AreaReport | null> => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=${r}`);
+      const url =
+        q.kind === "place"
+          ? `/api/area?lat=${q.place.lat}&lng=${q.place.lng}&label=${encodeURIComponent(q.place.name)}&radius=${r}`
+          : `/api/area?postcode=${encodeURIComponent(q.value)}&radius=${r}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Search failed");
       setReport(data);
-      setLastQuery(postcode);
+      setLastQuery(q);
       setRadius(r);
       return data as AreaReport;
     } catch (e) {
@@ -49,11 +56,13 @@ export default function Dashboard() {
     }
   }, []);
 
-  const search = (postcode: string) => run(postcode, radius);
+  const search = (postcode: string) => run({ kind: "postcode", value: postcode }, radius);
+  // Place-name search: run the area report at the picked place's centre (it carries its own coords).
+  const goToPlace = (place: PlaceMatch) => run({ kind: "place", place }, radius);
   const changeRadius = (r: number) => (lastQuery ? run(lastQuery, r) : setRadius(r));
   // School-name search: run the area report at the school's postcode, then open its card.
   const goToSchool = async (m: SchoolMatch) => {
-    const data = await run(m.postcode, radius);
+    const data = await run({ kind: "postcode", value: m.postcode }, radius);
     const hit = data?.schools.find((s) => s.id === m.id);
     if (hit) setSelected(hit);
   };
@@ -73,7 +82,13 @@ export default function Dashboard() {
         <RouteSelector value={route} onChange={setRoute} variant="cards" />
 
         <div className="mx-auto mt-6 max-w-xl">
-          <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} large />
+          <PostcodeSearch
+            onSearch={search}
+            onPickSchool={goToSchool}
+            onPickPlace={goToPlace}
+            loading={loading}
+            large
+          />
         </div>
         <p className="mt-4 text-center text-sm text-[var(--muted)]">
           or{" "}
@@ -89,7 +104,12 @@ export default function Dashboard() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 max-w-xl">
-        <PostcodeSearch onSearch={search} onPickSchool={goToSchool} loading={loading} />
+        <PostcodeSearch
+          onSearch={search}
+          onPickSchool={goToSchool}
+          onPickPlace={goToPlace}
+          loading={loading}
+        />
       </div>
       {error && <Banner>{error}</Banner>}
       {loading && <Skeleton />}
@@ -145,7 +165,7 @@ function Report({
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">{f.postcode}</h1>
+            <h1 className="text-2xl font-bold tracking-tight">{f.label ?? f.postcode}</h1>
             {(f.district || f.region) && (
               <span className="text-[var(--muted)]">
                 {[f.district, f.region].filter(Boolean).join(", ")}

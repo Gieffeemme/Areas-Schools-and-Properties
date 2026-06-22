@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { geocodePostcode, GeocodeResult } from "@/lib/geocode";
+import { geocodePostcode, geocodePoint, GeocodeResult } from "@/lib/geocode";
 import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
@@ -15,23 +15,33 @@ const CACHE_TTL_SECONDS = 6 * 60 * 60;
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const postcode = searchParams.get("postcode");
+  const lat = searchParams.get("lat");
+  const lng = searchParams.get("lng");
+  const label = searchParams.get("label") ?? undefined;
+  // A picked place comes in as coordinates (+ display label); a postcode/place-text comes in as `postcode`.
+  const isPlace =
+    lat != null && lng != null && Number.isFinite(Number(lat)) && Number.isFinite(Number(lng));
   const radiusMiles = Math.min(
     5,
     Math.max(0.25, Number(searchParams.get("radius") ?? "1")),
   );
 
-  if (!postcode) {
+  if (!postcode && !isPlace) {
     return NextResponse.json({ error: "postcode is required" }, { status: 400 });
   }
 
-  const cacheKey = `area:${postcode.trim().toLowerCase()}|${radiusMiles}`;
+  const cacheKey = isPlace
+    ? `area:@${Number(lat).toFixed(4)},${Number(lng).toFixed(4)}|${radiusMiles}`
+    : `area:${postcode!.trim().toLowerCase()}|${radiusMiles}`;
   const cached = await cacheGet<AreaReport>(cacheKey);
   if (cached) return NextResponse.json(cached);
 
   // Geocoding is the one hard dependency - if it fails, there's nothing to show.
   let geo: GeocodeResult | null = null;
   try {
-    geo = await geocodePostcode(postcode);
+    geo = isPlace
+      ? await geocodePoint(Number(lat), Number(lng), label)
+      : await geocodePostcode(postcode!);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Postcode lookup failed";
     return NextResponse.json({ error: message }, { status: 404 });
@@ -82,7 +92,7 @@ export async function GET(req: NextRequest) {
   };
 
   const report: AreaReport = {
-    query: postcode,
+    query: postcode ?? facts.label ?? "",
     centre,
     radiusMiles,
     facts,

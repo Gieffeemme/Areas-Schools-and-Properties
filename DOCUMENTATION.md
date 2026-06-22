@@ -80,6 +80,12 @@ PostcodeSearch / school-name search (client)
 - **School-name search:** `GET /api/school-search?q=` → `searchSchools()` ranks GIAS + nurseries
   (exact > prefix > "The "-prefix > substring); picking a result runs the area report at its
   postcode and opens its card.
+- **Place-name search:** `GET /api/place-search?q=` → `searchPlaces()` (postcodes.io Places / OS Open
+  Names, ranked City > Town > …, deduped with an area disambiguator so "Shoreditch, Greater London" vs
+  "Shoreditch, Somerset"). Picking a place runs the report at its centroid via `/api/area?lat=&lng=&label=`;
+  `geocodePoint()` reverse-geocodes to the nearest postcode so IMD / prices / broadband still resolve,
+  and the **place name shows as the header**. `geocodePostcode()` also falls back to a place lookup, so
+  typing "Leeds" and pressing Enter works without picking from the list.
 - **Map overlay layers** (the `/map` explorer) are separate point-grid endpoints:
   `/api/crime-points`, `/api/deprivation-points`, `/api/flood` — each samples a grid in the radius
   and bulk reverse-geocodes via postcodes.io (no boundary polygons bundled).
@@ -157,11 +163,12 @@ src/
       area/route.ts            geocode + schools + crime + prices + amenities + broadband → AreaReport (cached 6h)
       schools/route.ts         fetchSchoolsByIds() — full School objects by id (school compare)
       school-search/route.ts   searchSchools() autocomplete
+      place-search/route.ts    searchPlaces() autocomplete (town/city/borough, postcodes.io Places)
       crime-points/route.ts    point-grid crime layer (police.uk)
       deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
       flood/route.ts           EA flood-risk lookup
   lib/   (one concern each)
-    geocode.ts      postcode → centre + AreaFacts (IMD overall + domains)
+    geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  amenities.ts  fetchAmenities() (Overpass)   ·  broadband.ts  broadbandForLaua()
@@ -194,7 +201,8 @@ map remounts and re-fits when any of those change.
 
 ## 8. Features (dashboard)
 
-- **Search:** postcode **or** school name (autocomplete); adjustable **radius** (½–5 mi).
+- **Search:** postcode, **school name, or place** (town / city / borough — autocomplete; places via
+  postcodes.io Places, so a postcode isn't needed); adjustable **radius** (½–5 mi).
 - **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
   school type — special / independent / alternative) that drive the **map pins and the list together**.
 - **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,

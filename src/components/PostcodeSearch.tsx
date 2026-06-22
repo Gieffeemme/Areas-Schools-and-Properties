@@ -1,25 +1,31 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { SchoolMatch } from "@/lib/types";
+import { PlaceMatch, SchoolMatch } from "@/lib/types";
 
-const EXAMPLES = ["SW11 6QT", "LS6 3HN", "S11 9AR", "L18 1JU"];
+const EXAMPLES = ["SW11 6QT", "Leeds", "Harrogate", "S11 9AR"];
 // Full or partial UK postcode - if it looks like one, we run an area search rather than name search.
 const POSTCODE = /^[A-Za-z]{1,2}\d[A-Za-z\d]?\s*\d[A-Za-z]{2}$/;
+
+type Suggestion =
+  | { kind: "place"; place: PlaceMatch }
+  | { kind: "school"; school: SchoolMatch };
 
 export default function PostcodeSearch({
   onSearch,
   onPickSchool,
+  onPickPlace,
   loading,
   large = false,
 }: {
   onSearch: (postcode: string) => void;
   onPickSchool: (m: SchoolMatch) => void;
+  onPickPlace: (p: PlaceMatch) => void;
   loading: boolean;
   large?: boolean;
 }) {
   const [value, setValue] = useState("");
-  const [matches, setMatches] = useState<SchoolMatch[]>([]);
+  const [items, setItems] = useState<Suggestion[]>([]);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -31,29 +37,40 @@ export default function PostcodeSearch({
     const t = v.trim();
     if (timer.current) clearTimeout(timer.current);
     if (POSTCODE.test(t) || t.length < 3) {
-      setMatches([]);
+      setItems([]);
       setOpen(false);
       return;
     }
     timer.current = setTimeout(async () => {
       ctrl.current?.abort();
       ctrl.current = new AbortController();
-      try {
-        const res = await fetch(`/api/school-search?q=${encodeURIComponent(t)}`, { signal: ctrl.current.signal });
-        const data = await res.json();
-        setMatches(data.results ?? []);
-        setOpen(true);
-      } catch {
-        /* aborted/stale */
-      }
+      const sig = ctrl.current.signal;
+      const q = encodeURIComponent(t);
+      // Places and schools in parallel; one failing still shows the other.
+      const [places, schools] = await Promise.all([
+        fetch(`/api/place-search?q=${q}`, { signal: sig }).then((r) => r.json()).then((d) => d.results ?? []).catch(() => []),
+        fetch(`/api/school-search?q=${q}`, { signal: sig }).then((r) => r.json()).then((d) => d.results ?? []).catch(() => []),
+      ]);
+      if (sig.aborted) return;
+      const next: Suggestion[] = [
+        ...(places as PlaceMatch[]).slice(0, 4).map((p) => ({ kind: "place" as const, place: p })),
+        ...(schools as SchoolMatch[]).slice(0, 6).map((s) => ({ kind: "school" as const, school: s })),
+      ];
+      setItems(next);
+      setOpen(next.length > 0);
     }, 180);
   }
 
-  function pickSchool(m: SchoolMatch) {
-    setValue(m.name);
-    setMatches([]);
+  function pick(it: Suggestion) {
+    if (it.kind === "place") {
+      setValue(it.place.name);
+      onPickPlace(it.place);
+    } else {
+      setValue(it.school.name);
+      onPickSchool(it.school);
+    }
+    setItems([]);
     setOpen(false);
-    onPickSchool(m);
   }
 
   function submit(e: React.FormEvent) {
@@ -63,18 +80,18 @@ export default function PostcodeSearch({
     if (POSTCODE.test(t)) {
       setOpen(false);
       onSearch(t);
-    } else if (matches.length) {
-      pickSchool(matches[Math.min(active, matches.length - 1)]);
+    } else if (items.length) {
+      pick(items[Math.min(active, items.length - 1)]);
     } else {
-      onSearch(t); // fallback: let the area lookup try to geocode it
+      onSearch(t); // fallback: the area lookup geocodes a postcode OR a place name
     }
   }
 
   function onKeyDown(e: React.KeyboardEvent) {
-    if (!open || !matches.length) return;
+    if (!open || !items.length) return;
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setActive((i) => Math.min(i + 1, matches.length - 1));
+      setActive((i) => Math.min(i + 1, items.length - 1));
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setActive((i) => Math.max(i - 1, 0));
@@ -83,10 +100,10 @@ export default function PostcodeSearch({
     }
   }
 
-  function pick(pc: string) {
-    setValue(pc);
+  function quick(s: string) {
+    setValue(s);
     setOpen(false);
-    onSearch(pc);
+    onSearch(s);
   }
 
   return (
@@ -97,37 +114,51 @@ export default function PostcodeSearch({
             value={value}
             onChange={(e) => change(e.target.value)}
             onKeyDown={onKeyDown}
-            onFocus={() => matches.length && setOpen(true)}
+            onFocus={() => items.length && setOpen(true)}
             onBlur={() => setTimeout(() => setOpen(false), 120)}
-            placeholder="Enter a UK postcode or a school name"
-            aria-label="UK postcode or school name"
+            placeholder="Postcode, school, or place (e.g. Leeds)"
+            aria-label="UK postcode, school name, or place"
             autoComplete="off"
             className={`w-full rounded-xl border border-[var(--border)] bg-white px-4 shadow-sm outline-none transition focus:border-[var(--primary)] focus:ring-2 focus:ring-indigo-100 ${
               large ? "py-3.5 text-base" : "py-2.5 text-sm"
             }`}
           />
-          {open && matches.length > 0 && (
+          {open && items.length > 0 && (
             <ul className="absolute z-20 mt-1 max-h-72 w-full overflow-auto rounded-xl border border-[var(--border)] bg-white py-1 shadow-lg">
-              {matches.map((m, i) => (
-                <li key={m.id}>
-                  <button
-                    type="button"
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      pickSchool(m);
-                    }}
-                    onMouseEnter={() => setActive(i)}
-                    className={`flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left ${
-                      i === active ? "bg-indigo-50" : "hover:bg-slate-50"
-                    }`}
-                  >
-                    <span className="min-w-0 truncate text-sm font-medium">{m.name}</span>
-                    <span className="shrink-0 text-xs text-[var(--muted)]">
-                      {[m.phase, m.postcode].filter(Boolean).join(" · ")}
-                    </span>
-                  </button>
-                </li>
-              ))}
+              {items.map((it, i) => {
+                const key = it.kind === "place" ? `p:${it.place.id}` : `s:${it.school.id}`;
+                return (
+                  <li key={key}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        pick(it);
+                      }}
+                      onMouseEnter={() => setActive(i)}
+                      className={`flex w-full items-baseline justify-between gap-3 px-4 py-2 text-left ${
+                        i === active ? "bg-indigo-50" : "hover:bg-slate-50"
+                      }`}
+                    >
+                      {it.kind === "place" ? (
+                        <>
+                          <span className="min-w-0 truncate text-sm font-medium">{it.place.name}</span>
+                          <span className="shrink-0 text-xs text-[var(--muted)]">
+                            {["Place", it.place.area].filter(Boolean).join(" · ")}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="min-w-0 truncate text-sm font-medium">{it.school.name}</span>
+                          <span className="shrink-0 text-xs text-[var(--muted)]">
+                            {[it.school.phase, it.school.postcode].filter(Boolean).join(" · ")}
+                          </span>
+                        </>
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
@@ -145,14 +176,14 @@ export default function PostcodeSearch({
       {large && (
         <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[var(--muted)]">
           <span>Try:</span>
-          {EXAMPLES.map((pc) => (
+          {EXAMPLES.map((ex) => (
             <button
-              key={pc}
+              key={ex}
               type="button"
-              onClick={() => pick(pc)}
+              onClick={() => quick(ex)}
               className="rounded-full border border-[var(--border)] bg-white px-3 py-1 font-medium text-[var(--foreground)] shadow-sm transition hover:border-[var(--primary)] hover:text-[var(--primary)]"
             >
-              {pc}
+              {ex}
             </button>
           ))}
         </div>
