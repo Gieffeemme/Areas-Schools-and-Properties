@@ -20,7 +20,8 @@
     "etl:workforce": "node scripts/etl/build-workforce.mjs",
     "etl:finance": "node scripts/etl/build-finance.mjs",
     "etl:imd": "node scripts/etl/build-imd.mjs",
-    "etl:report-cards": "node scripts/etl/build-report-cards.mjs"
+    "etl:report-cards": "node scripts/etl/build-report-cards.mjs",
+    "etl:broadband": "node scripts/etl/build-broadband.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

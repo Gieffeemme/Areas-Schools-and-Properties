@@ -44,6 +44,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           constituency: r.parliamentary_constituency,
           lsoa: r.lsoa,
           lsoaCode,
+          lauaCode: r.codes?.admin_district,
           imdRank,
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,

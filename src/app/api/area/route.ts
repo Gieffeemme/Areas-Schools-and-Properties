@@ -4,6 +4,7 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { fetchAmenities } from "@/lib/amenities";
+import { broadbandForLaua } from "@/lib/broadband";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
@@ -63,6 +64,8 @@ export async function GET(req: NextRequest) {
   if (amenitiesR.status === "rejected")
     errors.push({ source: "amenities", message: reason(amenitiesR) });
 
+  const broadband = broadbandForLaua(facts.lauaCode);
+
   const benchmarks: AreaBenchmarks = {
     crime: crimeBenchmark(crime?.total),
     price: priceBenchmark(prices?.averagePrice ?? null),
@@ -78,6 +81,7 @@ export async function GET(req: NextRequest) {
     crime,
     prices,
     amenities,
+    broadband,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),
     errors,

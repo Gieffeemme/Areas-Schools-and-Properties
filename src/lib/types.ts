@@ -190,6 +190,7 @@ export interface AreaFacts {
   constituency?: string;
   lsoa?: string; // LSOA name (display)
   lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
+  lauaCode?: string; // local authority (LAUA) ONS code (join key for broadband)
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
   imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA
@@ -223,6 +224,15 @@ export interface AmenitySummary {
   categories: AmenityCategory[];
 }
 
+export interface BroadbandSummary {
+  laName: string;
+  superfast: number | null; // % premises with superfast (30+ Mbit/s)
+  ultrafast: number | null; // % with ultrafast
+  fullFibre: number | null; // % with full fibre
+  gigabit: number | null; // % gigabit-capable
+  belowUso: number | null; // % below the USO (can't get a decent connection)
+}
+
 export interface AreaReport {
   query: string;
   centre: LatLng;
@@ -232,6 +242,7 @@ export interface AreaReport {
   crime: CrimeSummary | null;
   prices: PriceSummary | null;
   amenities: AmenitySummary | null;
+  broadband: BroadbandSummary | null;
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)
