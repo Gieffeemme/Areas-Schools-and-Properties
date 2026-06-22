@@ -9,7 +9,9 @@ import PricePanel from "./PricePanel";
 import PropertyChecks from "./PropertyChecks";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
+import PhaseChips from "./PhaseChips";
 import { RATING_COLORS } from "@/lib/ratings";
+import { PhaseFilter, matchesPhase, phaseTabs } from "@/lib/phase";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
 import { AreaReport, OfstedRating, School, SchoolMatch, SourceError } from "@/lib/types";
 
@@ -126,6 +128,14 @@ function Report({
     if (showList && !showMap) return;
     setShowList((v) => !v);
   };
+
+  // Phase filter is lifted here so the map pins and the list stay in sync, and the chips can show
+  // in the map-only view (where the list panel that normally hosts them is hidden).
+  const [filter, setFilter] = useState<PhaseFilter>("all");
+  const { effFilter } = phaseTabs(report.schools, filter);
+  const mapSchools =
+    effFilter === "all" ? report.schools : report.schools.filter((s) => matchesPhase(s, effFilter));
+
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -159,17 +169,26 @@ function Report({
 
       <div className={both ? "grid items-start gap-4 lg:grid-cols-[3fr_2fr]" : ""}>
         {showMap && (
-          <div className={both ? "lg:sticky lg:top-4" : ""}>
+          <div className={both ? "lg:sticky lg:top-4" : "flex h-[calc(100vh-9rem)] flex-col"}>
+            {/* Map-only: the list panel that normally hosts the chips is hidden, so show them here. */}
+            {!showList && (
+              <PhaseChips
+                schools={report.schools}
+                filter={filter}
+                onFilter={setFilter}
+                className="mb-2 shrink-0"
+              />
+            )}
             <div
               className={`relative overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm ${
-                both ? "h-[420px] sm:h-[520px] lg:h-[600px]" : "h-[calc(100vh-9rem)]"
+                both ? "h-[420px] sm:h-[520px] lg:h-[600px]" : "min-h-0 flex-1"
               }`}
             >
-              {/* key includes radius + layout so the (mount-only) Leaflet map re-fits when they change */}
+              {/* key includes radius + layout + phase filter so the (mount-only) map re-fits/re-pins on change */}
               <AreaMap
-                key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${both ? "both" : "map"}`}
+                key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${both ? "both" : "map"}|${effFilter}`}
                 centre={report.centre}
-                schools={report.schools}
+                schools={mapSchools}
                 radiusMiles={report.radiusMiles}
                 onSelect={onSelect}
               />
@@ -180,7 +199,13 @@ function Report({
 
         {showList && (
           <div className="space-y-4">
-            <SidePanels report={report} route={route} onSelect={onSelect} />
+            <SidePanels
+              report={report}
+              route={route}
+              onSelect={onSelect}
+              filter={filter}
+              onFilter={setFilter}
+            />
           </div>
         )}
       </div>
@@ -201,10 +226,14 @@ function SidePanels({
   report,
   route,
   onSelect,
+  filter,
+  onFilter,
 }: {
   report: AreaReport;
   route: Route;
   onSelect: (s: School) => void;
+  filter: PhaseFilter;
+  onFilter: (f: PhaseFilter) => void;
 }) {
   const schools = (
     <SchoolsPanel
@@ -212,6 +241,8 @@ function SidePanels({
       radiusMiles={report.radiusMiles}
       ofstedLoaded={report.ofstedLoaded}
       onSelect={onSelect}
+      filter={filter}
+      onFilter={onFilter}
     />
   );
   const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;

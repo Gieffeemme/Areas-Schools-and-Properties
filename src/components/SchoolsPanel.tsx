@@ -2,29 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { School } from "@/lib/types";
+import { PhaseFilter, matchesPhase, phaseTabs } from "@/lib/phase";
+import PhaseChips from "./PhaseChips";
 import SchoolCard from "./SchoolCard";
 
-type PhaseFilter = "all" | "nursery" | "primary" | "secondary" | "sixthform" | "allthrough";
 type SortKey = "distance" | "ofsted" | "p8" | "att8" | "ks2" | "alevel" | "parent";
-
-// All-through schools serve every phase, so they also count under primary/secondary/sixth-form.
-function matches(s: School, f: PhaseFilter): boolean {
-  const p = s.phase;
-  if (f === "all") return true;
-  if (f === "nursery") return p === "Nursery";
-  if (f === "primary") return p === "Primary" || p === "All-through";
-  if (f === "secondary") return p === "Secondary" || p === "All-through";
-  if (f === "sixthform") return p === "Sixth form" || p === "College" || p === "All-through";
-  return p === "All-through"; // allthrough
-}
-
-const CATS: { key: PhaseFilter; label: string }[] = [
-  { key: "nursery", label: "Nursery" },
-  { key: "primary", label: "Primary" },
-  { key: "secondary", label: "Secondary" },
-  { key: "sixthform", label: "Sixth form / college" },
-  { key: "allthrough", label: "All-through" },
-];
 
 const OFSTED_RANK: Record<string, number> = {
   Outstanding: 0, Good: 1, "Requires improvement": 2, Inadequate: 3, "Not rated": 4, "Not loaded": 5,
@@ -79,13 +61,16 @@ export default function SchoolsPanel({
   radiusMiles,
   ofstedLoaded,
   onSelect,
+  filter,
+  onFilter,
 }: {
   schools: School[];
   radiusMiles: number;
   ofstedLoaded: boolean;
   onSelect?: (s: School) => void;
+  filter: PhaseFilter;
+  onFilter: (f: PhaseFilter) => void;
 }) {
-  const [filter, setFilter] = useState<PhaseFilter>("all");
   const [sort, setSort] = useState<SortKey>("distance");
   const [shortlist, setShortlist] = useState<Set<string>>(loadShortlist);
   const [shortlistOnly, setShortlistOnly] = useState(false);
@@ -103,15 +88,7 @@ export default function SchoolsPanel({
       return next;
     });
 
-  const counts = useMemo(() => {
-    const c: Record<string, number> = {};
-    for (const cat of CATS) c[cat.key] = schools.filter((s) => matches(s, cat.key)).length;
-    return c;
-  }, [schools]);
-  const active = CATS.filter((c) => counts[c.key] > 0);
-  const canFilter = active.length >= 2;
-  const effFilter: PhaseFilter =
-    canFilter && filter !== "all" && counts[filter] > 0 ? filter : "all";
+  const { effFilter } = phaseTabs(schools, filter);
 
   const shortlistedCount = useMemo(
     () => schools.filter((s) => shortlist.has(s.id)).length,
@@ -119,15 +96,10 @@ export default function SchoolsPanel({
   );
 
   const shown = useMemo(() => {
-    let list = effFilter === "all" ? schools : schools.filter((s) => matches(s, effFilter));
+    let list = effFilter === "all" ? schools : schools.filter((s) => matchesPhase(s, effFilter));
     if (shortlistOnly) list = list.filter((s) => shortlist.has(s.id));
     return [...list].sort(comparator(sort));
   }, [schools, effFilter, shortlistOnly, shortlist, sort]);
-
-  const tabs: { key: PhaseFilter; label: string; count: number }[] = [
-    { key: "all", label: "All", count: schools.length },
-    ...active.map((c) => ({ ...c, count: counts[c.key] })),
-  ];
 
   return (
     <section>
@@ -140,23 +112,8 @@ export default function SchoolsPanel({
         </span>
       </header>
 
-      {canFilter && (
-        <div className="mb-2 flex flex-wrap gap-1 text-xs">
-          {tabs.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setFilter(t.key)}
-              className={`rounded-md border px-2 py-1 transition ${
-                effFilter === t.key
-                  ? "border-[var(--primary)] bg-[var(--primary)] font-semibold text-white"
-                  : "border-[var(--border)] bg-white text-[var(--muted)] hover:bg-slate-50"
-              }`}
-            >
-              {t.label} <span className={effFilter === t.key ? "opacity-80" : "opacity-50"}>{t.count}</span>
-            </button>
-          ))}
-        </div>
-      )}
+      <PhaseChips schools={schools} filter={filter} onFilter={onFilter} className="mb-2" />
+
 
       {schools.length > 0 && (
         <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
