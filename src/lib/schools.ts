@@ -121,6 +121,13 @@ interface GiasRecord {
   phase: string;
   lat: number;
   lng: number;
+  pupils?: number;
+  gender?: string;
+  type?: string;
+  religion?: string;
+  ageLow?: number;
+  ageHigh?: number;
+  admissions?: string; // "Selective" | "Non-selective" (secondaries only)
 }
 const gias = giasData as GiasRecord[];
 // State nursery schools appear in GIAS too; dedupe them against the EY register by postcode so a
@@ -161,6 +168,13 @@ export async function fetchSchools(
       distanceMiles: round1(d),
       urn,
       phase: g.phase,
+      pupils: g.pupils,
+      gender: g.gender,
+      type: g.type,
+      religion: g.religion,
+      ageLow: g.ageLow,
+      ageHigh: g.ageHigh,
+      selective: g.admissions === "Selective" || undefined,
       ofsted: enr?.rating ?? (ofstedLoaded ? "Not rated" : "Not loaded"),
       ofstedDate: enr?.date,
       progress8: ks4?.p8 ?? null,

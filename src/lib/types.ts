@@ -32,6 +32,14 @@ export interface School {
   urn?: string; // from OSM tag ref:edubase, when present
   phase?: string; // Nursery / Primary / Secondary / Sixth form / College / All-through
   places?: number; // registered capacity (Ofsted Early Years nurseries)
+  // GIAS register metadata (state/independent schools; nurseries carry `places` instead)
+  pupils?: number; // number on roll
+  gender?: string; // "Mixed" | "Boys" | "Girls"
+  type?: string; // establishment type, e.g. "Academy converter", "Voluntary aided school"
+  religion?: string; // religious character, when a faith school (e.g. "Roman Catholic")
+  ageLow?: number; // statutory low age
+  ageHigh?: number; // statutory high age
+  selective?: boolean; // selective (grammar) admissions
   ofsted: OfstedRating;
   ofstedDate?: string; // last inspection date, once enriched
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE

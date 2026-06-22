@@ -89,6 +89,7 @@ export default function SchoolCard({
 
       <p className="mt-0.5 text-xs text-[var(--muted)]">
         {s.phase ?? "School"}
+        {s.pupils != null && ` · ${s.pupils.toLocaleString()} pupils`}
         {year != null && (
           <>
             {" · "}

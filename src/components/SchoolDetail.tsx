@@ -91,6 +91,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const pv = s.parentView ?? null;
   const pvList = pv ? pvRows(pv) : [];
   const recommend = pv?.["14"]?.pos;
+  const ageRange = s.ageLow != null && s.ageHigh != null ? `${s.ageLow}–${s.ageHigh}` : null;
+  const hasDetails = !!(s.type || s.pupils != null || s.gender || s.religion || ageRange || s.selective);
 
   return (
     <div className="fixed inset-0 z-[2000] flex justify-end" role="dialog" aria-modal="true">
@@ -129,6 +131,19 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
         </div>
 
         <div className="space-y-4 p-5">
+          {hasDetails && (
+            <Section title="Details">
+              <dl className="space-y-1.5 text-sm">
+                {s.type && <Fact label="Type" value={s.type} />}
+                {ageRange && <Fact label="Ages" value={ageRange} />}
+                {s.pupils != null && <Fact label="Pupils" value={s.pupils.toLocaleString()} />}
+                {s.gender && <Fact label="Gender" value={s.gender} />}
+                {s.religion && <Fact label="Faith" value={s.religion} />}
+                {s.selective && <Fact label="Admissions" value="Selective (11+)" />}
+              </dl>
+            </Section>
+          )}
+
           <Section title="Ofsted">
             <div className="flex flex-wrap items-center gap-2">
               <span
@@ -309,8 +324,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           )}
 
           <p className="text-[11px] leading-relaxed text-[var(--muted)]">
-            Coming next: admissions (catchment proxy) and multi-year trends. Sources: DfE
-            performance tables, Ofsted, postcodes.io.
+            Coming next: catchment area and multi-year trends. Sources: GIAS, DfE performance
+            tables, Ofsted, postcodes.io.
           </p>
         </div>
       </div>
@@ -359,6 +374,15 @@ function Stat({ label, value, color }: { label: string; value: string; color?: s
         {value}
       </p>
       <p className="mt-1 text-xs leading-snug text-[var(--muted)]">{label}</p>
+    </div>
+  );
+}
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline justify-between gap-2">
+      <dt className="text-[var(--muted)]">{label}</dt>
+      <dd className="text-right font-medium">{value}</dd>
     </div>
   );
 }

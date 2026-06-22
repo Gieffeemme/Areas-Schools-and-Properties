@@ -46,6 +46,16 @@ function parseLine(l) {
 
 const cleanPC = (pc) => String(pc ?? "").trim().toUpperCase().replace(/\s+/g, " ");
 
+// Keep only meaningful GIAS field values (drop placeholders); numbers must be positive.
+const numOf = (v) => {
+  const n = Number(v);
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+};
+const strOf = (v) => {
+  const s = String(v ?? "").trim();
+  return s && !/^(not applicable|does not apply|unknown)$/i.test(s) ? s : undefined;
+};
+
 // GIAS phase -> our age-range taxonomy. "16 plus" splits college vs sixth form by type group.
 function mapPhase(phase, group) {
   switch (phase) {
@@ -177,8 +187,17 @@ async function main() {
     pc: col(/^postcode$/i),
     e: col(/^easting$/i),
     n: col(/^northing$/i),
+    type: col(/^typeofestablishment \(name\)/i),
+    gender: col(/^gender \(name\)/i),
+    religion: col(/^religiouscharacter \(name\)/i),
+    lowAge: col(/^statutorylowage$/i),
+    highAge: col(/^statutoryhighage$/i),
+    pupils: col(/^numberofpupils$/i),
+    admissions: col(/^admissionspolicy \(name\)/i),
   };
   if (C.urn < 0 || C.phase < 0 || C.pc < 0) throw new Error("Missing expected GIAS columns (URN/phase/postcode).");
+  // Surface which optional columns resolved (-1 = header not found → field will be absent).
+  console.log("extra columns:", JSON.stringify({ type: C.type, gender: C.gender, religion: C.religion, lowAge: C.lowAge, highAge: C.highAge, pupils: C.pupils, admissions: C.admissions }));
 
   const recs = [];
   const postcodes = new Set();
@@ -194,6 +213,16 @@ async function main() {
     const hasEN = Number.isFinite(e) && Number.isFinite(n) && e > 0 && n > 0;
     if (!hasEN && !pc) continue; // no location at all
     const rec = { urn: (x[C.urn] ?? "").trim(), name: (x[C.name] ?? "").trim(), postcode: pc, phase };
+    // GIAS metadata we surface on the card and as map filters (kept only when meaningful).
+    rec.pupils = numOf(x[C.pupils]);
+    rec.ageLow = numOf(x[C.lowAge]);
+    rec.ageHigh = numOf(x[C.highAge]);
+    rec.type = strOf(x[C.type]);
+    rec.admissions = strOf(x[C.admissions]);
+    const gen = String(x[C.gender] ?? "").trim();
+    rec.gender = /^(boys|girls|mixed)$/i.test(gen) ? gen : undefined;
+    const rel = String(x[C.religion] ?? "").trim();
+    rec.religion = rel && !/^(none|does not apply|not applicable|unknown)$/i.test(rel) ? rel : undefined;
     if (hasEN) { rec.e = e; rec.n = n; }
     else postcodes.add(pc); // only the few without a grid ref need postcode geocoding
     recs.push(rec);
@@ -214,7 +243,15 @@ async function main() {
       ({ lat, lng } = c);
       viaPC++;
     }
-    out.push({ urn: rec.urn, name: rec.name, postcode: rec.postcode, phase: rec.phase, lat: Math.round(lat * 1e5) / 1e5, lng: Math.round(lng * 1e5) / 1e5 });
+    const o = { urn: rec.urn, name: rec.name, postcode: rec.postcode, phase: rec.phase, lat: Math.round(lat * 1e5) / 1e5, lng: Math.round(lng * 1e5) / 1e5 };
+    if (rec.pupils != null) o.pupils = rec.pupils;
+    if (rec.gender) o.gender = rec.gender;
+    if (rec.type) o.type = rec.type;
+    if (rec.religion) o.religion = rec.religion;
+    if (rec.ageLow != null) o.ageLow = rec.ageLow;
+    if (rec.ageHigh != null) o.ageHigh = rec.ageHigh;
+    if (rec.admissions) o.admissions = rec.admissions;
+    out.push(o);
   }
   await writeFile(OUT, JSON.stringify(out) + "\n");
   const byPhase = {};

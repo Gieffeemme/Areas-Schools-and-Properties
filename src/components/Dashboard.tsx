@@ -9,9 +9,9 @@ import PricePanel from "./PricePanel";
 import PropertyChecks from "./PropertyChecks";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
-import PhaseChips from "./PhaseChips";
+import SchoolControls from "./SchoolControls";
 import { RATING_COLORS } from "@/lib/ratings";
-import { PhaseFilter, matchesPhase, phaseTabs } from "@/lib/phase";
+import { SchoolFilters, DEFAULT_FILTERS, applyFilters } from "@/lib/schoolFilters";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
 import { AreaReport, OfstedRating, School, SchoolMatch, SourceError } from "@/lib/types";
 
@@ -129,12 +129,11 @@ function Report({
     setShowList((v) => !v);
   };
 
-  // Phase filter is lifted here so the map pins and the list stay in sync, and the chips can show
-  // in the map-only view (where the list panel that normally hosts them is hidden).
-  const [filter, setFilter] = useState<PhaseFilter>("all");
-  const { effFilter } = phaseTabs(report.schools, filter);
-  const mapSchools =
-    effFilter === "all" ? report.schools : report.schools.filter((s) => matchesPhase(s, effFilter));
+  // School filters are lifted here so the map pins and the list stay in sync, and the controls can
+  // show in the map-only view (where the list panel that normally hosts them is hidden).
+  const [filters, setFilters] = useState<SchoolFilters>(DEFAULT_FILTERS);
+  const mapSchools = applyFilters(report.schools, filters);
+  const filterKey = `${filters.phase}|${filters.gender}|${filters.faith}|${filters.selective}|${filters.rating}`;
 
   return (
     <div>
@@ -170,12 +169,12 @@ function Report({
       <div className={both ? "grid items-start gap-4 lg:grid-cols-[3fr_2fr]" : ""}>
         {showMap && (
           <div className={both ? "lg:sticky lg:top-4" : "flex h-[calc(100vh-9rem)] flex-col"}>
-            {/* Map-only: the list panel that normally hosts the chips is hidden, so show them here. */}
+            {/* Map-only: the list panel that normally hosts the controls is hidden, so show them here. */}
             {!showList && (
-              <PhaseChips
+              <SchoolControls
                 schools={report.schools}
-                filter={filter}
-                onFilter={setFilter}
+                filters={filters}
+                onChange={setFilters}
                 className="mb-2 shrink-0"
               />
             )}
@@ -186,7 +185,7 @@ function Report({
             >
               {/* key includes radius + layout + phase filter so the (mount-only) map re-fits/re-pins on change */}
               <AreaMap
-                key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${both ? "both" : "map"}|${effFilter}`}
+                key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${both ? "both" : "map"}|${filterKey}`}
                 centre={report.centre}
                 schools={mapSchools}
                 radiusMiles={report.radiusMiles}
@@ -203,8 +202,8 @@ function Report({
               report={report}
               route={route}
               onSelect={onSelect}
-              filter={filter}
-              onFilter={setFilter}
+              filters={filters}
+              onChange={setFilters}
             />
           </div>
         )}
@@ -226,14 +225,14 @@ function SidePanels({
   report,
   route,
   onSelect,
-  filter,
-  onFilter,
+  filters,
+  onChange,
 }: {
   report: AreaReport;
   route: Route;
   onSelect: (s: School) => void;
-  filter: PhaseFilter;
-  onFilter: (f: PhaseFilter) => void;
+  filters: SchoolFilters;
+  onChange: (f: SchoolFilters) => void;
 }) {
   const schools = (
     <SchoolsPanel
@@ -241,8 +240,8 @@ function SidePanels({
       radiusMiles={report.radiusMiles}
       ofstedLoaded={report.ofstedLoaded}
       onSelect={onSelect}
-      filter={filter}
-      onFilter={onFilter}
+      filters={filters}
+      onChange={onChange}
     />
   );
   const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;

@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { School } from "@/lib/types";
-import { PhaseFilter, matchesPhase, phaseTabs } from "@/lib/phase";
-import PhaseChips from "./PhaseChips";
+import { SchoolFilters, applyFilters } from "@/lib/schoolFilters";
+import SchoolControls from "./SchoolControls";
 import SchoolCard from "./SchoolCard";
 
 type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "ks2" | "alevel" | "parent";
@@ -68,15 +68,15 @@ export default function SchoolsPanel({
   radiusMiles,
   ofstedLoaded,
   onSelect,
-  filter,
-  onFilter,
+  filters,
+  onChange,
 }: {
   schools: School[];
   radiusMiles: number;
   ofstedLoaded: boolean;
   onSelect?: (s: School) => void;
-  filter: PhaseFilter;
-  onFilter: (f: PhaseFilter) => void;
+  filters: SchoolFilters;
+  onChange: (f: SchoolFilters) => void;
 }) {
   const [sort, setSort] = useState<SortKey>("distance");
   const [shortlist, setShortlist] = useState<Set<string>>(loadShortlist);
@@ -95,18 +95,16 @@ export default function SchoolsPanel({
       return next;
     });
 
-  const { effFilter } = phaseTabs(schools, filter);
-
   const shortlistedCount = useMemo(
     () => schools.filter((s) => shortlist.has(s.id)).length,
     [schools, shortlist],
   );
 
   const shown = useMemo(() => {
-    let list = effFilter === "all" ? schools : schools.filter((s) => matchesPhase(s, effFilter));
+    let list = applyFilters(schools, filters);
     if (shortlistOnly) list = list.filter((s) => shortlist.has(s.id));
     return [...list].sort(comparator(sort));
-  }, [schools, effFilter, shortlistOnly, shortlist, sort]);
+  }, [schools, filters, shortlistOnly, shortlist, sort]);
 
   return (
     <section>
@@ -119,7 +117,7 @@ export default function SchoolsPanel({
         </span>
       </header>
 
-      <PhaseChips schools={schools} filter={filter} onFilter={onFilter} className="mb-2" />
+      <SchoolControls schools={schools} filters={filters} onChange={onChange} className="mb-2" />
 
 
       {schools.length > 0 && (
