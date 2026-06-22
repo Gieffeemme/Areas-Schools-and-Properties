@@ -114,7 +114,18 @@ function Report({
   onRadius: (r: number) => void;
 }) {
   const f = report.facts;
-  const [mapFull, setMapFull] = useState(false);
+  const [showMap, setShowMap] = useState(true);
+  const [showList, setShowList] = useState(true);
+  const both = showMap && showList;
+  // At least one view must stay on.
+  const toggleMap = () => {
+    if (showMap && !showList) return;
+    setShowMap((v) => !v);
+  };
+  const toggleList = () => {
+    if (showList && !showMap) return;
+    setShowList((v) => !v);
+  };
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
@@ -138,37 +149,35 @@ function Report({
         <RouteSelector value={route} onChange={onRoute} variant="tabs" />
       </div>
 
-      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1">
-        <span className="text-xs font-medium text-[var(--muted)]">Show area within</span>
-        <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          <span className="text-xs font-medium text-[var(--muted)]">Show area within</span>
+          <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
+        </div>
+        <ViewToggle showMap={showMap} showList={showList} onMap={toggleMap} onList={toggleList} />
       </div>
 
-      <div className={mapFull ? "" : "grid items-start gap-4 lg:grid-cols-[3fr_2fr]"}>
-        <div className={mapFull ? "" : "lg:sticky lg:top-4"}>
-          <div
-            className={`relative overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm ${
-              mapFull ? "h-[78vh]" : "h-[420px] sm:h-[520px] lg:h-[calc(100vh-7rem)]"
-            }`}
-          >
-            {/* key includes radius + layout so the (mount-only) Leaflet map re-fits when either changes */}
-            <AreaMap
-              key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${mapFull ? "full" : "split"}`}
-              centre={report.centre}
-              schools={report.schools}
-              radiusMiles={report.radiusMiles}
-            />
-            <button
-              type="button"
-              onClick={() => setMapFull((v) => !v)}
-              className="absolute right-3 top-3 z-10 rounded-lg border border-[var(--border)] bg-white/95 px-2.5 py-1 text-xs font-medium shadow-sm transition hover:bg-white"
+      <div className={both ? "grid items-start gap-4 lg:grid-cols-[3fr_2fr]" : ""}>
+        {showMap && (
+          <div className={both ? "lg:sticky lg:top-4" : ""}>
+            <div
+              className={`relative overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm ${
+                both ? "h-[420px] sm:h-[520px] lg:h-[600px]" : "h-[calc(100vh-9rem)]"
+              }`}
             >
-              {mapFull ? "Show list →" : "⤢ Expand map"}
-            </button>
+              {/* key includes radius + layout so the (mount-only) Leaflet map re-fits when they change */}
+              <AreaMap
+                key={`${report.centre.lat},${report.centre.lng}|${report.radiusMiles}|${both ? "both" : "map"}`}
+                centre={report.centre}
+                schools={report.schools}
+                radiusMiles={report.radiusMiles}
+              />
+            </div>
+            <Legend />
           </div>
-          <Legend />
-        </div>
+        )}
 
-        {!mapFull && (
+        {showList && (
           <div className="space-y-4">
             <SidePanels report={report} route={route} onSelect={onSelect} />
           </div>
@@ -245,6 +254,38 @@ function RadiusSelector({ value, onChange }: { value: number; onChange: (r: numb
           {r === 0.5 ? "½" : r} mi
         </button>
       ))}
+    </div>
+  );
+}
+
+function ViewToggle({
+  showMap,
+  showList,
+  onMap,
+  onList,
+}: {
+  showMap: boolean;
+  showList: boolean;
+  onMap: () => void;
+  onList: () => void;
+}) {
+  const cls = (on: boolean) =>
+    `px-3 py-1.5 font-medium transition ${
+      on ? "bg-[var(--primary)] text-white" : "text-[var(--muted)] hover:bg-slate-50"
+    }`;
+  return (
+    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)] bg-white text-xs">
+      <button type="button" onClick={onMap} aria-pressed={showMap} className={cls(showMap)}>
+        Map
+      </button>
+      <button
+        type="button"
+        onClick={onList}
+        aria-pressed={showList}
+        className={`border-l border-[var(--border)] ${cls(showList)}`}
+      >
+        List
+      </button>
     </div>
   );
 }
