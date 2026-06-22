@@ -30,7 +30,8 @@ export interface School {
   lng: number;
   distanceMiles: number;
   urn?: string; // from OSM tag ref:edubase, when present
-  phase?: string; // Primary / Secondary / All-through (best-effort from OSM tags)
+  phase?: string; // Nursery / Primary / Secondary / Sixth form / College / All-through
+  places?: number; // registered capacity (Ofsted Early Years nurseries)
   ofsted: OfstedRating;
   ofstedDate?: string; // last inspection date, once enriched
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE

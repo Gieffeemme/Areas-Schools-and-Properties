@@ -7,6 +7,8 @@ import parentviewByUrn from "@/data/parentview-by-urn.json";
 import ks2ByUrn from "@/data/ks2-by-urn.json";
 import censusByUrn from "@/data/census-by-urn.json";
 import destinationsByUrn from "@/data/destinations-by-urn.json";
+import nurseriesData from "@/data/nurseries.json";
+import { ofstedReportUrl } from "./links";
 
 const OVERPASS = "https://overpass-api.de/api/interpreter";
 
@@ -96,6 +98,20 @@ interface DestRecord {
 }
 const destMap = destinationsByUrn as Record<string, DestRecord>;
 
+// Ofsted Early Years register (postcode-geocoded by the nurseries ETL). Authoritative, England-wide.
+interface NurseryRecord {
+  urn: string;
+  name: string;
+  postcode: string;
+  rating?: OfstedRating;
+  date?: string;
+  places?: number;
+  sub?: NonNullable<School["ofstedSub"]>;
+  lat: number;
+  lng: number;
+}
+const nurseries = nurseriesData as unknown as NurseryRecord[];
+
 interface OverpassEl {
   type: string;
   id: number;
@@ -111,10 +127,10 @@ export async function fetchSchools(
   radiusMiles: number,
 ): Promise<School[]> {
   const radiusM = Math.round(radiusMiles * 1609.34);
-  // amenity=school = primary/secondary/all-through; kindergarten + childcare = nurseries/daycare
-  // (OSM tags both); college = sixth-form & FE colleges (post-16). Together these populate the
-  // full age-range filter.
-  const AMENITIES = ["school", "kindergarten", "childcare", "college"];
+  // amenity=school = primary/secondary/all-through; college = sixth-form & FE colleges (post-16).
+  // Nurseries come from the authoritative Ofsted Early Years register (merged in below), NOT OSM —
+  // OSM misses too many of them.
+  const AMENITIES = ["school", "college"];
   const q =
     `[out:json][timeout:25];(` +
     AMENITIES.map(
@@ -197,6 +213,26 @@ export async function fetchSchools(
     });
   }
 
+  // Merge in nurseries from the Ofsted Early Years register (authoritative; OSM misses most).
+  // Postcode-geocoded, each carrying its Ofsted inspection outcome.
+  for (const n of nurseries) {
+    const d = distanceMiles(centre.lat, centre.lng, n.lat, n.lng);
+    if (d > radiusMiles) continue;
+    schools.push({
+      id: `ey/${n.urn}`,
+      name: n.name,
+      lat: n.lat,
+      lng: n.lng,
+      distanceMiles: Math.round(d * 10) / 10,
+      phase: "Nursery",
+      ofsted: n.rating ?? "Not rated",
+      ofstedDate: n.date,
+      ofstedSub: n.sub,
+      ofstedReport: ofstedReportUrl(n.urn),
+      places: n.places,
+    });
+  }
+
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
 }
@@ -204,7 +240,6 @@ export async function fetchSchools(
 // Best-effort age-range phase from OSM tags. amenity is the strongest signal (kindergarten =
 // nursery, college = post-16); otherwise infer from explicit ages, then ISCED levels.
 function phaseFromTags(tags: Record<string, string>): string | undefined {
-  if (tags["amenity"] === "kindergarten" || tags["amenity"] === "childcare") return "Nursery";
   if (tags["amenity"] === "college") return "College";
 
   const min = parseInt(tags["min_age"] ?? "", 10);

@@ -13,6 +13,7 @@
     "etl:parentview": "node scripts/etl/build-parentview.mjs",
     "etl:ks2": "node scripts/etl/build-ks2.mjs",
     "etl:ks5": "node scripts/etl/build-ks5.mjs",
+    "etl:nurseries": "node scripts/etl/build-nurseries.mjs",
     "etl:census": "node scripts/etl/build-census.mjs",
     "etl:destinations": "node scripts/etl/build-destinations.mjs"
   },

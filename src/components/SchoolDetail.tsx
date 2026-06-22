@@ -113,7 +113,9 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               )}
             </h2>
             <p className="mt-0.5 text-xs text-[var(--muted)]">
-              {[s.phase, `${s.distanceMiles} mi away`].filter(Boolean).join(" · ")}
+              {[s.phase, s.places ? `${s.places} places` : null, `${s.distanceMiles} mi away`]
+                .filter(Boolean)
+                .join(" · ")}
             </p>
           </div>
           <button
