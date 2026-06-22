@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FloodSummary, LatLng } from "@/lib/types";
+import { FloodSummary, LatLng, PriceSummary } from "@/lib/types";
 import Card from "./Card";
 
 type Check = { label: string; status: "live" | "soon"; note: string };
 
-export default function PropertyChecks({ centre }: { centre: LatLng }) {
+export default function PropertyChecks({
+  centre,
+  prices,
+}: {
+  centre: LatLng;
+  prices: PriceSummary | null;
+}) {
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
 
   useEffect(() => {
@@ -24,8 +30,8 @@ export default function PropertyChecks({ centre }: { centre: LatLng }) {
   const checks: Check[] = [
     floodCheck(flood),
     { label: "Sold price history", status: "live", note: "HM Land Registry - see the prices panel" },
+    tenureCheck(prices),
     { label: "EPC & energy cost", status: "soon", note: "MHCLG EPC register" },
-    { label: "Tenure (freehold / leasehold)", status: "soon", note: "HM Land Registry" },
     { label: "Council tax band", status: "soon", note: "VOA" },
     { label: "Planning applications nearby", status: "soon", note: "Local authority" },
   ];
@@ -52,11 +58,26 @@ export default function PropertyChecks({ centre }: { centre: LatLng }) {
         ))}
       </ul>
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Flood risk is live from the Environment Agency. “Soon” checks arrive with their data
-        pipelines.
+        Flood, sold prices and tenure are live (Environment Agency, HM Land Registry). “Soon” checks
+        arrive with their data pipelines.
       </p>
     </Card>
   );
+}
+
+function tenureCheck(prices: PriceSummary | null): Check {
+  const t = prices?.tenure;
+  if (!t || !(t.freehold || t.leasehold)) {
+    return { label: "Tenure (freehold / leasehold)", status: "soon", note: "HM Land Registry" };
+  }
+  const total = t.freehold + t.leasehold;
+  const fhPct = Math.round((t.freehold / total) * 100);
+  const lead = fhPct >= 50 ? `${fhPct}% freehold` : `${100 - fhPct}% leasehold`;
+  return {
+    label: "Tenure (freehold / leasehold)",
+    status: "live",
+    note: `HM Land Registry - recent sales ${lead} (${t.freehold} FH · ${t.leasehold} LH)`,
+  };
 }
 
 function floodCheck(flood: FloodSummary | null | "loading"): Check {

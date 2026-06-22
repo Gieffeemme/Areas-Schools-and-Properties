@@ -47,6 +47,7 @@ async function fetchExact(postcode: string): Promise<PriceSale[]> {
           paon: asString(addr.paon),
           street: asString(addr.street),
           type: propertyType(it.propertyType),
+          tenure: tenureOf(it.estateType),
         };
       })
       .filter((s) => s.price > 0)
@@ -61,12 +62,13 @@ async function fetchSector(sector: string): Promise<PriceSale[]> {
   const query = `
 PREFIX lrppi: <http://landregistry.data.gov.uk/def/ppi/>
 PREFIX lrcommon: <http://landregistry.data.gov.uk/def/common/>
-SELECT ?date ?amount ?type ?paon ?street WHERE {
+SELECT ?date ?amount ?type ?paon ?street ?estate WHERE {
   ?t lrppi:pricePaid ?amount ;
      lrppi:transactionDate ?date ;
      lrppi:propertyAddress ?a .
   ?a lrcommon:postcode ?postcode .
   OPTIONAL { ?t lrppi:propertyType ?type }
+  OPTIONAL { ?t lrppi:estateType ?estate }
   OPTIONAL { ?a lrcommon:paon ?paon }
   OPTIONAL { ?a lrcommon:street ?street }
   FILTER(STRSTARTS(?postcode, "${sector}"))
@@ -95,6 +97,7 @@ SELECT ?date ?amount ?type ?paon ?street WHERE {
         paon: r.paon?.value,
         street: r.street?.value,
         type: propertyType(r.type?.value),
+        tenure: tenureOf(r.estate?.value),
       }))
       .filter((s) => s.price > 0)
       .sort(byDateDesc);
@@ -133,7 +136,25 @@ function summarise(
     }))
     .sort((a, b) => a.year - b.year);
 
-  return { postcode, scope, area, sales: sales.slice(0, 12), count, averagePrice, medianPrice, byYear };
+  let freehold = 0;
+  let leasehold = 0;
+  for (const s of sales) {
+    if (s.tenure === "freehold") freehold++;
+    else if (s.tenure === "leasehold") leasehold++;
+  }
+  const tenure = freehold || leasehold ? { freehold, leasehold } : null;
+
+  return {
+    postcode,
+    scope,
+    area,
+    sales: sales.slice(0, 12),
+    count,
+    averagePrice,
+    medianPrice,
+    byYear,
+    tenure,
+  };
 }
 
 /** Median of a list of numbers (rounded), or null when empty. */
@@ -180,4 +201,13 @@ function propertyType(v: unknown): string | undefined {
   const slug = uri.split("/").pop()?.split("#").pop();
   if (!slug) return undefined;
   return slug.replace(/-/g, " ");
+}
+
+/** Land Registry encodes estate type as a URI (…/common/freehold | …/leasehold) or {_about}. */
+function tenureOf(v: unknown): "freehold" | "leasehold" | undefined {
+  let uri: string | undefined;
+  if (typeof v === "string") uri = v;
+  else if (v && typeof v === "object" && "_about" in v) uri = (v as { _about?: string })._about;
+  const slug = uri?.split("/").pop()?.split("#").pop()?.toLowerCase();
+  return slug === "freehold" || slug === "leasehold" ? slug : undefined;
 }

@@ -215,7 +215,7 @@ map remounts and re-fits when any of those change.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (OSM/Overpass — shops, transport,
   GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail, England — Lden/Lnight
-  at the point), Property prices, Property checks (EA flood).
+  at the point), Property prices, Property checks (EA flood + tenure from Land Registry; EPC & council-tax to come).
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 

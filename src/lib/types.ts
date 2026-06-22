@@ -162,6 +162,7 @@ export interface PriceSale {
   paon?: string;
   street?: string;
   type?: string; // detached / semi-detached / terraced / flat-maisonette / other
+  tenure?: "freehold" | "leasehold"; // HM Land Registry estate type
 }
 
 export interface PriceYear {
@@ -180,6 +181,7 @@ export interface PriceSummary {
   averagePrice: number | null; // mean - feeds the national price benchmark
   medianPrice: number | null; // median - the headline figure (robust to commercial outliers)
   byYear: PriceYear[];
+  tenure: { freehold: number; leasehold: number } | null; // freehold/leasehold split of these sales
 }
 
 // IMD 2019 domain deciles (1 = most deprived 10% of England's LSOAs, 10 = least).
