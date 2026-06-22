@@ -50,6 +50,10 @@ export interface School {
   pupilTeacherRatio?: number | null; // pupils per teacher (FTE) — DfE School Workforce Census
   teachersFte?: number | null; // teaching staff, full-time equivalent
   workforceYear?: string; // e.g. "2023/24"
+  financePerPupil?: number | null; // total expenditure per pupil (£) — DfE school finance
+  financeReserve?: number | null; // revenue reserve (£); negative = in deficit
+  financeInYear?: number | null; // in-year balance (£)
+  financeYear?: string; // e.g. "2024/25"
   parentViewHappy?: number | null; // % agree "My child is happy" (Ofsted Parent View)
   parentViewResponses?: number;
   parentView?: ParentView | null; // full survey breakdown, keyed by question id ("1".."14","7a","7b")

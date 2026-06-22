@@ -90,6 +90,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const hasComp =
     !!comp && (comp.fsm != null || comp.eal != null || comp.senEhcp != null || comp.senSupport != null);
   const hasWorkforce = s.pupilTeacherRatio != null || s.teachersFte != null;
+  const hasFinance = s.financePerPupil != null || s.financeReserve != null;
   const pv = s.parentView ?? null;
   const pvList = pv ? pvRows(pv) : [];
   const recommend = pv?.["14"]?.pos;
@@ -285,6 +286,30 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             </Section>
           )}
 
+          {hasFinance && (
+            <Section title={`Finances${s.financeYear ? ` · ${s.financeYear}` : ""}`}>
+              <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                <Stat
+                  label="Spend per pupil"
+                  value={s.financePerPupil != null ? gbp(s.financePerPupil) : "—"}
+                />
+                <Stat
+                  label="Revenue reserve"
+                  value={s.financeReserve != null ? gbp(s.financeReserve) : "—"}
+                  color={balanceColor(s.financeReserve)}
+                />
+                <Stat
+                  label="In-year balance"
+                  value={s.financeInYear != null ? gbp(s.financeInYear) : "—"}
+                  color={balanceColor(s.financeInYear)}
+                />
+              </div>
+              <p className="mt-2 text-[11px] leading-snug text-[var(--muted)]">
+                Revenue reserve is the surplus (green) or deficit (red) carried forward.
+              </p>
+            </Section>
+          )}
+
           {typeof s.parentViewHappy === "number" && (
             <Section
               title="Parent View"
@@ -344,7 +369,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
 
           <p className="text-[11px] leading-relaxed text-[var(--muted)]">
             Coming next: catchment area and multi-year trends. Sources: GIAS, DfE performance
-            tables, School Workforce Census, Ofsted, postcodes.io.
+            tables, School Workforce Census, school finance (CFR/AAR), Ofsted, postcodes.io.
           </p>
         </div>
       </div>
@@ -448,6 +473,13 @@ function signed(v: number | null | undefined): string {
 }
 function pct(v: number | null | undefined): string {
   return v == null ? "—" : `${v}%`;
+}
+function gbp(n: number): string {
+  const v = Math.round(n);
+  return (v < 0 ? "−£" : "£") + Math.abs(v).toLocaleString();
+}
+function balanceColor(v: number | null | undefined): string | undefined {
+  return v == null ? undefined : v >= 0 ? "#16a34a" : "#dc2626";
 }
 function tint(v: number | null | undefined, fn: (n: number) => string): string | undefined {
   return v == null ? undefined : fn(v);
