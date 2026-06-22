@@ -319,9 +319,19 @@ ETL and no committed data, like crime/prices/amenities.)
 **per-school subjects** (DfE subject data is national-only, not bulk-published per school);
 **11+ oversubscription** (published LA-by-LA, messy).
 
-**Follow-up:** **Welsh schools** are still excluded from the register — they lack the statutory age
-fields we derive phase from and aren't covered by our England Ofsted/DfE enrichment; proper support
-needs a dedicated Welsh pipeline (Estyn inspections + Welsh-Government results).
+**Follow-up — non-England nations.** Each needs its **own register, inspectorate and
+performance/deprivation data**, and there is **no Ofsted-style single grade** outside England, so none
+slot into the existing GIAS/Ofsted/DfE pipeline:
+
+- **Wales** — *present in GIAS but excluded* (the schools are there, but carry no statutory age fields
+  to derive phase from, and aren't covered by our England Ofsted/DfE enrichment). Needs a Welsh
+  pipeline: **Estyn** inspections + **Welsh-Government** results + **WIMD** deprivation.
+- **Scotland** — *not in GIAS at all* (no Scotland group; 0 Scottish schools in the file). Needs the
+  **Scottish Government** school register, **Education Scotland** inspections (quality-indicator
+  framework, not graded), **SQA/Insight** results + **SIMD**. Note police.uk also has no Police
+  Scotland data, so the crime layer is England/Wales/NI only.
+- *(Northern Ireland is the same shape — not in GIAS; would need the **DENI** register + **ETI**
+  inspections + DENI results + **NIMDM**.)*
 
 ---
 
