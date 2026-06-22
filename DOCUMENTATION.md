@@ -217,8 +217,16 @@ These cost real time to discover — don't re-learn them:
   domains join needs the code.
 - **`xlsx` is a project dependency** — use `import * as XLSX from "xlsx"; XLSX.read(buf, {type:"buffer"})`
   for the Ofsted/Parent View/FBIT workbooks.
-- **Catchment areas** (the one big remaining gap) need **restricted NPD pupil-residence microdata**
-  via the ONS Secure Research Service — *not* free/open. Only approximable. Don't promise a clean build.
+- **Catchment areas** (the big remaining gap) need **restricted NPD pupil-residence microdata** via
+  the ONS Secure Research Service — *not* free/open. Only approximable. Don't promise a clean build.
+- **Per-school subjects aren't cleanly available either.** DfE's KS4 subject datasets (EES) are
+  **national/aggregate** (no per-school URN), and the bulk KS4 download is summary-only. Per-school
+  subject results render on the compare-school-performance *website* but aren't bulk-published — so
+  "Subjects" would be a per-school scrape, disclosure-suppressed for small entries. Treated as gated.
+- **The in-build TypeScript check is disabled** (`next.config.ts` → `typescript.ignoreBuildErrors`):
+  `next build`'s "Running TypeScript" step OOM-hangs on Vercel's 8 GB machine inferring literal types
+  for the multi-MB committed JSON. **Run `tsc --noEmit` yourself** — that's the type-check safety net,
+  not the build.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -233,7 +241,7 @@ npm install
 npm run dev            # http://localhost:3000  (no keys needed; /map needs NEXT_PUBLIC_MAPBOX_TOKEN)
 npm run build          # production build
 npm run lint           # ESLint (a few pre-existing warnings in MapboxMap/PropertyChecks are known)
-node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json   # typecheck
+node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json   # typecheck (the real one — build skips it, §9)
 ```
 
 - **Refresh data:** re-run the relevant `npm run etl:*` when the DfE/Ofsted/MHCLG source publishes a
@@ -248,15 +256,18 @@ node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json   # typecheck
 
 **Shipped — school-card parity with Locrating's free tier + more:** register-based pins, Ofsted +
 sub-grades, KS2/GCSE/A-level (incl. GCSE 5+ E&M), Parent View full breakdown, destinations, pupil
-composition, **workforce**, **finances**, GIAS metadata (pupils/gender/type/faith/grammar) + map
-filters, **IMD 7-domain deprivation breakdown**, crime vs benchmark, sold-price trends, EA flood,
-compare, Map/List, search-by-name.
+composition, **workforce** (pupil:teacher ratio, teacher FTE, total staff FTE), **finances**, GIAS
+metadata (pupils/gender/type/faith/grammar) + map filters, **IMD 7-domain deprivation breakdown**,
+crime vs benchmark, sold-price trends, EA flood, compare, Map/List, search-by-name.
 
 **Remaining (free data):** per-domain IMD **map layers** (recolour the map by a chosen domain —
 extends `/api/deprivation-points`); **amenities/POIs** (Overpass); **Defra noise**; **Ofcom
 broadband**; richer **crime filters** by category/time.
 
-**Gated:** **catchment areas** (restricted NPD microdata — §9).
+**Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
+**feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
+**per-school subjects** (DfE subject data is national-only, not bulk-published per school);
+**11+ oversubscription** (published LA-by-LA, messy).
 
 ---
 
