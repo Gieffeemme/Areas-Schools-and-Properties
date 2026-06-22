@@ -6,6 +6,7 @@ import AreaMap from "./AreaMap";
 import SchoolsPanel from "./SchoolsPanel";
 import CrimePanel from "./CrimePanel";
 import PricePanel from "./PricePanel";
+import DeprivationPanel from "./DeprivationPanel";
 import PropertyChecks from "./PropertyChecks";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
@@ -246,6 +247,7 @@ function SidePanels({
   );
   const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;
   const price = <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />;
+  const deprivation = <DeprivationPanel facts={report.facts} />;
 
   if (route === "property") {
     return (
@@ -253,6 +255,7 @@ function SidePanels({
         {price}
         <PropertyChecks centre={report.centre} />
         {crime}
+        {deprivation}
         {schools}
       </>
     );
@@ -263,6 +266,7 @@ function SidePanels({
     <>
       {schools}
       {crime}
+      {deprivation}
       {price}
     </>
   );

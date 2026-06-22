@@ -18,7 +18,8 @@
     "etl:census": "node scripts/etl/build-census.mjs",
     "etl:destinations": "node scripts/etl/build-destinations.mjs",
     "etl:workforce": "node scripts/etl/build-workforce.mjs",
-    "etl:finance": "node scripts/etl/build-finance.mjs"
+    "etl:finance": "node scripts/etl/build-finance.mjs",
+    "etl:imd": "node scripts/etl/build-imd.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

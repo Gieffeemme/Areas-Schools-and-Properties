@@ -168,14 +168,27 @@ export interface PriceSummary {
   byYear: PriceYear[];
 }
 
+// IMD 2019 domain deciles (1 = most deprived 10% of England's LSOAs, 10 = least).
+export interface ImdDomains {
+  income: number | null;
+  employment: number | null;
+  education: number | null;
+  health: number | null;
+  crime: number | null;
+  housing: number | null; // Barriers to Housing and Services
+  living: number | null; // Living Environment
+}
+
 export interface AreaFacts {
   postcode: string;
   district?: string;
   region?: string;
   constituency?: string;
-  lsoa?: string;
+  lsoa?: string; // LSOA name (display)
+  lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
+  imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA
 }
 
 export interface MetricBenchmark {

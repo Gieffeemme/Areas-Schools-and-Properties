@@ -1,4 +1,5 @@
 import { AreaFacts, LatLng } from "./types";
+import { imdDomainsForLsoa } from "./imd";
 
 // Number of LSOAs in the English IMD 2019 ranking (used to derive a decile).
 const ENGLAND_LSOA_COUNT = 32844;
@@ -33,6 +34,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
         isEngland && imdRank
           ? Math.min(10, Math.max(1, Math.ceil((imdRank / ENGLAND_LSOA_COUNT) * 10)))
           : null;
+      const lsoaCode: string | undefined = r.codes?.lsoa;
       return {
         centre: { lat: r.latitude, lng: r.longitude },
         facts: {
@@ -41,8 +43,10 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           region: r.region,
           constituency: r.parliamentary_constituency,
           lsoa: r.lsoa,
+          lsoaCode,
           imdRank,
           imdDecile,
+          imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
         },
       };
     }
