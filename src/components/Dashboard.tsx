@@ -143,11 +143,11 @@ function Report({
         <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
       </div>
 
-      <div className={mapFull ? "" : "grid gap-4 lg:grid-cols-[3fr_2fr]"}>
-        <div>
+      <div className={mapFull ? "" : "grid items-start gap-4 lg:grid-cols-[3fr_2fr]"}>
+        <div className={mapFull ? "" : "lg:sticky lg:top-4"}>
           <div
             className={`relative overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm ${
-              mapFull ? "h-[78vh]" : "h-[420px] sm:h-[520px] lg:h-[640px]"
+              mapFull ? "h-[78vh]" : "h-[420px] sm:h-[520px] lg:h-[calc(100vh-7rem)]"
             }`}
           >
             {/* key includes radius + layout so the (mount-only) Leaflet map re-fits when either changes */}
