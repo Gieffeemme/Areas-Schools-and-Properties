@@ -167,12 +167,13 @@ src/
       crime-points/route.ts    point-grid crime layer (police.uk)
       deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
       flood/route.ts           EA flood-risk lookup
+      epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  amenities.ts  fetchAmenities() (Overpass)   ·  broadband.ts  broadbandForLaua()
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()  ·  flood.ts  fetchFlood()
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()  ·  flood.ts  fetchFlood()  ·  epc.ts  fetchEpc()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
@@ -215,7 +216,7 @@ map remounts and re-fits when any of those change.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (OSM/Overpass — shops, transport,
   GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail, England — Lden/Lnight
-  at the point), Property prices, Property checks (EA flood + tenure from Land Registry; EPC & council-tax to come).
+  at the point), Property prices, Property checks (EA flood + tenure + EPC energy ratings; council-tax to come).
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 
@@ -277,6 +278,15 @@ These cost real time to discover — don't re-learn them:
   dead (500). It's an **England-only** dataset (out-of-coverage points return empty / `0` / a negative
   sentinel inconsistently), so `/api/area` calls `fetchNoise()` only when `facts.country === "England"`
   and the dashboard hides the panel elsewhere.
+- **EPC data moved (May 2026) — old API retired.** `epc.opendatacommunities.org` was retired and now
+  301-redirects to an HTML site (so the old `…/api/v1/domestic/search` silently returns a web page).
+  EPC is now MHCLG's **"Get energy performance of buildings data"** at
+  `api.get-energy-performance-data.communities.gov.uk/api/domestic/search`, authenticated with
+  **`Authorization: Bearer <token>`** (token from your account page → env **`EPC_API_KEY`**,
+  server-only via `fetchEpc()`/`/api/epc`, never sent to the browser). It returns `data[]` with
+  `currentEnergyEfficiencyBand` (A–G); a 404 `{data:{error}}` just means "no certificates for that
+  postcode". The old API used Basic `base64(email:key)` — a *different* scheme; the api.gov.uk
+  catalogue still lists the dead endpoint, so don't trust it.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the

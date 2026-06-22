@@ -142,6 +142,14 @@ export interface FloodSummary {
   topSeverity?: string; // most severe active warning, e.g. "Flood alert"
 }
 
+// Domestic EPC summary for a postcode (MHCLG "Get energy performance of buildings data").
+export interface EpcSummary {
+  postcode: string;
+  count: number; // distinct dwellings with an EPC (latest certificate each)
+  bands: Record<string, number>; // energy band A–G → count
+  typicalBand: string | null; // most common band
+}
+
 export interface CrimeCategoryCount {
   category: string;
   count: number;

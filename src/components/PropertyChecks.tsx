@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { FloodSummary, LatLng, PriceSummary } from "@/lib/types";
+import { EpcSummary, FloodSummary, LatLng, PriceSummary } from "@/lib/types";
 import Card from "./Card";
 
 type Check = { label: string; status: "live" | "soon"; note: string };
@@ -9,11 +9,14 @@ type Check = { label: string; status: "live" | "soon"; note: string };
 export default function PropertyChecks({
   centre,
   prices,
+  postcode,
 }: {
   centre: LatLng;
   prices: PriceSummary | null;
+  postcode?: string;
 }) {
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
+  const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
 
   useEffect(() => {
     let on = true;
@@ -27,11 +30,27 @@ export default function PropertyChecks({
     };
   }, [centre.lat, centre.lng]);
 
+  useEffect(() => {
+    if (!postcode) {
+      setEpc(null);
+      return;
+    }
+    let on = true;
+    setEpc("loading");
+    fetch(`/api/epc?postcode=${encodeURIComponent(postcode)}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => on && setEpc(d as EpcSummary | null))
+      .catch(() => on && setEpc(null));
+    return () => {
+      on = false;
+    };
+  }, [postcode]);
+
   const checks: Check[] = [
     floodCheck(flood),
     { label: "Sold price history", status: "live", note: "HM Land Registry - see the prices panel" },
     tenureCheck(prices),
-    { label: "EPC & energy cost", status: "soon", note: "MHCLG EPC register" },
+    epcCheck(epc),
     { label: "Council tax band", status: "soon", note: "VOA" },
     { label: "Planning applications nearby", status: "soon", note: "Local authority" },
   ];
@@ -63,6 +82,24 @@ export default function PropertyChecks({
       </p>
     </Card>
   );
+}
+
+function epcCheck(epc: EpcSummary | null | "loading"): Check {
+  if (epc === "loading")
+    return { label: "EPC / energy", status: "soon", note: "EPC register - checking…" };
+  if (!epc) return { label: "EPC / energy", status: "soon", note: "MHCLG EPC register" };
+  if (!epc.count)
+    return { label: "EPC / energy", status: "live", note: "EPC register - no certificate lodged for this postcode" };
+  const top = Object.entries(epc.bands)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3)
+    .map(([b, n]) => `${n} ${b}`)
+    .join(" · ");
+  return {
+    label: "EPC / energy",
+    status: "live",
+    note: `EPC register - typical band ${epc.typicalBand} of ${epc.count} (${top})`,
+  };
 }
 
 function tenureCheck(prices: PriceSummary | null): Check {
