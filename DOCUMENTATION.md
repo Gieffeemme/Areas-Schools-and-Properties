@@ -200,7 +200,8 @@ map remounts and re-fits when any of those change.
 - **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,
   Parent View; **shortlist** (★, localStorage). Metric sorts fall back to Ofsted then distance.
 - **School detail drawer:** Details, **Ofsted** — the new Nov-2025 **report card** (5-band scale +
-  safeguarding + per-area counts) where one exists, otherwise the legacy grade + sub-grades — GCSE
+  safeguarding + per-area counts) where one exists, otherwise the legacy grade + sub-grades (shown
+  with a caveat note linking to the live Ofsted report — see §9) — GCSE
   (incl. 5+/4+ E&M), A-level, KS2, Destinations, Pupil composition, **Workforce**, **Finances**, full
   **Parent View**. Nurseries deep-link to the live Ofsted page.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
@@ -236,6 +237,18 @@ These cost real time to discover — don't re-learn them:
   **national/aggregate** (no per-school URN), and the bulk KS4 download is summary-only. Per-school
   subject results render on the compare-school-performance *website* but aren't bulk-published — so
   "Subjects" would be a per-school scrape, disclosure-suppressed for small entries. Treated as gated.
+- **A legacy single-word Ofsted grade isn't necessarily stale.** Ofsted's new *report cards* exist
+  only for inspections from the **Nov-2025 cutover** onward; a provider last inspected before then
+  keeps a legacy graded report (overall + the four EIF judgements: quality of education, behaviour &
+  attitudes, personal development, leadership & management) — exactly what the bulk MI carries and the
+  drawer shows. `etl:report-cards --discover` overrides the bulk grade **only** when a genuine
+  post-cutover report card exists, so a recent legacy grade (e.g. a nursery inspected mid-2025) is
+  *current*, not lag. The drawer carries a **blanket caveat note** ("Grade is from Ofsted's bulk
+  data… open the live report to check") — accurate as a general hedge, but it can read as if a fresher
+  grade is hidden when the shown grade is already the latest. To confirm a provider's true latest
+  status: open `reports.ofsted.gov.uk/provider/16/{urn}`, take the newest *Inspection* PDF (file IDs
+  under `files.ofsted.gov.uk/v1/file/…`), and compare. (Checked Bubbles Nurseries `EY494343`: bulk and
+  live both "Requires improvement", 1 Jul 2025 — no discrepancy.)
 - **Large datasets are read at RUNTIME, never `import`-bundled.** `src/lib/schools.ts` and
   `src/lib/imd.ts` load `src/data/*.json` via `fs` (memoised per cold start); `next.config.ts` →
   `outputFileTracingIncludes` copies those files into each server route's trace (the read paths are
