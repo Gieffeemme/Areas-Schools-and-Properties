@@ -6,7 +6,7 @@ import { PhaseFilter, matchesPhase, phaseTabs } from "@/lib/phase";
 import PhaseChips from "./PhaseChips";
 import SchoolCard from "./SchoolCard";
 
-type SortKey = "distance" | "ofsted" | "p8" | "att8" | "ks2" | "alevel" | "parent";
+type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "ks2" | "alevel" | "parent";
 
 const OFSTED_RANK: Record<string, number> = {
   Outstanding: 0, Good: 1, "Requires improvement": 2, Inadequate: 3, "Not rated": 4, "Not loaded": 5,
@@ -14,6 +14,7 @@ const OFSTED_RANK: Record<string, number> = {
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "distance", label: "Distance" },
+  { key: "name", label: "Name (A–Z)" },
   { key: "ofsted", label: "Ofsted" },
   { key: "p8", label: "GCSE · Progress 8" },
   { key: "att8", label: "GCSE · Attainment 8" },
@@ -25,6 +26,7 @@ const SORTS: { key: SortKey; label: string }[] = [
 // "Best" first; schools missing the metric sink to the bottom; distance breaks ties.
 function comparator(key: SortKey): (a: School, b: School) => number {
   if (key === "distance") return (a, b) => a.distanceMiles - b.distanceMiles;
+  if (key === "name") return (a, b) => a.name.localeCompare(b.name);
   if (key === "ofsted")
     return (a, b) =>
       (OFSTED_RANK[a.ofsted] ?? 9) - (OFSTED_RANK[b.ofsted] ?? 9) || a.distanceMiles - b.distanceMiles;
