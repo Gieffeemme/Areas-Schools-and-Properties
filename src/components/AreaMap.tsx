@@ -8,12 +8,18 @@ interface Props {
   centre: LatLng;
   schools: School[];
   radiusMiles: number;
+  onSelect: (s: School) => void;
 }
 
 // Remounted per search via a `key` on the centre, so building once on mount is correct.
-export default function AreaMap({ centre, schools, radiusMiles }: Props) {
+export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstance = useRef<unknown>(null);
+  // Keep the latest onSelect so the (mount-only) popup click listeners never go stale.
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => {
+    onSelectRef.current = onSelect;
+  }, [onSelect]);
 
   useEffect(() => {
     if (!mapRef.current || mapInstance.current) return;
@@ -67,7 +73,8 @@ export default function AreaMap({ centre, schools, radiusMiles }: Props) {
         .addTo(map)
         .bindPopup("<strong>Your location</strong>");
 
-      // School pins, coloured by Ofsted rating
+      // School pins, coloured by Ofsted rating. The name is a button that opens
+      // the full detail drawer (via onSelect) — same as clicking a list card.
       schools.forEach((s) => {
         const color = RATING_COLORS[s.ofsted];
         const icon = L.divIcon({
@@ -76,13 +83,16 @@ export default function AreaMap({ centre, schools, radiusMiles }: Props) {
           iconSize: [16, 16],
           iconAnchor: [8, 15],
         });
-        L.marker([s.lat, s.lng], { icon })
-          .addTo(map)
-          .bindPopup(
-            `<strong>${escapeHtml(s.name)}</strong><br>` +
-              `${s.phase ? escapeHtml(s.phase) + " · " : ""}${s.distanceMiles} mi<br>` +
-              `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${color}">${escapeHtml(ratingText(s.ofsted))}</span>`,
-          );
+        const popupEl = document.createElement("div");
+        popupEl.innerHTML =
+          `<button type="button" class="am-popup-name" title="View full details" style="display:inline;padding:0;border:0;background:none;font:inherit;font-weight:700;color:#6366f1;text-decoration:underline;cursor:pointer;text-align:left">${escapeHtml(s.name)}</button><br>` +
+          `${s.phase ? escapeHtml(s.phase) + " · " : ""}${s.distanceMiles} mi<br>` +
+          `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${color}">${escapeHtml(ratingText(s.ofsted))}</span>`;
+        popupEl.querySelector(".am-popup-name")?.addEventListener("click", () => {
+          map.closePopup();
+          onSelectRef.current?.(s);
+        });
+        L.marker([s.lat, s.lng], { icon }).addTo(map).bindPopup(popupEl);
       });
 
       const dLat = radiusMetres / 111320;

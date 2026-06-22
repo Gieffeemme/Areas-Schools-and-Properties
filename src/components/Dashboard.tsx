@@ -171,6 +171,7 @@ function Report({
                 centre={report.centre}
                 schools={report.schools}
                 radiusMiles={report.radiusMiles}
+                onSelect={onSelect}
               />
             </div>
             <Legend />
