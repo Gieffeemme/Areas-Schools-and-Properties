@@ -14,7 +14,7 @@ export interface RouteDef {
 export const ROUTES: RouteDef[] = [
   {
     id: "area",
-    label: "Schools & area",
+    label: "Find a school & search an area",
     emoji: "🏘️",
     blurb: "Search a postcode or a school name — schools, nurseries, crime, prices & deprivation.",
     headline: "Explore an area — or find a school",
