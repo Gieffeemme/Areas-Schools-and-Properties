@@ -208,7 +208,7 @@ export interface AreaBenchmarks {
 }
 
 export interface SourceError {
-  source: "schools" | "crime" | "prices" | "amenities";
+  source: "schools" | "crime" | "prices" | "amenities" | "noise";
   message: string;
 }
 
@@ -233,6 +233,20 @@ export interface BroadbandSummary {
   belowUso: number | null; // % below the USO (can't get a decent connection)
 }
 
+// Environmental noise at the searched point, from Defra strategic noise mapping (Round 4, 2021).
+// Each level is the modelled dB at the location; null = below the mapping threshold (40 dB Lden /
+// 35 dB Lnight), i.e. no significant source of that kind nearby.
+export interface NoiseSource {
+  lden: number | null; // day–evening–night level (overall annoyance)
+  lnight: number | null; // night-time level (sleep disturbance)
+}
+
+export interface NoiseSummary {
+  road: NoiseSource;
+  rail: NoiseSource;
+  year: string; // snapshot year of the Round 4 maps ("2021")
+}
+
 export interface AreaReport {
   query: string;
   centre: LatLng;
@@ -243,6 +257,7 @@ export interface AreaReport {
   prices: PriceSummary | null;
   amenities: AmenitySummary | null;
   broadband: BroadbandSummary | null;
+  noise: NoiseSummary | null;
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)

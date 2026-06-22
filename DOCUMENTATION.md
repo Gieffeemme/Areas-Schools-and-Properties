@@ -68,7 +68,8 @@ PostcodeSearch / school-name search (client)
        │    ├─ fetchSchools()       gias + nurseries + report-cards, enriched by URN  → School[]
        │    ├─ fetchCrime()         police.uk     → totals, categories, vs-benchmark
        │    ├─ fetchPrices()        HM Land Registry → sales, averages, by-year
-       │    └─ fetchAmenities()     OSM / Overpass → counts + nearest by category (~1 mi)
+       │    ├─ fetchAmenities()     OSM / Overpass → counts + nearest by category (~1 mi)
+       │    └─ fetchNoise()         Defra WMS GetFeatureInfo → road+rail Lden/Lnight dB at the point
        └─ broadbandForLaua()        broadband-by-laua.json (sync fs read) → Ofcom LA coverage
   └─ AreaReport JSON → <Dashboard/> renders map + panels + detail drawer
 ```
@@ -204,7 +205,8 @@ map remounts and re-fits when any of those change.
   **Parent View**. Nurseries deep-link to the live Ofsted page.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (OSM/Overpass — shops, transport,
-  GPs, parks…), **Broadband** (Ofcom coverage), Property prices, Property checks (EA flood).
+  GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail — Lden/Lnight at the
+  point), Property prices, Property checks (EA flood).
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 
@@ -244,6 +246,14 @@ These cost real time to discover — don't re-learn them:
   static `import x from "@/data/big.json"` into app code — read it at runtime and list it under
   `outputFileTracingIncludes`, or the OOM returns. (`benchmarks.json`, 4 KB, is the lone exception,
   still imported.) Still run `tsc --noEmit` for fast local checks.
+- **Defra strategic noise is a WMS raster, not vector contours.** The Round 4 (2021) road/rail maps
+  are served from Defra's GeoServer (`environment.data.gov.uk/spatialdata/<slug>/wms`); `fetchNoise()`
+  reads the modelled dB at the point via **`GetFeatureInfo`** (JSON → `GRAY_INDEX`; `0` = below the
+  40 dB/35 dB cutoff → "below threshold"). So it's a runtime point-query — no ETL, no committed
+  geometry, no point-in-polygon. Use `crs=CRS:84` (lon,lat) to dodge the WMS 1.3.0 EPSG:4326
+  axis-order trap; road and rail are in **different workspaces** (rail lives in the `noise-data`
+  workspace, road in `road-noise-all-metrics-england-round-4`). The legacy `/arcgis/rest/` paths are
+  dead (500).
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -278,10 +288,13 @@ KS2/GCSE/A-level (incl. GCSE 5+ E&M), Parent View full breakdown, destinations, 
 layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-name, the
 **runtime-load build cleanup** (datasets read at runtime; in-build type-check re-enabled),
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (Overpass), **broadband**
-(Ofcom), **area rankings**, **crime-category filter** on the map.
+(Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
+strategic noise mapping, Round 4).
 
-**Remaining (free data):** **Defra noise** — the last Tier-1 layer (GIS contours → point-in-polygon;
-the heaviest, not yet started).
+**Remaining (free data):** none outstanding — the Tier-1 set is complete. (The last of them, **Defra
+noise**, was expected to need committed GIS contours + point-in-polygon, but Defra serves the Round 4
+maps as a GeoServer **WMS raster**, so `fetchNoise()` does a live `GetFeatureInfo` point-query — no
+ETL and no committed data, like crime/prices/amenities.)
 
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);

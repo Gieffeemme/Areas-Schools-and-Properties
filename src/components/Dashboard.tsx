@@ -10,6 +10,7 @@ import DeprivationPanel from "./DeprivationPanel";
 import AmenitiesPanel from "./AmenitiesPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
+import NoisePanel from "./NoisePanel";
 import PropertyChecks from "./PropertyChecks";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
@@ -254,6 +255,7 @@ function SidePanels({
   const amenities = <AmenitiesPanel amenities={report.amenities} />;
   const rankings = <RankingsPanel report={report} />;
   const broadband = <BroadbandPanel broadband={report.broadband} />;
+  const noise = <NoisePanel noise={report.noise} />;
 
   if (route === "property") {
     return (
@@ -263,6 +265,7 @@ function SidePanels({
         {crime}
         {amenities}
         {broadband}
+        {noise}
         {deprivation}
         {rankings}
         {schools}
@@ -278,6 +281,7 @@ function SidePanels({
       {crime}
       {amenities}
       {broadband}
+      {noise}
       {deprivation}
       {price}
     </>

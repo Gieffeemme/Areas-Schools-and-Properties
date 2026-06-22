@@ -4,6 +4,7 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { fetchAmenities } from "@/lib/amenities";
+import { fetchNoise } from "@/lib/noise";
 import { broadbandForLaua } from "@/lib/broadband";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
@@ -39,11 +40,12 @@ export async function GET(req: NextRequest) {
 
   // The three data layers run in parallel and fail independently — one outage shouldn't
   // blank the whole dashboard.
-  const [schoolsR, crimeR, pricesR, amenitiesR] = await Promise.allSettled([
+  const [schoolsR, crimeR, pricesR, amenitiesR, noiseR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
     fetchAmenities(centre),
+    fetchNoise(centre),
   ]);
 
   const errors: SourceError[] = [];
@@ -64,6 +66,10 @@ export async function GET(req: NextRequest) {
   if (amenitiesR.status === "rejected")
     errors.push({ source: "amenities", message: reason(amenitiesR) });
 
+  const noise = noiseR.status === "fulfilled" ? noiseR.value : null;
+  if (noiseR.status === "rejected")
+    errors.push({ source: "noise", message: reason(noiseR) });
+
   const broadband = broadbandForLaua(facts.lauaCode);
 
   const benchmarks: AreaBenchmarks = {
@@ -82,6 +88,7 @@ export async function GET(req: NextRequest) {
     prices,
     amenities,
     broadband,
+    noise,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),
     errors,
