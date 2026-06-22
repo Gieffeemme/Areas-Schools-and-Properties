@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { LatLng, School } from "@/lib/types";
-import { RATING_COLORS } from "@/lib/ratings";
+import { gradeDisplay } from "@/lib/reportCard";
 
 interface Props {
   centre: LatLng;
@@ -76,7 +76,8 @@ export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Prop
       // School pins, coloured by Ofsted rating. The name is a button that opens
       // the full detail drawer (via onSelect) — same as clicking a list card.
       schools.forEach((s) => {
-        const color = RATING_COLORS[s.ofsted];
+        const g = gradeDisplay(s.reportCard, s.ofsted);
+        const color = g.colour;
         const icon = L.divIcon({
           className: "",
           html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>`,
@@ -87,7 +88,7 @@ export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Prop
         popupEl.innerHTML =
           `<button type="button" class="am-popup-name" title="View full details" style="display:inline;padding:0;border:0;background:none;font:inherit;font-weight:700;color:#6366f1;text-decoration:underline;cursor:pointer;text-align:left">${escapeHtml(s.name)}</button><br>` +
           `${s.phase ? escapeHtml(s.phase) + " · " : ""}${s.distanceMiles} mi<br>` +
-          `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${color}">${escapeHtml(ratingText(s.ofsted))}</span>`;
+          `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${color}">${escapeHtml(g.label)}</span>`;
         popupEl.querySelector(".am-popup-name")?.addEventListener("click", () => {
           map.closePopup();
           onSelectRef.current?.(s);
@@ -130,8 +131,4 @@ function escapeHtml(s: string): string {
     (c) =>
       ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] as string,
   );
-}
-
-function ratingText(r: School["ofsted"]): string {
-  return r === "Not loaded" ? "Ofsted: not loaded" : r;
 }

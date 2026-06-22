@@ -1,5 +1,5 @@
 import { OfstedRating, School } from "@/lib/types";
-import { RATING_COLORS } from "@/lib/ratings";
+import { gradeDisplay } from "@/lib/reportCard";
 import { happyColor, p8Color, pctColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl } from "@/lib/links";
 import Pill from "./Pill";
@@ -24,9 +24,13 @@ export default function SchoolCard({
   shortlisted?: boolean;
   onToggleShortlist?: () => void;
 }) {
-  const color = RATING_COLORS[s.ofsted];
-  const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
-  const stale = year != null && new Date().getFullYear() - year > 4;
+  const grade = gradeDisplay(s.reportCard, s.ofsted);
+  const year = s.reportCard?.inspectionDate
+    ? Number(s.reportCard.inspectionDate.slice(0, 4))
+    : s.ofstedDate
+      ? Number(s.ofstedDate.slice(0, 4))
+      : null;
+  const stale = !s.reportCard && year != null && new Date().getFullYear() - year > 4;
   // Schools link to DfE compare-school-performance; nurseries (no DfE URN) to their Ofsted report.
   const nameHref = s.urn ? dfePerformanceUrl(s.urn) : s.ofstedReport;
   const nameTitle = s.urn ? "DfE — compare school performance" : "Ofsted report";
@@ -49,7 +53,7 @@ export default function SchoolCard({
       className={`rounded-lg border border-l-4 border-[var(--border)] bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md ${
         onClick ? "cursor-pointer" : ""
       }`}
-      style={{ borderLeftColor: color }}
+      style={{ borderLeftColor: grade.colour }}
     >
       <div className="flex items-baseline justify-between gap-2">
         {nameHref ? (
@@ -99,8 +103,8 @@ export default function SchoolCard({
       </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <Pill color={color} title={`Ofsted: ${s.ofsted}`}>
-          {OFSTED_SHORT[s.ofsted] ?? s.ofsted}
+        <Pill color={grade.colour} title={`Ofsted: ${grade.label}`}>
+          {grade.isReportCard ? grade.label : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
         </Pill>
         {typeof s.progress8 === "number" && (
           <Pill color={p8Color(s.progress8)} title={`Progress 8${s.ks4Year ? ` (${s.ks4Year})` : ""}`}>

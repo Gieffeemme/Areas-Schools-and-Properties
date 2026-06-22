@@ -6,9 +6,12 @@
 // (reports.ofsted.gov.uk/provider/16/{urn}) because Ofsted's bulk MI download does not yet carry
 // new-framework outcomes — so a re-inspected setting otherwise shows a stale old grade.
 //
-// ⚠️ NOT YET WIRED INTO THE APP. Before importing a full-size report-cards-by-urn.json into
-// src/lib/schools.ts, do the runtime-load build cleanup (Next outputFileTracingIncludes) — bundling
-// another multi-MB JSON would re-trigger the `next build` OOM. See DOCUMENTATION.md.
+// Wired into the app: src/lib/schools.ts reads report-cards-by-urn.json at runtime (memoised) and
+// attaches the card to each nursery; gradeDisplay() then prefers it over the legacy bulk-MI grade.
+// Build/refresh it with `npm run etl:report-cards -- --discover`.
+
+import type { OfstedRating } from "./types";
+import { RATING_COLORS, RATING_LABELS } from "./ratings";
 
 export type ReportCardBand =
   | "exceptional"
@@ -46,4 +49,29 @@ export interface ReportCard {
   safeguarding?: "met" | "not met";
   areas: Partial<Record<ReportCardBand, number>>; // # of evaluation areas landing at each band
   source: string; // the live provider page the record was scraped from
+}
+
+export interface GradeDisplay {
+  label: string;
+  colour: string;
+  isReportCard: boolean;
+}
+
+/**
+ * The grade to SHOW for a setting. Prefer the new report-card band when we have one (current, scraped
+ * from the live page); otherwise fall back to the legacy Ofsted rating from the bulk data. Lets the
+ * old 4-band scale keep working for everything that hasn't got a report card yet.
+ */
+export function gradeDisplay(
+  reportCard: ReportCard | null | undefined,
+  legacy: OfstedRating,
+): GradeDisplay {
+  if (reportCard) {
+    return {
+      label: reportCard.overallLabel,
+      colour: REPORT_CARD_COLOUR[reportCard.overall],
+      isReportCard: true,
+    };
+  }
+  return { label: RATING_LABELS[legacy], colour: RATING_COLORS[legacy], isReportCard: false };
 }

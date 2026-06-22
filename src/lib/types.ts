@@ -1,3 +1,5 @@
+import type { ReportCard } from "./reportCard";
+
 export interface LatLng {
   lat: number;
   lng: number;
@@ -42,6 +44,7 @@ export interface School {
   selective?: boolean; // selective (grammar) admissions
   ofsted: OfstedRating;
   ofstedDate?: string; // last inspection date, once enriched
+  reportCard?: ReportCard | null; // new-framework (Nov 2025+) EY report card, when scraped
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE
   attainment8?: number | null; // KS4 Attainment 8
   gcse5EM?: number | null; // % achieving grade 5+ in English & Maths (headline "strong pass")

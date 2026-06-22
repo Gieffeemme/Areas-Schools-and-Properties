@@ -154,6 +154,73 @@ async function fetchProvider(urn) {
   }
 }
 
+// Ofsted report search, childcare category (level_1_types=2), open providers, sorted by latest-report
+// date descending. Provider links are /provider/{typeCode}/{urn}; type 16 = non-domestic EY (our
+// nurseries). Because it's date-sorted, every new-framework report card sits in a contiguous block at
+// the front (reports on/after the Nov 2025 switch), so we can stop once we cross the boundary.
+const SEARCH = (start) =>
+  `https://reports.ofsted.gov.uk/search?level_1_types=2&status%5B0%5D=1&rows=100&start=${start}&sort=date&order=desc`;
+
+/**
+ * Discover + scrape new-framework EY report cards efficiently. Walks the date-desc childcare search,
+ * scraping type-16 URNs that exist in nurseries.json (the ones we actually display), and stops after
+ * a run of consecutive old-framework pages — i.e. once the date order has carried us past the new
+ * framework's start. This touches only the new-framework nurseries plus a small buffer, not all ~23k.
+ */
+async function discoverAndScrape() {
+  const nurseries = JSON.parse(await readFile(NURSERIES, "utf8"));
+  const nurserySet = new Set(nurseries.map((n) => String(n.urn)));
+  const cards = {};
+  const seen = new Set();
+  const tally = { "report-card": 0, "old-framework": 0, missing: 0, error: 0 };
+  const STOP_AFTER_OLD = 80; // consecutive old-framework scrapes past the boundary → stop
+  const MAX_PAGES = 300; // safety backstop (~30k results)
+  let consecutiveOld = 0;
+  for (let page = 0; page < MAX_PAGES; page++) {
+    let html;
+    try {
+      html = unescapeHtml(await (await fetch(SEARCH(page * 100), { headers: { "User-Agent": UA } })).text());
+    } catch (e) {
+      console.warn(`  ! search page ${page} failed: ${e.message}`);
+      continue;
+    }
+    const urns = [...html.matchAll(/\/provider\/16\/(\d+)/g)].map((m) => m[1]);
+    if (urns.length === 0) break; // end of results
+    const fresh = [];
+    for (const u of urns) {
+      if (seen.has(u)) continue;
+      seen.add(u);
+      if (nurserySet.has(u)) fresh.push(u);
+    }
+    const results = await mapPool(fresh, 5, async (urn) => {
+      const r = await fetchProvider(urn);
+      if (r.error) return { urn, kind: "error", message: r.error };
+      if (r.status === 404) return { urn, kind: "missing" };
+      const rec = parseReportCard(r.html, urn);
+      return rec ? { urn, kind: "report-card", rec } : { urn, kind: "old-framework" };
+    });
+    let stop = false;
+    for (const r of results) {
+      tally[r.kind] = (tally[r.kind] || 0) + 1;
+      if (r.kind === "report-card") {
+        cards[r.rec.urn] = r.rec;
+        consecutiveOld = 0;
+      } else if (r.kind === "old-framework") {
+        consecutiveOld++;
+        if (page >= 2 && consecutiveOld >= STOP_AFTER_OLD) { stop = true; break; }
+      }
+    }
+    const added = results.filter((r) => r.kind === "report-card").length;
+    console.log(`  page ${page} (start ${page * 100}): +${added} cards · total ${Object.keys(cards).length} · consecutiveOld ${consecutiveOld}`);
+    if (page % 10 === 9) await writeFile(OUT, JSON.stringify(cards, null, 2) + "\n"); // checkpoint
+    if (stop) {
+      console.log(`  crossed the framework boundary (${STOP_AFTER_OLD} consecutive old-framework) — stopping.`);
+      break;
+    }
+  }
+  return { cards, tally };
+}
+
 /** Map over URNs with a small concurrency cap, to stay polite to reports.ofsted.gov.uk. */
 async function mapPool(items, concurrency, fn) {
   const out = new Array(items.length);
@@ -185,6 +252,22 @@ async function resolveUrns(args) {
 
 async function main() {
   const args = process.argv.slice(2);
+
+  // Efficient full-coverage mode: discover new-framework nurseries via the date-desc search.
+  if (args.includes("--discover")) {
+    console.log("Discovering new-framework EY report cards via Ofsted search (childcare, date-desc)…");
+    const { cards, tally } = await discoverAndScrape();
+    await writeFile(OUT, JSON.stringify(cards, null, 2) + "\n");
+    const bands = {};
+    for (const c of Object.values(cards)) bands[c.overallLabel] = (bands[c.overallLabel] || 0) + 1;
+    const dates = Object.values(cards).map((c) => c.inspectionDate).filter(Boolean).sort();
+    console.log(`\nWrote ${Object.keys(cards).length} report cards → ${OUT}`);
+    console.log(`  scraped — report-card: ${tally["report-card"]} · old: ${tally["old-framework"]} · missing: ${tally.missing} · errors: ${tally.error}`);
+    console.log(`  by band: ${JSON.stringify(bands)}`);
+    console.log(`  inspection dates: ${dates[0] ?? "?"} … ${dates[dates.length - 1] ?? "?"}`);
+    return;
+  }
+
   const urns = await resolveUrns(args);
   console.log(`Scraping ${urns.length} EY provider page(s) for new-framework report cards…`);
 

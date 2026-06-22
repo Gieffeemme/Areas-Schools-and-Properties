@@ -2,6 +2,7 @@
 
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS, RATING_LABELS } from "@/lib/ratings";
+import { gradeDisplay, REPORT_CARD_BANDS, type ReportCardBand } from "@/lib/reportCard";
 import { gradeColor, happyColor, p8Color, pctColor, progressColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl, ofstedReportUrl, parentViewUrl } from "@/lib/links";
 
@@ -71,9 +72,14 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
 }
 
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
-  const color = RATING_COLORS[s.ofsted];
-  const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
-  const stale = year != null && new Date().getFullYear() - year > 4;
+  const rc = s.reportCard ?? null;
+  const grade = gradeDisplay(rc, s.ofsted);
+  const year = rc?.inspectionDate
+    ? Number(rc.inspectionDate.slice(0, 4))
+    : s.ofstedDate
+      ? Number(s.ofstedDate.slice(0, 4))
+      : null;
+  const stale = !rc && year != null && new Date().getFullYear() - year > 4;
   const sub = s.ofstedSub ?? {};
   const reportUrl = s.urn ? ofstedReportUrl(s.urn) : s.ofstedReport;
   const dfeHref = s.urn ? dfePerformanceUrl(s.urn) : undefined;
@@ -151,9 +157,9 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className="rounded-md px-2.5 py-1 text-sm font-semibold text-white"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: grade.colour }}
               >
-                {RATING_LABELS[s.ofsted]}
+                {grade.label}
               </span>
               {year != null && (
                 <span className={`text-xs ${stale ? "font-medium text-[#d97706]" : "text-[var(--muted)]"}`}>
@@ -162,24 +168,55 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 </span>
               )}
             </div>
-            {SUB.some((x) => sub[x.key]) && (
-              <dl className="mt-3 space-y-1.5">
-                {SUB.filter((x) => sub[x.key]).map((x) => (
-                  <div key={x.key} className="flex items-center justify-between gap-2 text-sm">
-                    <dt className="text-[var(--muted)]">{x.label}</dt>
-                    <dd>
-                      <GradeChip rating={sub[x.key] as OfstedRating} />
-                    </dd>
-                  </div>
-                ))}
-              </dl>
-            )}
-            {s.phase === "Nursery" && (
-              <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
-                Grade is from Ofsted’s bulk data. Their new report cards (from Nov 2025) aren’t
-                published in bulk yet, so a recent re-inspection may not show here — open the live
-                report to check.
-              </p>
+            {rc ? (
+              <>
+                <dl className="mt-3 space-y-1.5 text-sm">
+                  {rc.safeguarding && (
+                    <div className="flex items-center justify-between gap-2">
+                      <dt className="text-[var(--muted)]">Safeguarding</dt>
+                      <dd
+                        className="font-medium"
+                        style={{ color: rc.safeguarding === "met" ? "#16a34a" : "#dc2626" }}
+                      >
+                        {rc.safeguarding === "met" ? "Standards met" : "Not met"}
+                      </dd>
+                    </div>
+                  )}
+                  {areaSummary(rc.areas) && (
+                    <div className="flex items-start justify-between gap-2">
+                      <dt className="shrink-0 text-[var(--muted)]">Evaluation areas</dt>
+                      <dd className="text-right">{areaSummary(rc.areas)}</dd>
+                    </div>
+                  )}
+                </dl>
+                <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                  Ofsted’s new report-card grade, read from the live report. Five-band scale:
+                  Exceptional · Strong standard · Expected standard · Needs attention · Urgent
+                  improvement.
+                </p>
+              </>
+            ) : (
+              <>
+                {SUB.some((x) => sub[x.key]) && (
+                  <dl className="mt-3 space-y-1.5">
+                    {SUB.filter((x) => sub[x.key]).map((x) => (
+                      <div key={x.key} className="flex items-center justify-between gap-2 text-sm">
+                        <dt className="text-[var(--muted)]">{x.label}</dt>
+                        <dd>
+                          <GradeChip rating={sub[x.key] as OfstedRating} />
+                        </dd>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+                {s.phase === "Nursery" && (
+                  <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                    Grade is from Ofsted’s bulk data. Their new report cards (from Nov 2025) aren’t
+                    published in bulk yet, so a recent re-inspection may not show here — open the live
+                    report to check.
+                  </p>
+                )}
+              </>
             )}
             {reportUrl && (
               <a
@@ -477,6 +514,14 @@ function GradeChip({ rating }: { rating: OfstedRating }) {
       {RATING_LABELS[rating]}
     </span>
   );
+}
+
+// Summarise a report card's per-band area counts, e.g. {expected:6} -> "6 Expected standard";
+// {strong:4, expected:2} -> "4 Strong standard, 2 Expected standard".
+function areaSummary(areas: Partial<Record<ReportCardBand, number>>): string {
+  return REPORT_CARD_BANDS.filter((b) => areas[b.code])
+    .map((b) => `${areas[b.code]} ${b.label}`)
+    .join(", ");
 }
 
 function signed(v: number | null | undefined): string {

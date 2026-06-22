@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
 import { ofstedReportUrl, ofstedEarlyYearsUrl } from "./links";
+import type { ReportCard } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
 // so `next build`'s type-checker never has to infer literal types for ~26 MB of JSON — that inference
@@ -145,6 +146,16 @@ interface NurseryRecord {
 }
 const nurseries = memo(() => loadData<NurseryRecord[]>("nurseries.json"));
 
+// New-framework (Nov 2025+) EY report cards, scraped from the live provider pages by etl:report-cards
+// (the bulk MI doesn't carry them yet). Optional — an empty map until the ETL has produced the file.
+const reportCardMap = memo<Record<string, ReportCard>>(() => {
+  try {
+    return loadData<Record<string, ReportCard>>("report-cards-by-urn.json");
+  } catch {
+    return {};
+  }
+});
+
 // GIAS — the DfE register of every school in England (build-gias.mjs, postcode-geocoded). The
 // authoritative source of school pins + phase, replacing OpenStreetMap (which missed schools and
 // guessed phase). URN is native, so every school joins to the enrichment data above.
@@ -257,6 +268,7 @@ export async function fetchSchools(
       ofsted: n.rating ?? "Not rated",
       ofstedDate: n.date,
       ofstedSub: n.sub,
+      reportCard: reportCardMap()[n.urn] ?? null,
       // EY register deep-links to the live provider page (type 16), which carries the new
       // report-card grade the bulk MI hasn't published yet — so a re-inspection shows there.
       ofstedReport: ofstedEarlyYearsUrl(n.urn),

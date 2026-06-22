@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { GeoJSONSource, Map as MbMap } from "mapbox-gl";
 import { LatLng, School } from "@/lib/types";
-import { RATING_COLORS } from "@/lib/ratings";
+import { gradeDisplay } from "@/lib/reportCard";
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -228,20 +228,26 @@ function domainProp(domain: string): string {
   return domain === "overall" ? "decile" : domain;
 }
 
+function schoolPinProps(s: School) {
+  // Prefer the new report-card band (current) over the legacy bulk-MI grade for colour + popup label.
+  const g = gradeDisplay(s.reportCard, s.ofsted);
+  return {
+    name: s.name,
+    phase: s.phase ?? "",
+    dist: String(s.distanceMiles),
+    ofsted: g.label,
+    date: s.reportCard?.inspectionDate ?? s.ofstedDate ?? "",
+    color: g.colour,
+  };
+}
+
 function schoolsGeo(schools: School[]): GeoJSON.FeatureCollection {
   return {
     type: "FeatureCollection",
     features: schools.map((s) => ({
       type: "Feature",
       geometry: { type: "Point", coordinates: [s.lng, s.lat] },
-      properties: {
-        name: s.name,
-        phase: s.phase ?? "",
-        dist: String(s.distanceMiles),
-        ofsted: s.ofsted,
-        date: s.ofstedDate ?? "",
-        color: RATING_COLORS[s.ofsted],
-      },
+      properties: schoolPinProps(s),
     })),
   };
 }
