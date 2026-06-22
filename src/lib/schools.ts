@@ -1,17 +1,29 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
-import ofstedByUrn from "@/data/ofsted-by-urn.json";
-import ks4ByUrn from "@/data/ks4-by-urn.json";
-import ks5ByUrn from "@/data/ks5-by-urn.json";
-import parentviewByUrn from "@/data/parentview-by-urn.json";
-import ks2ByUrn from "@/data/ks2-by-urn.json";
-import censusByUrn from "@/data/census-by-urn.json";
-import destinationsByUrn from "@/data/destinations-by-urn.json";
-import workforceByUrn from "@/data/workforce-by-urn.json";
-import financeByUrn from "@/data/finance-by-urn.json";
-import nurseriesData from "@/data/nurseries.json";
-import giasData from "@/data/gias.json";
-import { ofstedReportUrl } from "./links";
+import { ofstedReportUrl, ofstedEarlyYearsUrl } from "./links";
+
+// The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
+// so `next build`'s type-checker never has to infer literal types for ~26 MB of JSON — that inference
+// OOM-hung Vercel's 8 GB build machine. next.config.ts → outputFileTracingIncludes copies these files
+// into each serverless function's trace (the read path is dynamic, so @vercel/nft can't find them on
+// its own). Each dataset is parsed once per cold start and memoised.
+const DATA_DIR = join(process.cwd(), "src", "data");
+function loadData<T>(file: string): T {
+  return JSON.parse(readFileSync(join(DATA_DIR, file), "utf8")) as T;
+}
+function memo<T>(load: () => T): () => T {
+  let value: T;
+  let loaded = false;
+  return () => {
+    if (!loaded) {
+      value = load();
+      loaded = true;
+    }
+    return value;
+  };
+}
 
 interface OfstedRecord {
   rating: OfstedRating;
@@ -28,10 +40,12 @@ interface OfstedRecord {
   };
 }
 
-const ofstedMap = ofstedByUrn as Record<string, OfstedRecord>;
+const ofstedMap = memo(() => loadData<Record<string, OfstedRecord>>("ofsted-by-urn.json"));
 
 /** True once the ETL has populated src/data/ofsted-by-urn.json. */
-export const ofstedLoaded: boolean = Object.keys(ofstedMap).length > 0;
+export function ofstedLoaded(): boolean {
+  return Object.keys(ofstedMap()).length > 0;
+}
 
 interface Ks4Record {
   p8: number | null; // Progress 8 (P8MEA)
@@ -44,7 +58,7 @@ interface Ks4Record {
   year: string;
 }
 
-const ks4Map = ks4ByUrn as Record<string, Ks4Record>;
+const ks4Map = memo(() => loadData<Record<string, Ks4Record>>("ks4-by-urn.json"));
 
 interface Ks5Record {
   grade: string | null; // average result per A level entry, as a grade
@@ -54,7 +68,7 @@ interface Ks5Record {
   year: string;
 }
 
-const ks5Map = ks5ByUrn as Record<string, Ks5Record>;
+const ks5Map = memo(() => loadData<Record<string, Ks5Record>>("ks5-by-urn.json"));
 
 interface PvRecord {
   happy: number; // % who agree "My child is happy at this school" (= q["1"].pos)
@@ -62,7 +76,7 @@ interface PvRecord {
   q?: ParentView; // full survey breakdown
 }
 
-const pvMap = parentviewByUrn as Record<string, PvRecord>;
+const pvMap = memo(() => loadData<Record<string, PvRecord>>("parentview-by-urn.json"));
 
 interface Ks2Record {
   rwmExp: number | null;
@@ -73,7 +87,7 @@ interface Ks2Record {
   year: string;
 }
 
-const ks2Map = ks2ByUrn as Record<string, Ks2Record>;
+const ks2Map = memo(() => loadData<Record<string, Ks2Record>>("ks2-by-urn.json"));
 
 interface CensusRecord {
   fsm: number | null;
@@ -81,7 +95,7 @@ interface CensusRecord {
   senEhcp: number | null;
   senSupport: number | null;
 }
-const censusMap = censusByUrn as Record<string, CensusRecord>;
+const censusMap = memo(() => loadData<Record<string, CensusRecord>>("census-by-urn.json"));
 
 interface DestRecord {
   ks4?: {
@@ -99,7 +113,7 @@ interface DestRecord {
     employment: number | null;
   };
 }
-const destMap = destinationsByUrn as Record<string, DestRecord>;
+const destMap = memo(() => loadData<Record<string, DestRecord>>("destinations-by-urn.json"));
 
 interface WorkforceRecord {
   ptr: number | null; // pupils per (qualified) teacher, FTE
@@ -107,7 +121,7 @@ interface WorkforceRecord {
   staffFte: number | null; // all staff (teachers + support), full-time equivalent
   year: string;
 }
-const workforceMap = workforceByUrn as Record<string, WorkforceRecord>;
+const workforceMap = memo(() => loadData<Record<string, WorkforceRecord>>("workforce-by-urn.json"));
 
 interface FinanceRecord {
   perPupil: number | null; // total expenditure per pupil (£)
@@ -115,7 +129,7 @@ interface FinanceRecord {
   inYear: number | null; // in-year balance (£)
   year: string;
 }
-const financeMap = financeByUrn as Record<string, FinanceRecord>;
+const financeMap = memo(() => loadData<Record<string, FinanceRecord>>("finance-by-urn.json"));
 
 // Ofsted Early Years register (postcode-geocoded by the nurseries ETL). Authoritative, England-wide.
 interface NurseryRecord {
@@ -129,7 +143,7 @@ interface NurseryRecord {
   lat: number;
   lng: number;
 }
-const nurseries = nurseriesData as unknown as NurseryRecord[];
+const nurseries = memo(() => loadData<NurseryRecord[]>("nurseries.json"));
 
 // GIAS — the DfE register of every school in England (build-gias.mjs, postcode-geocoded). The
 // authoritative source of school pins + phase, replacing OpenStreetMap (which missed schools and
@@ -149,11 +163,11 @@ interface GiasRecord {
   ageHigh?: number;
   admissions?: string; // "Selective" | "Non-selective" (secondaries only)
 }
-const gias = giasData as GiasRecord[];
+const gias = memo(() => loadData<GiasRecord[]>("gias.json"));
 // State nursery schools appear in GIAS too; dedupe them against the EY register by postcode so a
 // setting in both isn't listed twice (GIAS wins — it carries a school-framework Ofsted grade).
-const giasNurseryPostcodes = new Set(
-  gias.filter((g) => g.phase === "Nursery").map((g) => g.postcode),
+const giasNurseryPostcodes = memo(
+  () => new Set(gias().filter((g) => g.phase === "Nursery").map((g) => g.postcode)),
 );
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
@@ -169,19 +183,19 @@ export async function fetchSchools(
 ): Promise<School[]> {
   const schools: School[] = [];
 
-  for (const g of gias) {
+  for (const g of gias()) {
     const d = distanceMiles(centre.lat, centre.lng, g.lat, g.lng);
     if (d > radiusMiles) continue;
     const urn = g.urn;
-    const enr = ofstedMap[urn];
-    const ks4 = ks4Map[urn];
-    const ks5 = ks5Map[urn];
-    const pv = pvMap[urn];
-    const ks2 = ks2Map[urn];
-    const census = censusMap[urn];
-    const dest = destMap[urn];
-    const wf = workforceMap[urn];
-    const fin = financeMap[urn];
+    const enr = ofstedMap()[urn];
+    const ks4 = ks4Map()[urn];
+    const ks5 = ks5Map()[urn];
+    const pv = pvMap()[urn];
+    const ks2 = ks2Map()[urn];
+    const census = censusMap()[urn];
+    const dest = destMap()[urn];
+    const wf = workforceMap()[urn];
+    const fin = financeMap()[urn];
     schools.push({
       id: `gias/${urn}`,
       name: g.name,
@@ -197,7 +211,7 @@ export async function fetchSchools(
       ageLow: g.ageLow,
       ageHigh: g.ageHigh,
       selective: g.admissions === "Selective" || undefined,
-      ofsted: enr?.rating ?? (ofstedLoaded ? "Not rated" : "Not loaded"),
+      ofsted: enr?.rating ?? (ofstedLoaded() ? "Not rated" : "Not loaded"),
       ofstedDate: enr?.date,
       progress8: ks4?.p8 ?? null,
       attainment8: ks4?.att8 ?? null,
@@ -229,8 +243,8 @@ export async function fetchSchools(
 
   // Nurseries from the Ofsted Early Years register (~23k). Skip any that are also a GIAS state
   // nursery school at the same postcode (already added above).
-  for (const n of nurseries) {
-    if (giasNurseryPostcodes.has(n.postcode)) continue;
+  for (const n of nurseries()) {
+    if (giasNurseryPostcodes().has(n.postcode)) continue;
     const d = distanceMiles(centre.lat, centre.lng, n.lat, n.lng);
     if (d > radiusMiles) continue;
     schools.push({
@@ -243,7 +257,9 @@ export async function fetchSchools(
       ofsted: n.rating ?? "Not rated",
       ofstedDate: n.date,
       ofstedSub: n.sub,
-      ofstedReport: ofstedReportUrl(n.urn),
+      // EY register deep-links to the live provider page (type 16), which carries the new
+      // report-card grade the bulk MI hasn't published yet — so a re-inspection shows there.
+      ofstedReport: ofstedEarlyYearsUrl(n.urn),
       places: n.places,
     });
   }
@@ -269,12 +285,12 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
     if (lc.startsWith("the " + q)) return 2;
     return 3;
   };
-  for (const g of gias) {
+  for (const g of gias()) {
     const score = rank(g.name);
     if (score < 0) continue;
     scored.push({ score, m: { id: `gias/${g.urn}`, name: g.name, phase: g.phase, postcode: g.postcode, lat: g.lat, lng: g.lng } });
   }
-  for (const nrec of nurseries) {
+  for (const nrec of nurseries()) {
     const score = rank(nrec.name);
     if (score < 0) continue;
     scored.push({ score, m: { id: `ey/${nrec.urn}`, name: nrec.name, phase: "Nursery", postcode: nrec.postcode, lat: nrec.lat, lng: nrec.lng } });

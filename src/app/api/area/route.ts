@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
     crime,
     prices,
     benchmarks,
-    ofstedLoaded,
+    ofstedLoaded: ofstedLoaded(),
     errors,
     generatedAt: new Date().toISOString(),
   };

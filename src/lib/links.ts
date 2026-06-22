@@ -2,6 +2,9 @@
 //  - DfE "compare school performance" 200s on /school/{urn} (redirects to add the name slug).
 //  - Ofsted report: the /provider/{type}/{urn} type code varies per school (21, 23, …), so a direct
 //    link 404s for most. search?q={urn} reliably surfaces the school for any URN.
+//  - Ofsted early years: the EY register uses a stable provider-type code of 16, so EY settings
+//    (nurseries) deep-link straight to the live provider page — which now shows the new (Nov 2025+)
+//    report-card grade that the bulk MI download doesn't yet carry. Verified for EY URN 2821756.
 //  - Parent View results deep-link via ?urn= on /parent-view-results (not /parent-reviews).
 
 export const dfePerformanceUrl = (urn: string) =>
@@ -9,6 +12,9 @@ export const dfePerformanceUrl = (urn: string) =>
 
 export const ofstedReportUrl = (urn: string) =>
   `https://reports.ofsted.gov.uk/search?q=${urn}`;
+
+export const ofstedEarlyYearsUrl = (urn: string) =>
+  `https://reports.ofsted.gov.uk/provider/16/${urn}`;
 
 export const parentViewUrl = (urn: string) =>
   `https://parentview.ofsted.gov.uk/parent-view-results?urn=${urn}`;

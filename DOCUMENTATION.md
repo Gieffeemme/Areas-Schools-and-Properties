@@ -223,10 +223,16 @@ These cost real time to discover — don't re-learn them:
   **national/aggregate** (no per-school URN), and the bulk KS4 download is summary-only. Per-school
   subject results render on the compare-school-performance *website* but aren't bulk-published — so
   "Subjects" would be a per-school scrape, disclosure-suppressed for small entries. Treated as gated.
-- **The in-build TypeScript check is disabled** (`next.config.ts` → `typescript.ignoreBuildErrors`):
-  `next build`'s "Running TypeScript" step OOM-hangs on Vercel's 8 GB machine inferring literal types
-  for the multi-MB committed JSON. **Run `tsc --noEmit` yourself** — that's the type-check safety net,
-  not the build.
+- **Large datasets are read at RUNTIME, never `import`-bundled.** `src/lib/schools.ts` and
+  `src/lib/imd.ts` load `src/data/*.json` via `fs` (memoised per cold start); `next.config.ts` →
+  `outputFileTracingIncludes` copies those files into each server route's trace (the read paths are
+  dynamic, so `@vercel/nft` can't find them automatically). This **fixed the old build OOM**: when the
+  JSON was statically imported, `next build`'s "Running TypeScript" step hung on Vercel's 8 GB machine
+  inferring literal types for ~26 MB of JSON. The in-build type-check is now **enabled** (no more
+  `typescript.ignoreBuildErrors`) and that step runs in ~1.5 s. **Rule for future work:** never add a
+  static `import x from "@/data/big.json"` into app code — read it at runtime and list it under
+  `outputFileTracingIncludes`, or the OOM returns. (`benchmarks.json`, 4 KB, is the lone exception,
+  still imported.) Still run `tsc --noEmit` for fast local checks.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the

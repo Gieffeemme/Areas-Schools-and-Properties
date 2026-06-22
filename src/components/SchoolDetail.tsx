@@ -174,6 +174,13 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 ))}
               </dl>
             )}
+            {s.phase === "Nursery" && (
+              <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                Grade is from Ofsted’s bulk data. Their new report cards (from Nov 2025) aren’t
+                published in bulk yet, so a recent re-inspection may not show here — open the live
+                report to check.
+              </p>
+            )}
             {reportUrl && (
               <a
                 href={reportUrl}
@@ -181,7 +188,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 rel="noopener noreferrer"
                 className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
               >
-                View Ofsted report →
+                {s.phase === "Nursery" ? "View live Ofsted report →" : "View Ofsted report →"}
               </a>
             )}
           </Section>

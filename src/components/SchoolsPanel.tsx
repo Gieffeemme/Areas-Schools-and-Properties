@@ -173,8 +173,9 @@ export default function SchoolsPanel({
 
       {ofstedLoaded ? (
         <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-          Ofsted overall grades from official MI — check the inspection year; many pre-date Ofsted’s
-          2024 grade changes. Independent schools aren’t Ofsted-rated.
+          Ofsted grades come from Ofsted’s published bulk data; new report cards (from Nov 2025)
+          aren’t included yet, so a recently re-inspected setting may show an older grade — open its
+          report to check. Independent schools aren’t Ofsted-rated.
         </p>
       ) : schools.length > 0 ? (
         <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-[11px] leading-relaxed text-amber-800">
