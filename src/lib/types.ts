@@ -49,6 +49,7 @@ export interface School {
   ks4Year?: string; // e.g. "2022/23"
   pupilTeacherRatio?: number | null; // pupils per teacher (FTE) — DfE School Workforce Census
   teachersFte?: number | null; // teaching staff, full-time equivalent
+  staffFte?: number | null; // all staff (teachers + support), full-time equivalent
   workforceYear?: string; // e.g. "2023/24"
   financePerPupil?: number | null; // total expenditure per pupil (£) — DfE school finance
   financeReserve?: number | null; // revenue reserve (£); negative = in deficit

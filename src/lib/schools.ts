@@ -104,6 +104,7 @@ const destMap = destinationsByUrn as Record<string, DestRecord>;
 interface WorkforceRecord {
   ptr: number | null; // pupils per (qualified) teacher, FTE
   teachersFte: number | null; // teaching staff, full-time equivalent
+  staffFte: number | null; // all staff (teachers + support), full-time equivalent
   year: string;
 }
 const workforceMap = workforceByUrn as Record<string, WorkforceRecord>;
@@ -217,6 +218,7 @@ export async function fetchSchools(
       destinations: dest,
       pupilTeacherRatio: wf?.ptr ?? null,
       teachersFte: wf?.teachersFte ?? null,
+      staffFte: wf?.staffFte ?? null,
       workforceYear: wf?.year,
       financePerPupil: fin?.perPupil ?? null,
       financeReserve: fin?.reserve ?? null,

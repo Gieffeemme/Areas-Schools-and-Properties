@@ -282,6 +282,10 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   label="Teachers (FTE)"
                   value={s.teachersFte != null ? s.teachersFte.toFixed(1) : "—"}
                 />
+                <Stat
+                  label="Total staff (FTE)"
+                  value={s.staffFte != null ? s.staffFte.toFixed(1) : "—"}
+                />
               </div>
             </Section>
           )}

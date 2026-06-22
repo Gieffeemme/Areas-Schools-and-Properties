@@ -63,6 +63,7 @@ async function main() {
   const iTp = i("time_period");
   const iPtr = i("pupil_to_qual_teacher_ratio");
   const iTeach = i("teachers_fte");
+  const iAdults = i("adults_fte"); // all staff (teachers + support), FTE
   if (iUrn < 0 || iPtr < 0 || iTp < 0)
     throw new Error("Expected school_urn / pupil_to_qual_teacher_ratio / time_period columns.");
 
@@ -79,12 +80,13 @@ async function main() {
     if (!Number.isFinite(tp)) continue;
     const ptr = num(x[iPtr]);
     const teachersFte = num(x[iTeach]);
-    if (ptr == null && teachersFte == null) continue; // suppressed/empty row — skip
+    const staffFte = num(x[iAdults]);
+    if (ptr == null && teachersFte == null && staffFte == null) continue; // suppressed/empty row
     schoolRows++;
     if (latest[urn] == null || tp > latest[urn]) {
       latest[urn] = tp;
       const s = String(tp);
-      out[urn] = { ptr, teachersFte, year: `${s.slice(0, 4)}/${s.slice(4)}` };
+      out[urn] = { ptr, teachersFte, staffFte, year: `${s.slice(0, 4)}/${s.slice(4)}` };
     }
   }
 
