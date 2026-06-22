@@ -98,6 +98,11 @@ export default function SchoolsPanel({
     () => schools.filter((s) => shortlist.has(s.id)).length,
     [schools, shortlist],
   );
+  // Ids of shortlisted schools in this area (capped at the compare max of 4), for "Compare shortlisted".
+  const shortlistedIds = useMemo(
+    () => schools.filter((s) => shortlist.has(s.id)).map((s) => s.id).slice(0, 4),
+    [schools, shortlist],
+  );
 
   const shown = useMemo(() => {
     let list = applyFilters(schools, filters);
@@ -146,6 +151,14 @@ export default function SchoolsPanel({
             >
               ★ Shortlist ({shortlistedCount})
             </button>
+          )}
+          {shortlistedCount >= 2 && (
+            <a
+              href={`/compare?mode=schools&schools=${encodeURIComponent(shortlistedIds.join(","))}`}
+              className="rounded-md border border-[var(--primary)] bg-[var(--primary)] px-2 py-1 font-medium text-white transition hover:bg-[var(--primary-600)]"
+            >
+              Compare shortlisted →
+            </a>
           )}
         </div>
       )}

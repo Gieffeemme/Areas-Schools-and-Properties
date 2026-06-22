@@ -32,7 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 Map
               </a>
               <a href="/compare" className="text-white/70 transition hover:text-white">
-                Compare areas
+                Compare
               </a>
             </nav>
           </div>
