@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { imdDomainsForLsoa } from "@/lib/imd";
 
 // Returns a deprivation (IMD) surface as a GeoJSON FeatureCollection for the area around a point.
 // We sample a grid of locations inside the search radius and reverse-geocode them in ONE bulk call
@@ -9,7 +10,9 @@ const ENGLAND_LSOA_COUNT = 32844; // matches the decile derivation in lib/geocod
 
 interface RevGeo {
   query: { longitude: number; latitude: number };
-  result: { country?: string; index_of_multiple_deprivation?: number }[] | null;
+  result:
+    | { country?: string; index_of_multiple_deprivation?: number; codes?: { lsoa?: string } }[]
+    | null;
 }
 
 // A square grid clipped to the search circle. 11×11 ≈ 95 points inside the circle, just under
@@ -59,10 +62,24 @@ export async function GET(req: NextRequest) {
         const rank = r?.index_of_multiple_deprivation;
         // English IMD only — postcodes.io exposes no comparable rank for the other nations.
         if (!r || r.country !== "England" || typeof rank !== "number") return null;
+        const overall = decileFromRank(rank);
+        // Per-domain deciles for this point's LSOA drive the per-domain heatmap; fall back to the
+        // overall decile if the LSOA is somehow unmatched, so the surface never has holes.
+        const dom = imdDomainsForLsoa(r.codes?.lsoa);
         return {
           type: "Feature" as const,
           geometry: { type: "Point" as const, coordinates: [g.query.longitude, g.query.latitude] },
-          properties: { decile: decileFromRank(rank), rank },
+          properties: {
+            decile: overall,
+            rank,
+            income: dom?.income ?? overall,
+            employment: dom?.employment ?? overall,
+            education: dom?.education ?? overall,
+            health: dom?.health ?? overall,
+            crime: dom?.crime ?? overall,
+            housing: dom?.housing ?? overall,
+            living: dom?.living ?? overall,
+          },
         };
       })
       .filter((f): f is NonNullable<typeof f> => f !== null);

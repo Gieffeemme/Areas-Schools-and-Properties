@@ -14,10 +14,11 @@ interface Props {
   activeLayers: Set<string>;
   crimePoints: GeoJSON.FeatureCollection | null;
   deprivationPoints: GeoJSON.FeatureCollection | null;
+  imdDomain: string;
 }
 
 // mapbox-gl is imported dynamically inside the effect so it never evaluates during SSR.
-export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints, deprivationPoints }: Props) {
+export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, crimePoints, deprivationPoints, imdDomain }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MbMap | null>(null);
   const loadedRef = useRef(false);
@@ -92,7 +93,7 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
             id: "deprivation-heat", type: "heatmap", source: "deprivation",
             layout: { visibility: vis(activeLayers, "deprivation") },
             paint: {
-              "heatmap-weight": ["interpolate", ["linear"], ["get", "decile"], 1, 1, 10, 0.08],
+              "heatmap-weight": ["interpolate", ["linear"], ["get", domainProp(imdDomain)], 1, 1, 10, 0.08],
               "heatmap-radius": 32,
               "heatmap-opacity": 0.7,
               // Indigo ramp — distinct from the amber/red crime heatmap.
@@ -169,6 +170,20 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
     else map.once("load", apply);
   }, [deprivationPoints]);
 
+  // Re-weight the deprivation heatmap when the selected IMD domain changes.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    const apply = () => {
+      if (map.getLayer("deprivation-heat"))
+        map.setPaintProperty("deprivation-heat", "heatmap-weight", [
+          "interpolate", ["linear"], ["get", domainProp(imdDomain)], 1, 1, 10, 0.08,
+        ]);
+    };
+    if (loadedRef.current) apply();
+    else map.once("load", apply);
+  }, [imdDomain]);
+
   // Toggle layer visibility.
   useEffect(() => {
     const map = mapRef.current;
@@ -206,6 +221,11 @@ const EMPTY: GeoJSON.FeatureCollection = { type: "FeatureCollection", features: 
 
 function vis(active: Set<string>, id: string): "visible" | "none" {
   return active.has(id) ? "visible" : "none";
+}
+
+// Which feature property drives the deprivation heatmap weight for the chosen IMD domain.
+function domainProp(domain: string): string {
+  return domain === "overall" ? "decile" : domain;
 }
 
 function schoolsGeo(schools: School[]): GeoJSON.FeatureCollection {

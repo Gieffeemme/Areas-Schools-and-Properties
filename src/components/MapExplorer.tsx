@@ -16,6 +16,7 @@ export default function MapExplorer() {
   const [crime, setCrime] = useState<GeoJSON.FeatureCollection | null>(null);
   const [deprivation, setDeprivation] = useState<GeoJSON.FeatureCollection | null>(null);
   const [selected, setSelected] = useState<School | null>(null);
+  const [imdDomain, setImdDomain] = useState("overall");
 
   const search = useCallback(async (postcode: string): Promise<AreaReport | null> => {
     setLoading(true);
@@ -98,8 +99,14 @@ export default function MapExplorer() {
                 activeLayers={active}
                 crimePoints={crime}
                 deprivationPoints={deprivation}
+                imdDomain={imdDomain}
               />
-              <LayerControl active={active} onToggle={toggle} />
+              <LayerControl
+                active={active}
+                onToggle={toggle}
+                imdDomain={imdDomain}
+                onImdDomain={setImdDomain}
+              />
             </>
           ) : (
             <div className="grid h-full place-items-center px-6 text-center text-sm text-[var(--muted)]">
