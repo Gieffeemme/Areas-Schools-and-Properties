@@ -16,9 +16,13 @@ const OFSTED_SHORT: Record<OfstedRating, string> = {
 export default function SchoolCard({
   school: s,
   onClick,
+  shortlisted = false,
+  onToggleShortlist,
 }: {
   school: School;
   onClick?: () => void;
+  shortlisted?: boolean;
+  onToggleShortlist?: () => void;
 }) {
   const color = RATING_COLORS[s.ofsted];
   const year = s.ofstedDate ? Number(s.ofstedDate.slice(0, 4)) : null;
@@ -62,7 +66,25 @@ export default function SchoolCard({
         ) : (
           <p className="min-w-0 truncate text-[15px] font-semibold leading-tight">{s.name}</p>
         )}
-        <span className="shrink-0 text-xs text-[var(--muted)]">{s.distanceMiles} mi</span>
+        <div className="flex shrink-0 items-center gap-1.5">
+          <span className="text-xs text-[var(--muted)]">{s.distanceMiles} mi</span>
+          {onToggleShortlist && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onToggleShortlist();
+              }}
+              aria-label={shortlisted ? "Remove from shortlist" : "Add to shortlist"}
+              title={shortlisted ? "Remove from shortlist" : "Add to shortlist"}
+              className={`text-base leading-none transition ${
+                shortlisted ? "text-amber-500" : "text-slate-300 hover:text-amber-400"
+              }`}
+            >
+              {shortlisted ? "★" : "☆"}
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="mt-0.5 text-xs text-[var(--muted)]">
