@@ -258,11 +258,12 @@ node node_modules/typescript/bin/tsc --noEmit -p tsconfig.json   # typecheck (th
 sub-grades, KS2/GCSE/A-level (incl. GCSE 5+ E&M), Parent View full breakdown, destinations, pupil
 composition, **workforce** (pupil:teacher ratio, teacher FTE, total staff FTE), **finances**, GIAS
 metadata (pupils/gender/type/faith/grammar) + map filters, **IMD 7-domain deprivation breakdown**,
-crime vs benchmark, sold-price trends, EA flood, compare, Map/List, search-by-name.
+crime vs benchmark, sold-price trends, EA flood, compare, Map/List, search-by-name,
+**per-domain IMD map layers** (`/map` explorer — recolour the deprivation heatmap by any domain).
 
-**Remaining (free data):** per-domain IMD **map layers** (recolour the map by a chosen domain —
-extends `/api/deprivation-points`); **amenities/POIs** (Overpass); **Defra noise**; **Ofcom
-broadband**; richer **crime filters** by category/time.
+**Remaining (free data):** **amenities/POIs** (Overpass); **Defra noise**; **Ofcom broadband**;
+richer **crime filters** by category/time. Each adds a *new* dataset → do the runtime-load build
+cleanup (§9) first so the in-build type-check can be re-enabled.
 
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
