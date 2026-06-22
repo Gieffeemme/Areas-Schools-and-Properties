@@ -153,7 +153,7 @@ function Report({
             href={`/compare?postcodes=${encodeURIComponent(f.postcode)}`}
             className="mt-1 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
           >
-            Compare with another area →
+            compare areas or schools side by side →
           </a>
         </div>
         <RouteSelector value={route} onChange={onRoute} variant="tabs" />
