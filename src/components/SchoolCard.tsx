@@ -1,6 +1,6 @@
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS } from "@/lib/ratings";
-import { happyColor, p8Color } from "@/lib/scoreColors";
+import { happyColor, p8Color, pctColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl } from "@/lib/links";
 import Pill from "./Pill";
 
@@ -106,6 +106,11 @@ export default function SchoolCard({
           <Pill color={p8Color(s.progress8)} title={`Progress 8${s.ks4Year ? ` (${s.ks4Year})` : ""}`}>
             P8 {s.progress8 > 0 ? "+" : ""}
             {s.progress8.toFixed(2)}
+          </Pill>
+        )}
+        {typeof s.gcse5EM === "number" && (
+          <Pill color={pctColor(s.gcse5EM)} title={`GCSE grade 5+ in English & Maths${s.ks4Year ? ` (${s.ks4Year})` : ""}`}>
+            GCSE {s.gcse5EM}%
           </Pill>
         )}
         {typeof s.parentViewHappy === "number" && (

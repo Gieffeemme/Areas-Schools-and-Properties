@@ -78,7 +78,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const reportUrl = s.urn ? ofstedReportUrl(s.urn) : s.ofstedReport;
   const dfeHref = s.urn ? dfePerformanceUrl(s.urn) : undefined;
   const nameHref = dfeHref ?? s.ofstedReport; // nurseries have no DfE link; use their Ofsted report
-  const hasKs4 = s.progress8 != null || s.attainment8 != null || s.ebaccEntry != null;
+  const hasKs4 =
+    s.progress8 != null || s.attainment8 != null || s.gcse5EM != null || s.ebaccEntry != null;
   const al = s.alevel ?? null;
   const hasAlevel = !!al && (al.grade != null || al.aps != null);
   const ks2 = s.ks2;
@@ -186,6 +187,8 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
           {hasKs4 && (
             <Section title={`GCSE results${s.ks4Year ? ` · ${s.ks4Year}` : ""}`} href={dfeHref}>
               <div className="grid grid-cols-2 gap-x-3 gap-y-3">
+                <Stat label="Grade 5+ Eng & Maths" value={pct(s.gcse5EM)} color={tint(s.gcse5EM, pctColor)} />
+                <Stat label="Grade 4+ Eng & Maths" value={pct(s.gcse4EM)} color={tint(s.gcse4EM, pctColor)} />
                 <Stat label="Progress 8" value={signed(s.progress8)} color={tint(s.progress8, p8Color)} />
                 <Stat label="Attainment 8" value={s.attainment8 != null ? String(s.attainment8) : "—"} />
                 <Stat label="EBacc entry" value={pct(s.ebaccEntry)} color={tint(s.ebaccEntry, pctColor)} />

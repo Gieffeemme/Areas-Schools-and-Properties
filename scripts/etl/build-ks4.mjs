@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
  * Build src/data/ks4-by-urn.json from DfE KS4 (GCSE) performance tables, keyed by URN:
- * Progress 8 (P8MEA), Attainment 8 (ATT8SCR), EBacc entry % (PTEBACC_E_PTQ_EE), EBacc
+ * Progress 8 (P8MEA), Attainment 8 (ATT8SCR), % grade 5+ and 4+ in English & Maths — the headline
+ * "basics" pass rates (PTL2BASICS_95 / PTL2BASICS_94), EBacc entry % (PTEBACC_E_PTQ_EE), EBacc
  * achieved 9-4 % (PTEBACC_94), and disadvantaged Progress 8 (P8MEA_FSM6CLA1A). Secondary only.
  *
  * Source: DfE "Compare School Performance" download-data (direct CSV; needs a browser UA).
@@ -79,6 +80,8 @@ async function main() {
   const iEbE = i("PTEBACC_E_PTQ_EE");
   const iEb94 = i("PTEBACC_94");
   const iDis = i("P8MEA_FSM6CLA1A");
+  const iEm5 = i("PTL2BASICS_95"); // % grade 5+ (strong pass) in English & Maths
+  const iEm4 = i("PTL2BASICS_94"); // % grade 4+ (standard pass) in English & Maths
   if (iURN < 0 || iP8 < 0) throw new Error("Expected 'URN' and 'P8MEA' columns in the KS4 CSV.");
 
   const out = {};
@@ -93,6 +96,8 @@ async function main() {
     out[urn] = {
       p8,
       att8,
+      em5: iEm5 >= 0 ? num(row[iEm5]) : null,
+      em4: iEm4 >= 0 ? num(row[iEm4]) : null,
       ebaccEntry: iEbE >= 0 ? num(row[iEbE]) : null,
       ebacc94: iEb94 >= 0 ? num(row[iEb94]) : null,
       disP8: iDis >= 0 ? num(row[iDis]) : null,

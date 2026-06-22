@@ -6,7 +6,7 @@ import { SchoolFilters, applyFilters } from "@/lib/schoolFilters";
 import SchoolControls from "./SchoolControls";
 import SchoolCard from "./SchoolCard";
 
-type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "ks2" | "alevel" | "parent";
+type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "em5" | "ks2" | "alevel" | "parent";
 
 const OFSTED_RANK: Record<string, number> = {
   Outstanding: 0, Good: 1, "Requires improvement": 2, Inadequate: 3, "Not rated": 4, "Not loaded": 5,
@@ -18,6 +18,7 @@ const SORTS: { key: SortKey; label: string }[] = [
   { key: "ofsted", label: "Ofsted" },
   { key: "p8", label: "GCSE · Progress 8" },
   { key: "att8", label: "GCSE · Attainment 8" },
+  { key: "em5", label: "GCSE · grade 5+ E&M" },
   { key: "ks2", label: "KS2 · RWM expected" },
   { key: "alevel", label: "A-level · points" },
   { key: "parent", label: "Parent View" },
@@ -38,6 +39,7 @@ function comparator(key: SortKey): (a: School, b: School) => number {
   const get: (s: School) => number | null | undefined =
     key === "p8" ? (s) => s.progress8
     : key === "att8" ? (s) => s.attainment8
+    : key === "em5" ? (s) => s.gcse5EM
     : key === "ks2" ? (s) => s.ks2?.rwmExp
     : key === "alevel" ? (s) => s.alevel?.aps
     : (s) => s.parentViewHappy;

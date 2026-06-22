@@ -34,6 +34,8 @@ export const ofstedLoaded: boolean = Object.keys(ofstedMap).length > 0;
 interface Ks4Record {
   p8: number | null; // Progress 8 (P8MEA)
   att8: number | null; // Attainment 8 (ATT8SCR)
+  em5?: number | null; // % grade 5+ in English & Maths (PTL2BASICS_95)
+  em4?: number | null; // % grade 4+ in English & Maths (PTL2BASICS_94)
   ebaccEntry?: number | null;
   ebacc94?: number | null;
   disP8?: number | null;
@@ -179,6 +181,8 @@ export async function fetchSchools(
       ofstedDate: enr?.date,
       progress8: ks4?.p8 ?? null,
       attainment8: ks4?.att8 ?? null,
+      gcse5EM: ks4?.em5 ?? null,
+      gcse4EM: ks4?.em4 ?? null,
       ks4Year: ks4?.year,
       ebaccEntry: ks4?.ebaccEntry ?? null,
       ebacc94: ks4?.ebacc94 ?? null,
