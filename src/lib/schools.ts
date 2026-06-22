@@ -164,6 +164,7 @@ interface GiasRecord {
   name: string;
   postcode: string;
   phase: string;
+  kind?: "special" | "alternative" | "independent";
   lat: number;
   lng: number;
   pupils?: number;
@@ -270,6 +271,7 @@ function buildGiasSchool(g: GiasRecord, dist: number): School {
     distanceMiles: dist,
     urn,
     phase: g.phase,
+    kind: g.kind,
     pupils: g.pupils,
     gender: g.gender,
     type: g.type,

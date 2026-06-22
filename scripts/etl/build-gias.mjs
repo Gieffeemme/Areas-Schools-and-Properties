@@ -66,8 +66,34 @@ function mapPhase(phase, group) {
     case "Middle deemed secondary": return "Secondary";
     case "All-through": return "All-through";
     case "16 plus": return /colleg/i.test(group) ? "College" : "Sixth form";
-    default: return undefined; // "Not applicable" etc. -> not a school
+    default: return undefined; // "Not applicable" — handled below, by establishment type
   }
+}
+
+// Special / alternative / independent / Welsh schools all carry GIAS phase "Not applicable", so they
+// can't be placed by phase — but they're real schools and dropping them silently is a completeness
+// bug. Admit them by establishment type and return their "kind"; return undefined for establishments
+// we don't cover as schools (universities, British schools overseas/offshore, misc, service children).
+function classifyKind(group, type) {
+  const t = (type || "").toLowerCase();
+  // Wales is out of England scope and doesn't carry the statutory age fields we derive phase from
+  // (only a handful do), so it can't be done cleanly here — proper Welsh support (Estyn + Welsh
+  // results) is a separate pipeline. Exclude for now rather than admit a stray few.
+  if (group === "Welsh schools") return undefined;
+  if (group === "Independent schools" || /independent/.test(t)) return "independent";
+  if (/special/.test(t)) return "special";
+  if (/pupil referral|alternative provision|secure unit/.test(t)) return "alternative";
+  return undefined;
+}
+
+// Approximate our phase taxonomy from the statutory age range, for schools with no GIAS phase.
+function derivePhase(lo, hi) {
+  if (lo == null || hi == null) return undefined;
+  if (hi <= 5) return "Nursery";
+  if (hi <= 11) return "Primary";
+  if (lo >= 16) return "Sixth form";
+  if (lo >= 11) return "Secondary";
+  return "All-through";
 }
 
 async function getCsvText() {
@@ -206,17 +232,28 @@ async function main() {
     const x = parseLine(lines[r]);
     const status = (x[C.status] ?? "").trim();
     if (status !== "Open" && status !== "Open, but proposed to close") continue;
-    const phase = mapPhase((x[C.phase] ?? "").trim(), (x[C.group] ?? "").trim());
-    if (!phase) continue;
+    const ageLow = numOf(x[C.lowAge]);
+    const ageHigh = numOf(x[C.highAge]);
+    // Mainstream state schools map straight from GIAS phase. Special / alternative / independent /
+    // Welsh schools have phase "Not applicable" — admit them by type and derive phase from age.
+    let phase = mapPhase((x[C.phase] ?? "").trim(), (x[C.group] ?? "").trim());
+    let kind; // undefined = mainstream state school; else special/alternative/independent/welsh
+    if (!phase) {
+      kind = classifyKind((x[C.group] ?? "").trim(), (x[C.type] ?? "").trim());
+      if (!kind) continue; // not a school we cover (university, overseas/offshore, misc…)
+      phase = derivePhase(ageLow, ageHigh);
+      if (!phase) continue; // no age range to place it by
+    }
     const pc = cleanPC(x[C.pc]);
     const e = Number(x[C.e]), n = Number(x[C.n]);
     const hasEN = Number.isFinite(e) && Number.isFinite(n) && e > 0 && n > 0;
     if (!hasEN && !pc) continue; // no location at all
     const rec = { urn: (x[C.urn] ?? "").trim(), name: (x[C.name] ?? "").trim(), postcode: pc, phase };
+    if (kind) rec.kind = kind;
     // GIAS metadata we surface on the card and as map filters (kept only when meaningful).
     rec.pupils = numOf(x[C.pupils]);
-    rec.ageLow = numOf(x[C.lowAge]);
-    rec.ageHigh = numOf(x[C.highAge]);
+    rec.ageLow = ageLow;
+    rec.ageHigh = ageHigh;
     rec.type = strOf(x[C.type]);
     rec.admissions = strOf(x[C.admissions]);
     const gen = String(x[C.gender] ?? "").trim();
@@ -244,6 +281,7 @@ async function main() {
       viaPC++;
     }
     const o = { urn: rec.urn, name: rec.name, postcode: rec.postcode, phase: rec.phase, lat: Math.round(lat * 1e5) / 1e5, lng: Math.round(lng * 1e5) / 1e5 };
+    if (rec.kind) o.kind = rec.kind;
     if (rec.pupils != null) o.pupils = rec.pupils;
     if (rec.gender) o.gender = rec.gender;
     if (rec.type) o.type = rec.type;
@@ -256,8 +294,11 @@ async function main() {
   await writeFile(OUT, JSON.stringify(out) + "\n");
   const byPhase = {};
   for (const o of out) byPhase[o.phase] = (byPhase[o.phase] || 0) + 1;
+  const byKind = {};
+  for (const o of out) byKind[o.kind || "mainstream"] = (byKind[o.kind || "mainstream"] || 0) + 1;
   console.log(`Wrote ${out.length} schools → ${OUT}  (${viaEN} precise grid ref, ${viaPC} postcode; ${dropped} dropped)`);
   console.log("by phase:", JSON.stringify(byPhase));
+  console.log("by kind:", JSON.stringify(byKind));
 }
 
 main().catch((e) => {

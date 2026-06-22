@@ -1,8 +1,11 @@
 import { OfstedRating, School } from "@/lib/types";
 import { gradeDisplay } from "@/lib/reportCard";
+import { KIND_LABEL } from "@/lib/schoolFilters";
 import { happyColor, p8Color, pctColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl } from "@/lib/links";
 import Pill from "./Pill";
+
+const KIND_NEUTRAL = "#64748b"; // slate — a category tag, not a quality colour
 
 const OFSTED_SHORT: Record<OfstedRating, string> = {
   Outstanding: "Outstanding",
@@ -25,6 +28,10 @@ export default function SchoolCard({
   onToggleShortlist?: () => void;
 }) {
   const grade = gradeDisplay(s.reportCard, s.ofsted);
+  // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade — show
+  // "Independent" rather than a misleading "Not rated". Special/alternative get a neutral type tag.
+  const indie = s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
+  const kindTag = s.kind && s.kind !== "independent" ? KIND_LABEL[s.kind] : null;
   const year = s.reportCard?.inspectionDate
     ? Number(s.reportCard.inspectionDate.slice(0, 4))
     : s.ofstedDate
@@ -103,9 +110,20 @@ export default function SchoolCard({
       </p>
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
-        <Pill color={grade.colour} title={`Ofsted: ${grade.label}`}>
-          {grade.isReportCard ? grade.label : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
+        <Pill
+          color={indie ? KIND_NEUTRAL : grade.colour}
+          title={indie ? "Independent — inspected by ISI, not Ofsted" : `Ofsted: ${grade.label}`}
+        >
+          {indie ? "Independent" : grade.isReportCard ? grade.label : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
         </Pill>
+        {kindTag && (
+          <Pill
+            color={KIND_NEUTRAL}
+            title={s.kind === "special" ? "Special school (SEND provision)" : "Alternative provision / PRU"}
+          >
+            {kindTag}
+          </Pill>
+        )}
         {typeof s.progress8 === "number" && (
           <Pill color={p8Color(s.progress8)} title={`Progress 8${s.ks4Year ? ` (${s.ks4Year})` : ""}`}>
             P8 {s.progress8 > 0 ? "+" : ""}

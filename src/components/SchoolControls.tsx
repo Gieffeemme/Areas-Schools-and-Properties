@@ -106,9 +106,46 @@ export default function SchoolControls({
               <span className="text-[var(--muted)]">Grammar (selective) only</span>
             </label>
           )}
+          {(avail.kinds.special || avail.kinds.independent || avail.kinds.alternative) && (
+            <Row label="Type">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                {avail.kinds.special && (
+                  <KindCheck label="Special" checked={filters.showSpecial} onChange={(v) => set({ showSpecial: v })} />
+                )}
+                {avail.kinds.independent && (
+                  <KindCheck label="Independent" checked={filters.showIndependent} onChange={(v) => set({ showIndependent: v })} />
+                )}
+                {avail.kinds.alternative && (
+                  <KindCheck label="Alt. provision" checked={filters.showAlternative} onChange={(v) => set({ showAlternative: v })} />
+                )}
+              </div>
+            </Row>
+          )}
         </div>
       </details>
     </div>
+  );
+}
+
+function KindCheck({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer items-center gap-1.5 text-[var(--muted)]">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="h-3.5 w-3.5 accent-[var(--primary)]"
+      />
+      <span>{label}</span>
+    </label>
   );
 }
 

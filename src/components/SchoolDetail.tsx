@@ -74,6 +74,8 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
   const rc = s.reportCard ?? null;
   const grade = gradeDisplay(rc, s.ofsted);
+  // Independent schools are ISI-inspected, not Ofsted — show that honestly instead of "Not rated".
+  const indie = s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   const year = rc?.inspectionDate
     ? Number(rc.inspectionDate.slice(0, 4))
     : s.ofstedDate
@@ -157,9 +159,9 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             <div className="flex flex-wrap items-center gap-2">
               <span
                 className="rounded-md px-2.5 py-1 text-sm font-semibold text-white"
-                style={{ backgroundColor: grade.colour }}
+                style={{ backgroundColor: indie ? "#64748b" : grade.colour }}
               >
-                {grade.label}
+                {indie ? "Independent" : grade.label}
               </span>
               {year != null && (
                 <span className={`text-xs ${stale ? "font-medium text-[#d97706]" : "text-[var(--muted)]"}`}>
@@ -195,6 +197,12 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   improvement.
                 </p>
               </>
+            ) : indie ? (
+              <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                Independent school — inspected by the Independent Schools Inspectorate (ISI), not within
+                the state Ofsted framework, so we don’t hold an Ofsted grade or DfE performance data for
+                it. Use the link below for any published inspection report.
+              </p>
             ) : (
               <>
                 {SUB.some((x) => sub[x.key]) && (

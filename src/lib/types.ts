@@ -33,6 +33,7 @@ export interface School {
   distanceMiles: number;
   urn?: string; // from OSM tag ref:edubase, when present
   phase?: string; // Nursery / Primary / Secondary / Sixth form / College / All-through
+  kind?: "special" | "alternative" | "independent"; // non-mainstream GIAS category; undefined = mainstream state school
   places?: number; // registered capacity (Ofsted Early Years nurseries)
   // GIAS register metadata (state/independent schools; nurseries carry `places` instead)
   pupils?: number; // number on roll

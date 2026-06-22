@@ -41,7 +41,7 @@ Everything hinges on two join keys.
 
 | Layer | File | Source register | Coords | ~Count |
 |-------|------|-----------------|--------|--------|
-| Schools | `gias.json` | **GIAS** (Get Information About Schools) | precise grid-ref (OSGB36→WGS84, <1 cm) | ~20,800 open England schools |
+| Schools | `gias.json` | **GIAS** (Get Information About Schools) | precise grid-ref (OSGB36→WGS84, <1 cm) | ~24,900 open England schools — mainstream + special, alternative/PRU & independent (`kind`) |
 | Nurseries | `nurseries.json` | **Ofsted Early Years register** | postcode centroid (register has no coords) | ~23,000 |
 
 **The DfE URN is the join key.** Every GIAS school carries its URN natively, so `fetchSchools()`
@@ -122,7 +122,7 @@ column codes live in each script's header docstring** — the table below is the
 
 | Command | Output | Source |
 |---------|--------|--------|
-| `etl:gias` | `gias.json` | GIAS bulk "all establishments" CSV (`ea-edubase-api-prod.azurewebsites.net/.../edubasealldataYYYYMMDD.csv`). Open schools only; phase mapped; Easting/Northing → WGS84 via `osgbToWgs84`. Keeps NumberOfPupils, Gender, TypeOfEstablishment, ReligiousCharacter, Statutory{Low,High}Age, AdmissionsPolicy. |
+| `etl:gias` | `gias.json` | GIAS bulk "all establishments" CSV (`ea-edubase-api-prod.azurewebsites.net/.../edubasealldataYYYYMMDD.csv`). Open schools; phase mapped; Easting/Northing → WGS84 via `osgbToWgs84`. Keeps NumberOfPupils, Gender, TypeOfEstablishment, ReligiousCharacter, Statutory{Low,High}Age, AdmissionsPolicy. **Special / alternative (PRU) / independent** schools file under GIAS phase "Not applicable" — admitted by establishment type, phase derived from the age range, tagged `kind`; Welsh + universities/overseas excluded. |
 | `etl:nurseries` | `nurseries.json` | Ofsted "Childcare providers and inspections" MI (Early Years register), gov.uk statistical-data-sets. Active non-domestic EY settings; childminders dropped; postcode-geocoded via postcodes.io. |
 | `etl:report-cards -- --discover` | `report-cards-by-urn.json` | **Scraped** from live `reports.ofsted.gov.uk/provider/16/{urn}` pages — the new Nov-2025 report-card grades the bulk MI doesn't carry yet. `--discover` walks the date-desc childcare search (new-framework reports cluster at the front) and stops at the framework boundary, so it touches only the new-framework nurseries, not all ~23k. |
 | `etl:schools` | `ofsted-by-urn.json` | Ofsted "state-funded schools inspections and outcomes" MI **xlsx** (GIAS has no Ofsted column). Overall grade + sub-judgements. |
@@ -195,8 +195,8 @@ map remounts and re-fits when any of those change.
 ## 8. Features (dashboard)
 
 - **Search:** postcode **or** school name (autocomplete); adjustable **radius** (½–5 mi).
-- **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar)
-  that drive the **map pins and the list together**.
+- **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
+  school type — special / independent / alternative) that drive the **map pins and the list together**.
 - **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,
   Parent View; **shortlist** (★, localStorage). Metric sorts fall back to Ofsted then distance.
 - **School detail drawer:** Details, **Ofsted** — the new Nov-2025 **report card** (5-band scale +
@@ -304,7 +304,10 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **runtime-load build cleanup** (datasets read at runtime; in-build type-check re-enabled),
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (Overpass), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
-strategic noise mapping, Round 4).
+strategic noise mapping, Round 4), and a **complete school register** — special, alternative/PRU &
+independent schools (filed by GIAS under phase "Not applicable") are now admitted instead of silently
+dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
+ISI-inspected, no Ofsted grade).
 
 **Remaining (free data):** none outstanding — the Tier-1 set is complete. (The last of them, **Defra
 noise**, was expected to need committed GIS contours + point-in-polygon, but Defra serves the Round 4
@@ -315,6 +318,10 @@ ETL and no committed data, like crime/prices/amenities.)
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
 **per-school subjects** (DfE subject data is national-only, not bulk-published per school);
 **11+ oversubscription** (published LA-by-LA, messy).
+
+**Follow-up:** **Welsh schools** are still excluded from the register — they lack the statutory age
+fields we derive phase from and aren't covered by our England Ofsted/DfE enrichment; proper support
+needs a dedicated Welsh pipeline (Estyn inspections + Welsh-Government results).
 
 ---
 
