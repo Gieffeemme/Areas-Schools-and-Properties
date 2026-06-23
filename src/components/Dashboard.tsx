@@ -256,6 +256,16 @@ function Report({
       {report.errors.length > 0 && <PartialNote errors={report.errors} />}
 
       <p className="mt-4 text-xs text-[var(--muted)]">
+        Data may contain errors — verify with the official source before making any decision.{" "}
+        <a
+          href="/sources"
+          className="text-[var(--primary)] underline underline-offset-2 hover:no-underline"
+        >
+          Sources &amp; disclaimers
+        </a>
+        .
+      </p>
+      <p className="mt-2 text-xs text-[var(--muted)]">
         The shaded circle is a{" "}
         <strong>{report.radiusMiles === 0.5 ? "½" : report.radiusMiles}-mile distance guide</strong>,
         not a school catchment boundary. Catchment areas are a later phase.

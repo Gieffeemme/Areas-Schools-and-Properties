@@ -57,8 +57,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               © OpenStreetMap contributors (ODbL).
             </p>
             <p>
-              <strong>Indicative information only — not professional advice.</strong> Figures may be
-              incomplete or out of date; verify with the official source before relying on them.
+              <strong>Indicative information only — not professional advice.</strong> Data may contain
+              errors — verify with the official source before making any decision.
             </p>
             <p>© GFM 2026 · Not affiliated with or endorsed by the data providers.</p>
           </div>

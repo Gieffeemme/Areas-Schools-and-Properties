@@ -392,6 +392,16 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <NeighbourhoodToggle postcode={report.postcode} />
 
       <p className="text-[11px] leading-relaxed text-[var(--muted)]">
+        <strong>Data may contain errors — verify with the official source before making any decision.</strong>{" "}
+        <a
+          href="/sources"
+          className="text-[var(--primary)] underline underline-offset-2 hover:no-underline"
+        >
+          Sources &amp; disclaimers
+        </a>
+        .
+      </p>
+      <p className="text-[11px] leading-relaxed text-[var(--muted)]">
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
         Environment Agency at the postcode location; nearest stations from OpenStreetMap.
