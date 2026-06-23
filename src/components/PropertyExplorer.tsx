@@ -28,6 +28,7 @@ export default function PropertyExplorer({
   const [report, setReport] = useState<ReportState>(null);
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState(""); // narrows the address list (pre-filled from a typed street)
+  const [notFound, setNotFound] = useState<string | null>(null); // typed street that isn't in the list
 
   async function lookupPostcode(e: React.FormEvent) {
     e.preventDefault();
@@ -35,6 +36,7 @@ export default function PropertyExplorer({
     if (!raw) return;
     setReport(null);
     setError(null);
+    setNotFound(null);
     const m = raw.match(POSTCODE_RE);
     if (!m) {
       // No postcode in the input (e.g. they typed only a street name) - we can't street-search free.
@@ -43,12 +45,19 @@ export default function PropertyExplorer({
       return;
     }
     const pc = m[0].toUpperCase().replace(/\s+/g, "").replace(/(\d[A-Z]{2})$/, " $1"); // canonical "OUT IN"
-    setFilter(raw.slice(0, m.index ?? 0).replace(/,/g, " ").trim()); // pre-narrow to the typed street
+    const street = raw.slice(0, m.index ?? 0).replace(/,/g, " ").trim();
+    setFilter("");
     setAddresses("loading");
     try {
       const res = await fetch(`/api/address-search?postcode=${encodeURIComponent(pc)}`);
       const data = await res.json();
-      setAddresses(Array.isArray(data) ? data : []);
+      const listData: AddressMatch[] = Array.isArray(data) ? data : [];
+      setAddresses(listData);
+      // Pre-narrow to the typed street ONLY if it actually matches; otherwise show all + flag it, so a
+      // property with no lodged EPC doesn't dead-end ("parrots the address, then does nothing").
+      const hit = !!street && listData.some((a) => norm(a.line1).includes(norm(street)));
+      setFilter(hit ? street : "");
+      setNotFound(street && !hit && listData.length > 0 ? street : null);
     } catch {
       setAddresses([]);
       setError("Couldn’t load addresses for that postcode.");
@@ -117,7 +126,11 @@ export default function PropertyExplorer({
             addresses={addresses}
             onPick={pickAddress}
             filter={filter}
-            onFilter={setFilter}
+            onFilter={(v) => {
+              setNotFound(null);
+              setFilter(v);
+            }}
+            notFound={notFound}
           />
         )}
       </div>
@@ -130,11 +143,13 @@ function AddressPicker({
   onPick,
   filter,
   onFilter,
+  notFound,
 }: {
   addresses: AddrState;
   onPick: (a: AddressMatch) => void;
   filter: string;
   onFilter: (v: string) => void;
+  notFound?: string | null;
 }) {
   const list = Array.isArray(addresses) ? addresses : [];
   const shown = useMemo(() => {
@@ -172,6 +187,13 @@ function AddressPicker({
 
   return (
     <Card title={`${list.length} addresses`} subtitle="Pick the exact property">
+      {notFound && (
+        <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
+          We couldn’t find <strong>“{notFound}”</strong> here — the picker only lists properties with a
+          lodged EPC, and many homes don’t have one. Showing all {list.length} EPC-listed addresses at
+          this postcode; pick the closest, or it may not be checkable on free data.
+        </div>
+      )}
       {(list.length > 8 || filter) && (
         <input
           value={filter}
