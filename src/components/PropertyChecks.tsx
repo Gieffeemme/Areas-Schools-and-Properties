@@ -97,15 +97,11 @@ export default function PropertyChecks({
               {c.bars && c.bars.length > 0 && <BandBar segs={c.bars} />}
               <p className="mt-0.5 text-[10px] leading-tight text-[var(--muted)]">{c.source}</p>
             </div>
-            <span
-              className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                c.status === "live"
-                  ? "bg-emerald-100 text-emerald-700"
-                  : "bg-slate-100 text-[var(--muted)]"
-              }`}
-            >
-              {c.status === "live" ? "Live" : "Soon"}
-            </span>
+            {c.status === "soon" && (
+              <span className="mt-0.5 shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[var(--muted)]">
+                Soon
+              </span>
+            )}
           </li>
         ))}
       </ul>
