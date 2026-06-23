@@ -15,6 +15,7 @@ import NoisePanel from "./NoisePanel";
 import AirQualityPanel from "./AirQualityPanel";
 import MobilePanel from "./MobilePanel";
 import EvChargingPanel from "./EvChargingPanel";
+import BathingWaterPanel from "./BathingWaterPanel";
 import DemographicsPanel from "./DemographicsPanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
@@ -305,6 +306,8 @@ function SidePanels({
     report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
   // Defra PCM air quality covers GB; report.airQuality is null outside the grid (e.g. NI) → hide.
   const airQuality = report.airQuality ? <AirQualityPanel airQuality={report.airQuality} /> : null;
+  // Bathing water only renders when one is within the coastal threshold (panel returns null otherwise).
+  const bathingWater = <BathingWaterPanel water={report.bathingWater} />;
   const demographics = <DemographicsPanel census={report.census} />;
   const propertyChecks = (
     <PropertyChecks
@@ -326,6 +329,7 @@ function SidePanels({
       {mobile}
       {noise}
       {airQuality}
+      {bathingWater}
       {demographics}
       {deprivation}
       {price}

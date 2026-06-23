@@ -11,6 +11,7 @@ import { fetchCensus } from "@/lib/census";
 import { broadbandForLaua } from "@/lib/broadband";
 import { mobileForLaua } from "@/lib/mobile";
 import { airQualityForPoint } from "@/lib/airQuality";
+import { nearestBathingWater } from "@/lib/bathingWater";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
@@ -105,6 +106,8 @@ export async function GET(req: NextRequest) {
   const inGB =
     facts.country === "England" || facts.country === "Scotland" || facts.country === "Wales";
   const airQuality = inGB ? airQualityForPoint(facts.easting, facts.northing) : null;
+  // Nearest designated bathing water (committed EA dataset) - null unless within the coastal threshold.
+  const bathingWater = nearestBathingWater(centre);
 
   const benchmarks: AreaBenchmarks = {
     crime: crimeBenchmark(crime?.total),
@@ -127,6 +130,7 @@ export async function GET(req: NextRequest) {
     mobile,
     noise,
     airQuality,
+    bathingWater,
     census,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),

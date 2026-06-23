@@ -28,6 +28,9 @@ export const noiseSourceUrl = () =>
 // Defra modelled background pollution maps (PCM) — the 1 km NO2/PM2.5 background-concentration data.
 export const airQualitySourceUrl = () => "https://uk-air.defra.gov.uk/data/pcm-data";
 
+// Environment Agency bathing-water quality explorer.
+export const bathingWaterSourceUrl = () => "https://environment.data.gov.uk/bwq/";
+
 // Stateful Play form, no GET deep-link by location → its start page.
 export const floodSourceUrl = () => "https://check-long-term-flood-risk.service.gov.uk/postcode";
 

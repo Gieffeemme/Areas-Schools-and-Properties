@@ -24,6 +24,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Air quality (modelled background NO₂ / PM2.5, PCM 1 km maps)", provider: "Defra", licence: "OGL v3.0" },
   { name: "Health & care ratings (care directory with filters)", provider: "Care Quality Commission", licence: "OGL v3.0" },
   { name: "Flood risk & warnings", provider: "Environment Agency", licence: "OGL v3.0" },
+  { name: "Bathing water quality (classifications)", provider: "Environment Agency", licence: "OGL v3.0" },
   { name: "Energy performance certificates (EPC)", provider: "MHCLG - Get energy performance of buildings data", licence: "EPB reuse terms" },
   { name: "Planning applications", provider: "PlanIt (aggregates UK local-authority planning registers)", licence: "Third-party - see note" },
   { name: "Planning constraints (designations, listed buildings)", provider: "MHCLG planning.data.gov.uk (incl. Historic England)", licence: "OGL v3.0" },

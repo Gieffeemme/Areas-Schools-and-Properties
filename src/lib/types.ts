@@ -398,6 +398,14 @@ export interface MobileSummary {
   fiveGAny: number | null; // % premises with outdoor 5G from at least one operator
 }
 
+// Nearest designated bathing water to a point (Environment Agency), surfaced only within a coastal
+// threshold. Classification is the latest annual revised-Bathing-Water-Directive grade.
+export interface BathingWaterSummary {
+  name: string;
+  classification: string | null; // Excellent | Good | Sufficient | Poor; null = newly designated, not yet classified
+  distanceMiles: number;
+}
+
 // Environmental noise at the searched point, from Defra strategic noise mapping (Round 4, 2021).
 // Each level is the modelled dB at the location; null = below the mapping threshold (40 dB Lden /
 // 35 dB Lnight), i.e. no significant source of that kind nearby.
@@ -510,6 +518,7 @@ export interface AreaReport {
   mobile: MobileSummary | null; // Ofcom mobile coverage (4G/5G) for the LAUA; UK-wide
   noise: NoiseSummary | null;
   airQuality: AirQualitySummary | null; // modelled background NO2/PM2.5 at the point (Defra PCM); GB only
+  bathingWater: BathingWaterSummary | null; // nearest designated bathing water (EA); null unless within ~10 mi
   census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present

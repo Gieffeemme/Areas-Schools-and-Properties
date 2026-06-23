@@ -15,6 +15,7 @@ import NoisePanel from "./NoisePanel";
 import AirQualityPanel from "./AirQualityPanel";
 import MobilePanel from "./MobilePanel";
 import EvChargingPanel from "./EvChargingPanel";
+import BathingWaterPanel from "./BathingWaterPanel";
 import DemographicsPanel from "./DemographicsPanel";
 import RankingsPanel from "./RankingsPanel";
 import {
@@ -498,6 +499,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
               <MobilePanel mobile={area.mobile} />
               {area.facts.country === "England" && <NoisePanel noise={area.noise} />}
               {area.airQuality && <AirQualityPanel airQuality={area.airQuality} />}
+              <BathingWaterPanel water={area.bathingWater} />
               <DemographicsPanel census={area.census} />
               <DeprivationPanel facts={area.facts} />
               <PricePanel prices={area.prices} benchmark={area.benchmarks.price} />
