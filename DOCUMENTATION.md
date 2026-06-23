@@ -90,7 +90,10 @@ PostcodeSearch / school-name search (client)
   `GET /api/address-search?postcode=` → `fetchAddresses()` (EPC register) lists the specific addresses;
   picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` + `fetchAddressSales`
   (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus
-  geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated).
+  geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated). The search box accepts
+  a **postcode or a full address** — a postcode is extracted from anywhere in the input (and the leading
+  street pre-filters the address list); input with no postcode shows guidance, since the free address
+  lookup is postcode-keyed (no OS Places).
 - **Map overlay layers** (the `/map` explorer) are separate point-grid endpoints:
   `/api/crime-points`, `/api/deprivation-points`, `/api/flood` — each samples a grid in the radius
   and bulk reverse-geocodes via postcodes.io (no boundary polygons bundled).

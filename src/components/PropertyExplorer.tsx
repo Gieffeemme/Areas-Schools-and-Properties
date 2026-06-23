@@ -6,8 +6,12 @@ import Card from "./Card";
 import { AddressMatch, PriceSale, PropertyReport } from "@/lib/types";
 import { Route, routeDef } from "@/lib/routes";
 
-type AddrState = AddressMatch[] | "loading" | null;
+type AddrState = AddressMatch[] | "loading" | "no-postcode" | null;
 type ReportState = PropertyReport | "loading" | null;
+
+// A UK postcode anywhere in the input, so pasting a full address (with its postcode) still works.
+const POSTCODE_RE = /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i;
+const norm = (s: string) => s.trim().toLowerCase().replace(/,/g, " ").replace(/\s+/g, " ").trim();
 
 // The "Check a property" route: enter a postcode → pick the exact address → that property's report.
 export default function PropertyExplorer({
@@ -22,13 +26,23 @@ export default function PropertyExplorer({
   const [addresses, setAddresses] = useState<AddrState>(null);
   const [report, setReport] = useState<ReportState>(null);
   const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState(""); // narrows the address list (pre-filled from a typed street)
 
   async function lookupPostcode(e: React.FormEvent) {
     e.preventDefault();
-    const pc = postcode.trim();
-    if (!pc) return;
+    const raw = postcode.trim();
+    if (!raw) return;
     setReport(null);
     setError(null);
+    const m = raw.match(POSTCODE_RE);
+    if (!m) {
+      // No postcode in the input (e.g. they typed only a street name) - we can't street-search free.
+      setFilter("");
+      setAddresses("no-postcode");
+      return;
+    }
+    const pc = m[0].toUpperCase().replace(/\s+/g, "").replace(/(\d[A-Z]{2})$/, " $1"); // canonical "OUT IN"
+    setFilter(raw.slice(0, m.index ?? 0).replace(/,/g, " ").trim()); // pre-narrow to the typed street
     setAddresses("loading");
     try {
       const res = await fetch(`/api/address-search?postcode=${encodeURIComponent(pc)}`);
@@ -75,7 +89,7 @@ export default function PropertyExplorer({
         <input
           value={postcode}
           onChange={(e) => setPostcode(e.target.value)}
-          placeholder="Enter a postcode, e.g. M14 5SZ"
+          placeholder="Postcode (or a full address with its postcode), e.g. M14 5SZ"
           autoComplete="postal-code"
           aria-label="Postcode"
           className="min-w-0 flex-1 rounded-xl border border-[var(--border)] bg-white px-4 py-2.5 text-sm shadow-sm outline-none focus:border-[var(--primary)] focus:ring-2 focus:ring-indigo-100"
@@ -98,21 +112,45 @@ export default function PropertyExplorer({
         {report ? (
           <ReportSection report={report} onBack={() => setReport(null)} />
         ) : (
-          <AddressPicker addresses={addresses} onPick={pickAddress} />
+          <AddressPicker
+            addresses={addresses}
+            onPick={pickAddress}
+            filter={filter}
+            onFilter={setFilter}
+          />
         )}
       </div>
     </div>
   );
 }
 
-function AddressPicker({ addresses, onPick }: { addresses: AddrState; onPick: (a: AddressMatch) => void }) {
-  const [filter, setFilter] = useState("");
+function AddressPicker({
+  addresses,
+  onPick,
+  filter,
+  onFilter,
+}: {
+  addresses: AddrState;
+  onPick: (a: AddressMatch) => void;
+  filter: string;
+  onFilter: (v: string) => void;
+}) {
   const list = Array.isArray(addresses) ? addresses : [];
   const shown = useMemo(() => {
-    const q = filter.trim().toLowerCase();
-    return q ? list.filter((a) => a.line1.toLowerCase().includes(q)) : list;
+    const q = norm(filter);
+    return q ? list.filter((a) => norm(a.line1).includes(q)) : list;
   }, [list, filter]);
 
+  if (addresses === "no-postcode")
+    return (
+      <Card title="Enter a postcode" subtitle="Free address lookup is by postcode">
+        <p className="text-sm leading-relaxed text-[var(--muted)]">
+          Type a UK <strong>postcode</strong> (e.g. <span className="font-mono">M14 5SZ</span>) and we’ll
+          list the addresses at it to pick from. A full address works too, as long as it includes the
+          postcode — we can’t search by street name alone on the free tier.
+        </p>
+      </Card>
+    );
   if (addresses === null)
     return (
       <p className="text-center text-sm text-[var(--muted)]">
@@ -133,13 +171,18 @@ function AddressPicker({ addresses, onPick }: { addresses: AddrState; onPick: (a
 
   return (
     <Card title={`${list.length} addresses`} subtitle="Pick the exact property">
-      {list.length > 8 && (
+      {(list.length > 8 || filter) && (
         <input
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => onFilter(e.target.value)}
           placeholder="Filter by house number or name…"
           className="mb-2 w-full rounded-lg border border-[var(--border)] px-3 py-2 text-sm outline-none focus:border-[var(--primary)]"
         />
+      )}
+      {!shown.length && (
+        <p className="mb-2 text-xs text-[var(--muted)]">
+          Nothing matches “{filter}”. Clear the filter to see all {list.length}.
+        </p>
       )}
       <ul className="max-h-[26rem] divide-y divide-[var(--border)] overflow-auto">
         {shown.map((a) => (
