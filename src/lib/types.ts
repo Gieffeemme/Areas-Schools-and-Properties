@@ -151,6 +151,14 @@ export interface EpcSummary {
   typicalBand: string | null; // most common band
 }
 
+// Council Tax band mix for an LSOA (neighbourhood), from the VOA "stock of properties" stats
+// (table CTSOP4.1). Counts are VOA-rounded to 10; England has bands A–H, Wales A–I.
+export interface CouncilTaxSummary {
+  total: number; // dwellings on the valuation list in the LSOA
+  bands: Record<string, number>; // band A–I → count
+  typicalBand: string | null; // most common band
+}
+
 export interface CrimeCategoryCount {
   category: string;
   count: number;
@@ -217,6 +225,7 @@ export interface AreaFacts {
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
   imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA
+  councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 
 export interface MetricBenchmark {

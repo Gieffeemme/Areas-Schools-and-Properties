@@ -284,7 +284,12 @@ function SidePanels({
     return (
       <>
         {price}
-        <PropertyChecks centre={report.centre} prices={report.prices} postcode={report.facts.postcode} />
+        <PropertyChecks
+          centre={report.centre}
+          prices={report.prices}
+          postcode={report.facts.postcode}
+          councilTax={report.facts.councilTax}
+        />
         {crime}
         {amenities}
         {broadband}

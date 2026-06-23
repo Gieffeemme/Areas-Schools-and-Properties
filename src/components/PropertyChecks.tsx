@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { EpcSummary, FloodSummary, LatLng, PriceSummary } from "@/lib/types";
+import { CouncilTaxSummary, EpcSummary, FloodSummary, LatLng, PriceSummary } from "@/lib/types";
 import Card from "./Card";
 
 type Check = { label: string; status: "live" | "soon"; note: string };
@@ -10,10 +10,12 @@ export default function PropertyChecks({
   centre,
   prices,
   postcode,
+  councilTax,
 }: {
   centre: LatLng;
   prices: PriceSummary | null;
   postcode?: string;
+  councilTax?: CouncilTaxSummary | null;
 }) {
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
   const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
@@ -51,7 +53,7 @@ export default function PropertyChecks({
     { label: "Sold price history", status: "live", note: "HM Land Registry - see the prices panel" },
     tenureCheck(prices),
     epcCheck(epc),
-    { label: "Council tax band", status: "soon", note: "VOA" },
+    councilTaxCheck(councilTax),
     { label: "Planning applications nearby", status: "soon", note: "Local authority" },
   ];
 
@@ -77,8 +79,10 @@ export default function PropertyChecks({
         ))}
       </ul>
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Flood, sold prices and tenure are live (Environment Agency, HM Land Registry). “Soon” checks
-        arrive with their data pipelines.
+        Flood, sold prices, tenure, EPC and council tax draw on live or official open data
+        (Environment Agency, HM Land Registry, MHCLG, VOA). Council-tax bands are the neighbourhood
+        mix (the surrounding LSOA), not a single address. “Soon” checks arrive with their data
+        pipelines.
       </p>
     </Card>
   );
@@ -99,6 +103,22 @@ function epcCheck(epc: EpcSummary | null | "loading"): Check {
     label: "EPC / energy",
     status: "live",
     note: `EPC register - typical band ${epc.typicalBand} of ${epc.count} (${top})`,
+  };
+}
+
+function councilTaxCheck(ct: CouncilTaxSummary | null | undefined): Check {
+  if (!ct || !ct.total || !ct.typicalBand) {
+    return { label: "Council tax band", status: "soon", note: "VOA - England & Wales" };
+  }
+  const top = Object.entries(ct.bands)
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, 3)
+    .map(([b, n]) => `${Math.round((n / ct.total) * 100)}% ${b}`)
+    .join(" · ");
+  return {
+    label: "Council tax band",
+    status: "live",
+    note: `VOA 2025 - typical band ${ct.typicalBand} (${top}) of ~${ct.total} homes nearby`,
   };
 }
 

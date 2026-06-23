@@ -1,5 +1,6 @@
 import { AreaFacts, LatLng, PlaceMatch } from "./types";
 import { imdDomainsForLsoa } from "./imd";
+import { councilTaxForLsoa } from "./councilTax";
 
 // Number of LSOAs in the English IMD 2019 ranking (used to derive a decile).
 const ENGLAND_LSOA_COUNT = 32844;
@@ -49,6 +50,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           imdRank,
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
+          councilTax: councilTaxForLsoa(lsoaCode) ?? null,
         },
       };
     }
@@ -199,6 +201,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       imdRank,
       imdDecile,
       imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
+      councilTax: councilTaxForLsoa(lsoaCode) ?? null,
     },
   };
 }
