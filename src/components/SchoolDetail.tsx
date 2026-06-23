@@ -430,11 +430,6 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               )}
             </Section>
           )}
-
-          <p className="text-[11px] leading-relaxed text-[var(--muted)]">
-            Coming next: catchment area and multi-year trends. Sources: GIAS, DfE performance
-            tables, School Workforce Census, school finance (CFR/AAR), Ofsted, postcodes.io.
-          </p>
         </div>
       </div>
     </div>

@@ -6,7 +6,9 @@ import Card from "./Card";
 
 // A row: `value` is the actual finding (shown prominently); `source` is the attribution (fine print).
 // `value` is undefined for a check that has nothing to report yet (its row stays a quiet "Soon").
-type Check = { label: string; status: "live" | "soon"; value?: string; source: string };
+// `bars`, when present, is a band-share distribution rendered as a stacked bar under the value.
+type BandSeg = { band: string; pct: number; bg: string; fg: string };
+type Check = { label: string; status: "live" | "soon"; value?: string; source: string; bars?: BandSeg[] };
 
 export default function PropertyChecks({
   centre,
@@ -69,6 +71,7 @@ export default function PropertyChecks({
               {c.value && (
                 <p className="mt-0.5 text-sm font-semibold leading-snug">{c.value}</p>
               )}
+              {c.bars && c.bars.length > 0 && <BandBar segs={c.bars} />}
               <p className="mt-0.5 text-[10px] leading-tight text-[var(--muted)]">{c.source}</p>
             </div>
             <span
@@ -104,6 +107,54 @@ function topBands(bands: Record<string, number>, unit: (band: string, n: number)
     .join(" · ");
 }
 
+// Official EPC band colours (A best → G worst) + a readable colour for the on-bar letter.
+const EPC_BAND: Record<string, { bg: string; fg: string }> = {
+  A: { bg: "#0c8a4f", fg: "#ffffff" },
+  B: { bg: "#2f9e44", fg: "#ffffff" },
+  C: { bg: "#8dce46", fg: "#1a3a08" },
+  D: { bg: "#ffd400", fg: "#3a3000" },
+  E: { bg: "#fcaa67", fg: "#4a2600" },
+  F: { bg: "#ef8023", fg: "#ffffff" },
+  G: { bg: "#e9153b", fg: "#ffffff" },
+};
+const epcColor = (band: string) => EPC_BAND[band] ?? { bg: "#94a3b8", fg: "#ffffff" };
+
+// Council-tax bands have no official palette: a single-hue ramp, light A (lowest value) → dark H/I.
+function ctaxColor(band: string): { bg: string; fg: string } {
+  const pos = Math.max(0, Math.min(8, band.charCodeAt(0) - 65)); // A=0 … I=8
+  const L = 80 - (pos / 8) * 46; // lightness 80% (A) → 34% (I)
+  return { bg: `hsl(222 39% ${L}%)`, fg: L < 55 ? "#ffffff" : "#1e293b" };
+}
+
+// Turn a {band: count} map into stacked-bar segments (A → highest), each sized by its share.
+function bandSegs(
+  bands: Record<string, number>,
+  color: (band: string) => { bg: string; fg: string },
+): BandSeg[] {
+  const total = Object.values(bands).reduce((a, b) => a + b, 0) || 1;
+  return Object.keys(bands)
+    .sort()
+    .map((b) => ({ band: b, pct: (bands[b] / total) * 100, ...color(b) }))
+    .filter((s) => s.pct > 0);
+}
+
+function BandBar({ segs }: { segs: BandSeg[] }) {
+  return (
+    <div className="mt-1.5 flex h-3 w-full overflow-hidden rounded-full" aria-hidden="true">
+      {segs.map((s) => (
+        <div
+          key={s.band}
+          title={`Band ${s.band}: ${Math.round(s.pct)}%`}
+          style={{ width: `${s.pct}%`, backgroundColor: s.bg, color: s.fg }}
+          className="flex items-center justify-center text-[9px] font-bold leading-none"
+        >
+          {s.pct >= 11 ? s.band : ""}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function epcCheck(epc: EpcSummary | null | "loading"): Check {
   if (epc === "loading")
     return { label: "EPC / energy", status: "soon", value: "Checking…", source: "MHCLG EPC register" };
@@ -120,6 +171,7 @@ function epcCheck(epc: EpcSummary | null | "loading"): Check {
     status: "live",
     value: `Typical band ${epc.typicalBand} · ${topBands(epc.bands, (b, n) => `${n} ${b}`)}`,
     source: `MHCLG EPC register · ${epc.count} certificate${epc.count === 1 ? "" : "s"}`,
+    bars: bandSegs(epc.bands, epcColor),
   };
 }
 
@@ -133,6 +185,7 @@ function councilTaxCheck(ct: CouncilTaxSummary | null | undefined): Check {
     status: "live",
     value: `Typical band ${ct.typicalBand} · ${dist}`,
     source: `VOA 2025 · ~${ct.total} homes in this LSOA`,
+    bars: bandSegs(ct.bands, ctaxColor),
   };
 }
 
