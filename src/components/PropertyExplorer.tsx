@@ -500,7 +500,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
               {area.facts.country === "England" && <NoisePanel noise={area.noise} />}
               {area.airQuality && <AirQualityPanel airQuality={area.airQuality} />}
               <BathingWaterPanel water={area.bathingWater} />
-              <DemographicsPanel census={area.census} />
+              <DemographicsPanel census={area.census} income={area.income} />
               <DeprivationPanel facts={area.facts} />
               <PricePanel prices={area.prices} benchmark={area.benchmarks.price} />
             </>

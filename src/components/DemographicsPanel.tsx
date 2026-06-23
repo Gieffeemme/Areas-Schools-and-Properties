@@ -1,11 +1,17 @@
-import { CensusSummary } from "@/lib/types";
+import { CensusSummary, IncomeSummary } from "@/lib/types";
 import Card from "./Card";
 import SourceLink from "./SourceLink";
-import { censusSourceUrl } from "@/lib/sources";
+import { censusSourceUrl, incomeSourceUrl } from "@/lib/sources";
 
-// "Who lives here" - Census 2021 demographics for the neighbourhood (LSOA), from ONS via Nomis.
-// England & Wales only; null off-coverage (the panel is hidden by the dashboard there).
-export default function DemographicsPanel({ census }: { census: CensusSummary | null }) {
+// "Who lives here" - Census 2021 demographics for the neighbourhood (LSOA), from ONS via Nomis, plus the
+// MSOA net household income (ONS). England & Wales only; null off-coverage (hidden by the dashboard).
+export default function DemographicsPanel({
+  census,
+  income,
+}: {
+  census: CensusSummary | null;
+  income?: IncomeSummary | null;
+}) {
   if (!census) {
     return (
       <Card title="Who lives here" subtitle="Census 2021 · ONS">
@@ -24,6 +30,15 @@ export default function DemographicsPanel({ census }: { census: CensusSummary | 
   return (
     <Card title="Who lives here" subtitle={`Census 2021 · ${bits.join(" · ") || "ONS"}`}>
       <div className="space-y-3">
+        {income && (
+          <Row label="Household income" value={`£${income.net.toLocaleString("en-GB")} net/yr`}>
+            <p className="mt-0.5 text-[11px] text-[var(--muted)]">
+              MSOA estimate · {income.net >= income.median ? "above" : "below"} the £
+              {income.median.toLocaleString("en-GB")} England &amp; Wales median (FYE {income.year})
+            </p>
+          </Row>
+        )}
+
         {age && (
           <Row
             label="Age"
@@ -111,7 +126,14 @@ export default function DemographicsPanel({ census }: { census: CensusSummary | 
 
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Neighbourhood (LSOA) figures from the{" "}
-        <SourceLink href={censusSourceUrl()}>ONS Census 2021</SourceLink>. England & Wales.
+        <SourceLink href={censusSourceUrl()}>ONS Census 2021</SourceLink>
+        {income ? (
+          <>
+            ; household income (MSOA) from{" "}
+            <SourceLink href={incomeSourceUrl()}>ONS small-area income estimates</SourceLink>
+          </>
+        ) : null}
+        . England & Wales.
       </p>
     </Card>
   );

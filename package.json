@@ -30,7 +30,8 @@
     "etl:air-quality": "node scripts/etl/build-air-quality.mjs",
     "etl:mobile": "node scripts/etl/build-mobile.mjs",
     "etl:ev-charging": "node scripts/etl/build-ev-charging.mjs",
-    "etl:bathing-water": "node scripts/etl/build-bathing-water.mjs"
+    "etl:bathing-water": "node scripts/etl/build-bathing-water.mjs",
+    "etl:income": "node scripts/etl/build-income.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

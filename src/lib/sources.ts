@@ -18,6 +18,10 @@ export const imdSourceUrl = () =>
 // ONS Census 2021 - the interactive area maps where the same neighbourhood figures can be explored.
 export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 
+// ONS "Income estimates for small areas" (model-based net household income by MSOA).
+export const incomeSourceUrl = () =>
+  "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/smallareaincomeestimatesformiddlelayersuperoutputareasenglandandwales";
+
 export const broadbandSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/broadband-coverage";
 
 export const mobileSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/mobile-coverage";

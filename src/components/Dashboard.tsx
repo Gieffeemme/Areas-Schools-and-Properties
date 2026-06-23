@@ -308,7 +308,7 @@ function SidePanels({
   const airQuality = report.airQuality ? <AirQualityPanel airQuality={report.airQuality} /> : null;
   // Bathing water only renders when one is within the coastal threshold (panel returns null otherwise).
   const bathingWater = <BathingWaterPanel water={report.bathingWater} />;
-  const demographics = <DemographicsPanel census={report.census} />;
+  const demographics = <DemographicsPanel census={report.census} income={report.income} />;
   const propertyChecks = (
     <PropertyChecks
       centre={report.centre}

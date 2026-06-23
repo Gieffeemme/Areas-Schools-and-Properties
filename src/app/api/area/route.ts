@@ -12,6 +12,7 @@ import { broadbandForLaua } from "@/lib/broadband";
 import { mobileForLaua } from "@/lib/mobile";
 import { airQualityForPoint } from "@/lib/airQuality";
 import { nearestBathingWater } from "@/lib/bathingWater";
+import { incomeForMsoa } from "@/lib/income";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
@@ -108,6 +109,8 @@ export async function GET(req: NextRequest) {
   const airQuality = inGB ? airQualityForPoint(facts.easting, facts.northing) : null;
   // Nearest designated bathing water (committed EA dataset) - null unless within the coastal threshold.
   const bathingWater = nearestBathingWater(centre);
+  // Net household income for the neighbourhood MSOA (committed ONS dataset); England & Wales.
+  const income = incomeForMsoa(facts.msoa21Code, facts.msoaCode);
 
   const benchmarks: AreaBenchmarks = {
     crime: crimeBenchmark(crime?.total),
@@ -132,6 +135,7 @@ export async function GET(req: NextRequest) {
     airQuality,
     bathingWater,
     census,
+    income,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),
     errors,

@@ -225,6 +225,14 @@ export interface CouncilTaxSummary {
   typicalCost?: number | null; // actual £/yr for the typical band, all precepts in (MHCLG, England)
 }
 
+// Model-based net (disposable) annual household income for the neighbourhood (MSOA), from ONS small-area
+// income estimates, with the England & Wales median for context.
+export interface IncomeSummary {
+  net: number; // net annual household income (£) for the MSOA
+  median: number; // England & Wales MSOA median (£), for comparison
+  year: string; // financial-year-ending of the estimate
+}
+
 export interface CrimeCategoryCount {
   category: string;
   count: number;
@@ -289,6 +297,8 @@ export interface AreaFacts {
   lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
   lsoa21Code?: string; // LSOA 2021 code (join key for Census 2021)
   lauaCode?: string; // local authority (LAUA) ONS code (join key for broadband)
+  msoaCode?: string; // 2011 MSOA code (postcodes.io codes.msoa)
+  msoa21Code?: string; // 2021 MSOA code (join key for small-area income)
   easting?: number; // OSGB easting (postcodes.io) — join key for the air-quality 1 km grid
   northing?: number; // OSGB northing (postcodes.io)
   imdRank?: number | null; // England rank; 1 = most deprived
@@ -520,6 +530,7 @@ export interface AreaReport {
   airQuality: AirQualitySummary | null; // modelled background NO2/PM2.5 at the point (Defra PCM); GB only
   bathingWater: BathingWaterSummary | null; // nearest designated bathing water (EA); null unless within ~10 mi
   census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only
+  income: IncomeSummary | null; // model-based net household income for the MSOA (ONS); England & Wales
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)
