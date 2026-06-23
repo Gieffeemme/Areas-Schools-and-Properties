@@ -252,7 +252,7 @@ export interface AreaBenchmarks {
 }
 
 export interface SourceError {
-  source: "schools" | "crime" | "prices" | "amenities" | "noise";
+  source: "schools" | "crime" | "prices" | "noise";
   message: string;
 }
 

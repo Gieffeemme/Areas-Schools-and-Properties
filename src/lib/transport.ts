@@ -57,3 +57,9 @@ export function nearestStations(centre: LatLng): TransportSummary | null {
     .slice(0, MAX_STATIONS);
   return { stations, searchRadiusMiles: SEARCH_MILES };
 }
+
+// The raw committed stations, for the amenities "station" count — so stations.json stays the single
+// source of truth for stations. Empty array if the dataset file is missing.
+export function stationsData(): Station[] {
+  return all() ?? [];
+}

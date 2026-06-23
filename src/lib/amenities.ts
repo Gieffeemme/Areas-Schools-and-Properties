@@ -1,79 +1,70 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 import { AmenityCategory, AmenitySummary, LatLng } from "./types";
 import { distanceMiles } from "./distance";
+import { stationsData } from "./transport";
 
-// Everyday amenities near a point, from OpenStreetMap via the Overpass API. Live query (no committed
-// dataset), cached with the rest of the area report. Overpass needs a real User-Agent.
-const UA = "Locale/1.0 (area-intel; +https://github.com/Gieffeemme/Areas-Schools-and-Properties)";
-const OVERPASS = "https://overpass-api.de/api/interpreter";
-const RADIUS_MILES = 1; // fixed walkable radius, like the crime radius
-const MILE_M = 1609.34;
+// Everyday amenities near a point, from a COMMITTED OSM dataset (build-amenities.mjs) plus the committed
+// stations dataset — read from disk at runtime (memoised, like imd.ts). NO per-request Overpass call, so
+// it's instant and rate-limit-free. For each category: the count within ~1 mile + the nearest one.
+// (Bus stops are intentionally not committed — ~370k nationally, low signal; rail/metro/tram is the
+// Transport panel. The "station" count reuses stations.json so there's one source of truth for stations.)
+const RADIUS_MILES = 1; // fixed walkable radius
+// Cheap bounding-box guard (a bit over 1 mile at UK latitudes) to skip the haversine for far-away
+// points while scanning the national arrays.
+const DLAT = 0.02;
+const DLNG = 0.03;
 
-// Display order + how each category is matched from OSM tags. `sel` is its Overpass selector.
-const CATEGORIES: {
-  key: string;
-  label: string;
-  sel: string;
-  match: (t: Record<string, string>) => boolean;
-}[] = [
-  { key: "supermarket", label: "Supermarkets", sel: `nwr["shop"="supermarket"]`, match: (t) => t.shop === "supermarket" },
-  { key: "convenience", label: "Convenience stores", sel: `nwr["shop"="convenience"]`, match: (t) => t.shop === "convenience" },
-  { key: "gp", label: "GP surgeries", sel: `nwr["amenity"="doctors"]`, match: (t) => t.amenity === "doctors" },
-  { key: "pharmacy", label: "Pharmacies", sel: `nwr["amenity"="pharmacy"]`, match: (t) => t.amenity === "pharmacy" },
-  { key: "station", label: "Train/tram stations", sel: `nwr["railway"="station"]`, match: (t) => t.railway === "station" },
-  { key: "bus_stop", label: "Bus stops", sel: `node["highway"="bus_stop"]`, match: (t) => t.highway === "bus_stop" },
-  { key: "park", label: "Parks", sel: `nwr["leisure"="park"]`, match: (t) => t.leisure === "park" },
-  { key: "gym", label: "Gyms", sel: `nwr["leisure"="fitness_centre"]`, match: (t) => t.leisure === "fitness_centre" },
-  { key: "dining", label: "Cafés & restaurants", sel: `nwr["amenity"~"^(restaurant|cafe)$"]`, match: (t) => t.amenity === "restaurant" || t.amenity === "cafe" },
+// Display order + label. These keys live in amenities.json, except "station" which comes from stations.json.
+const CATEGORIES: { key: string; label: string }[] = [
+  { key: "supermarket", label: "Supermarkets" },
+  { key: "convenience", label: "Convenience stores" },
+  { key: "gp", label: "GP surgeries" },
+  { key: "pharmacy", label: "Pharmacies" },
+  { key: "station", label: "Train/tram stations" },
+  { key: "park", label: "Parks" },
+  { key: "gym", label: "Gyms" },
+  { key: "dining", label: "Cafés & restaurants" },
 ];
 
-interface OverpassEl {
-  lat?: number;
-  lon?: number;
-  center?: { lat: number; lon: number };
-  tags?: Record<string, string>;
+type Pt = [number, number]; // [lat, lng]
+let cached: Record<string, Pt[]> | null | undefined;
+function committed(): Record<string, Pt[]> | null {
+  if (cached !== undefined) return cached;
+  try {
+    cached = JSON.parse(
+      readFileSync(join(process.cwd(), "src", "data", "amenities.json"), "utf8"),
+    ) as Record<string, Pt[]>;
+  } catch {
+    cached = null; // dataset missing (shouldn't happen in a real deploy) → degrade, don't 500
+  }
+  return cached;
 }
 
-export async function fetchAmenities(centre: LatLng): Promise<AmenitySummary> {
-  const r = Math.round(RADIUS_MILES * MILE_M);
-  const q =
-    `[out:json][timeout:25];(` +
-    CATEGORIES.map((c) => `${c.sel}(around:${r},${centre.lat},${centre.lng});`).join("") +
-    `);out center tags;`;
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 28000);
-  try {
-    const res = await fetch(OVERPASS, {
-      method: "POST",
-      headers: { "User-Agent": UA, "Content-Type": "text/plain" },
-      body: q,
-      signal: ctrl.signal,
-      next: { revalidate: 86400 },
-    });
-    if (!res.ok) throw new Error(`Overpass returned ${res.status}`);
-    const data = (await res.json()) as { elements?: OverpassEl[] };
-    const els = data.elements ?? [];
+function pointsFor(key: string, data: Record<string, Pt[]>): Pt[] {
+  if (key === "station") return stationsData().map((s) => [s.lat, s.lng] as Pt);
+  return data[key] ?? [];
+}
 
-    const categories: AmenityCategory[] = CATEGORIES.map((c) => {
-      let count = 0;
-      let nearest: number | null = null;
-      for (const e of els) {
-        if (!c.match(e.tags ?? {})) continue;
-        count++;
-        const lat = e.lat ?? e.center?.lat;
-        const lon = e.lon ?? e.center?.lon;
-        if (lat == null || lon == null) continue;
-        const d = distanceMiles(centre.lat, centre.lng, lat, lon);
-        if (nearest == null || d < nearest) nearest = d;
-      }
-      return {
-        key: c.key,
-        label: c.label,
-        count,
-        nearestMiles: nearest == null ? null : Math.round(nearest * 10) / 10,
-      };
-    });
-    return { radiusMiles: RADIUS_MILES, categories };
-  } finally {
-    clearTimeout(timer);
-  }
+export function nearbyAmenities(centre: LatLng): AmenitySummary | null {
+  const data = committed();
+  if (data === null) return null;
+  const categories: AmenityCategory[] = CATEGORIES.map((c) => {
+    let count = 0;
+    let nearest: number | null = null;
+    for (const [lat, lng] of pointsFor(c.key, data)) {
+      if (Math.abs(lat - centre.lat) > DLAT || Math.abs(lng - centre.lng) > DLNG) continue;
+      const d = distanceMiles(centre.lat, centre.lng, lat, lng);
+      if (d > RADIUS_MILES) continue;
+      count++;
+      if (nearest == null || d < nearest) nearest = d;
+    }
+    return {
+      key: c.key,
+      label: c.label,
+      count,
+      nearestMiles: nearest == null ? null : Math.round(nearest * 10) / 10,
+    };
+  });
+  return { radiusMiles: RADIUS_MILES, categories };
 }
