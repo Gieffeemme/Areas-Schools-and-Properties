@@ -178,6 +178,36 @@ export interface PlanningSummary {
   recent: PlanningApplication[];
 }
 
+// Planning CONSTRAINTS at a point, from MHCLG's planning.data.gov.uk (live spatial query, OGL v3) -
+// distinct from the planning APPLICATIONS above (PlanIt). One area designation whose polygon contains
+// the point (conservation area, article-4 direction, green belt, AONB, national park, world heritage
+// site, scheduled monument, tree-preservation zone).
+export interface PlanningDesignation {
+  dataset: string; // planning.data.gov.uk dataset, e.g. "conservation-area"
+  label: string; // display label, e.g. "Conservation area"
+  name: string; // the designation's name, e.g. "Bath" (can be empty for some datasets)
+  reference: string;
+  url: string; // the entity page on planning.data.gov.uk
+}
+
+// A listed building near the point (Historic England, via planning.data.gov.uk).
+export interface ListedBuilding {
+  name: string;
+  grade: string; // "I" | "II*" | "II" (England); "" if unknown
+  distanceMetres: number;
+  url: string; // Historic England list-entry page (documentation-url)
+}
+
+export interface PlanningConstraintsSummary {
+  designations: PlanningDesignation[]; // area designations containing the point
+  listed: {
+    count: number; // listed buildings within the radius
+    capped: boolean; // true if the count hit the fetch cap (very dense heritage area) → show "N+"
+    radiusMetres: number;
+    nearest: ListedBuilding[]; // nearest first, a handful
+  };
+}
+
 // Domestic EPC summary for a postcode (MHCLG "Get energy performance of buildings data").
 export interface EpcSummary {
   postcode: string;
@@ -442,6 +472,7 @@ export interface PropertyReport {
   tenure: "freehold" | "leasehold" | null; // from the most recent sale that records it
   flood: FloodSummary | null;
   planning: PlanningSummary | null; // planning applications near the point (PlanIt); null = lookup failed
+  planningConstraints: PlanningConstraintsSummary | null; // designations + listed buildings (planning.data.gov.uk); null = lookup failed
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); null = lookup failed
   cqc: CqcSummary | null; // CQC-rated health/care services near the point (committed directory); null = dataset missing
   generatedAt: string;

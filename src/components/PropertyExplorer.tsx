@@ -22,6 +22,7 @@ import {
   CqcSummary,
   EpcCertificate,
   OfstedRating,
+  PlanningConstraintsSummary,
   PlanningSummary,
   PriceSale,
   PropertyReport,
@@ -40,6 +41,7 @@ import {
   epcPostcodeUrl,
   floodSourceUrl,
   osmFeatureUrl,
+  planningDataSourceUrl,
   planningSourceUrl,
   priceSourceUrl,
 } from "@/lib/sources";
@@ -380,6 +382,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
 
       <PlanningCard planning={report.planning} />
 
+      <PlanningConstraintsCard c={report.planningConstraints} />
+
       <CqcCard cqc={report.cqc} />
 
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
@@ -419,7 +423,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
         Environment Agency at the postcode location; nearest stations from OpenStreetMap; planning
-        applications from PlanIt, which aggregates council registers; health &amp; care ratings from the
+        applications from PlanIt, which aggregates council registers; planning constraints (designations
+        &amp; listed buildings) from planning.data.gov.uk (MHCLG); health &amp; care ratings from the
         CQC care directory (Open Government Licence).
       </p>
     </div>
@@ -830,6 +835,80 @@ const EPC_BG: Record<string, string> = {
 };
 
 const gbp = (n: number) => "£" + Math.round(n).toLocaleString("en-GB");
+
+// Planning constraints: the national designations that contain this point (conservation area, article-4,
+// green belt, etc.) plus listed buildings near it. Live query against planning.data.gov.uk (MHCLG).
+function PlanningConstraintsCard({ c }: { c: PlanningConstraintsSummary | null }) {
+  if (!c) {
+    return (
+      <Card title="Planning constraints" subtitle="Designations &amp; listed buildings · planning.data.gov.uk">
+        <p className="text-sm text-[var(--muted)]">Planning-constraints data is temporarily unavailable.</p>
+      </Card>
+    );
+  }
+  const { designations, listed } = c;
+  if (designations.length === 0 && listed.count === 0) {
+    return (
+      <Card title="Planning constraints" subtitle="At this location · planning.data.gov.uk">
+        <p className="text-sm text-[var(--muted)]">
+          No national planning designations contain this point, and no listed buildings are within
+          ~{listed.radiusMetres} m.
+        </p>
+        <p className="mt-3 text-[11px]">
+          <SourceLink href={planningDataSourceUrl()}>planning.data.gov.uk</SourceLink>
+        </p>
+      </Card>
+    );
+  }
+  return (
+    <Card title="Planning constraints" subtitle="At this location · planning.data.gov.uk">
+      {designations.length > 0 && (
+        <ul className="space-y-2">
+          {designations.map((d, i) => (
+            <li key={`${d.dataset}-${i}`} className="flex items-start justify-between gap-3">
+              <p className="min-w-0 text-sm leading-snug">
+                <span className="font-semibold">{d.label}</span>
+                {d.name ? <span className="text-[var(--muted)]"> · {d.name}</span> : null}
+              </p>
+              {d.url && <SourceLink href={d.url}>View</SourceLink>}
+            </li>
+          ))}
+        </ul>
+      )}
+      {listed.count > 0 && (
+        <div className={designations.length > 0 ? "mt-3 border-t border-[var(--border)] pt-3" : ""}>
+          <p className="text-sm font-semibold">
+            {listed.capped ? `${listed.count}+` : listed.count} listed building
+            {listed.count === 1 ? "" : "s"} within ~{listed.radiusMetres} m
+          </p>
+          <ul className="mt-1.5 divide-y divide-[var(--border)]">
+            {listed.nearest.map((b, i) => (
+              <li key={i} className="flex items-start justify-between gap-3 py-1.5">
+                <p className="min-w-0 text-xs leading-snug">{b.name}</p>
+                <p className="shrink-0 text-[11px] text-[var(--muted)]">
+                  {b.grade ? `Grade ${b.grade} · ` : ""}
+                  {b.distanceMetres} m
+                  {b.url ? (
+                    <>
+                      {" · "}
+                      <SourceLink href={b.url}>Historic England</SourceLink>
+                    </>
+                  ) : null}
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+        Designations whose boundary contains this point, plus listed buildings within ~{listed.radiusMetres} m,
+        via <SourceLink href={planningDataSourceUrl()}>planning.data.gov.uk</SourceLink> (MHCLG, OGL). The
+        point is the postcode centroid, so treat listed-building matches as nearby, not necessarily this
+        building.
+      </p>
+    </Card>
+  );
+}
 
 // Health & care: the nearest CQC-rated GP, dentist, care home, hospital and home-care service, plus the
 // rating mix across the radius. Mirrors PlanningCard. Data is the committed CQC directory (src/lib/cqc.ts).

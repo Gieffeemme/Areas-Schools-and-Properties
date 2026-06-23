@@ -8,6 +8,7 @@ import {
   FloodSummary,
   LatLng,
   OfstedRating,
+  PlanningConstraintsSummary,
   PlanningSummary,
   PriceSummary,
 } from "@/lib/types";
@@ -33,6 +34,9 @@ export default function PropertyChecks({
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
   const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
   const [planning, setPlanning] = useState<PlanningSummary | null | "loading">("loading");
+  const [constraints, setConstraints] = useState<PlanningConstraintsSummary | null | "loading">(
+    "loading",
+  );
   const [cqc, setCqc] = useState<CqcSummary | null | "loading">("loading");
 
   useEffect(() => {
@@ -54,6 +58,18 @@ export default function PropertyChecks({
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => on && setPlanning(d as PlanningSummary | null))
       .catch(() => on && setPlanning(null));
+    return () => {
+      on = false;
+    };
+  }, [centre.lat, centre.lng]);
+
+  useEffect(() => {
+    let on = true;
+    setConstraints("loading");
+    fetch(`/api/planning-constraints?lat=${centre.lat}&lng=${centre.lng}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => on && setConstraints(d as PlanningConstraintsSummary | null))
+      .catch(() => on && setConstraints(null));
     return () => {
       on = false;
     };
@@ -94,13 +110,14 @@ export default function PropertyChecks({
     epcCheck(epc),
     councilTaxCheck(councilTax),
     planningCheck(planning),
+    planningConstraintsCheck(constraints),
     cqcCheck(cqc),
   ];
 
   return (
     <Card
       title="Property checks"
-      subtitle="Flood, energy, council tax, tenure, prices, planning & health/care for this area"
+      subtitle="Flood, energy, council tax, tenure, prices, planning, constraints & health/care for this area"
     >
       <ul className="space-y-3">
         {checks.map((c) => (
@@ -124,9 +141,10 @@ export default function PropertyChecks({
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Flood, sold prices, tenure, EPC and council tax draw on live or official open data
         (Environment Agency, HM Land Registry, MHCLG, VOA); planning applications come via PlanIt,
-        which aggregates council registers; health &amp; care ratings come from the CQC care directory
-        (Open Government Licence). Council-tax bands are the neighbourhood mix (the surrounding LSOA),
-        not a single address. “Soon” checks arrive with their data pipelines.
+        which aggregates council registers; planning constraints (designations &amp; listed buildings)
+        come from planning.data.gov.uk (MHCLG); health &amp; care ratings come from the CQC care
+        directory (Open Government Licence). Council-tax bands are the neighbourhood mix (the surrounding
+        LSOA), not a single address. “Soon” checks arrive with their data pipelines.
       </p>
     </Card>
   );
@@ -340,6 +358,23 @@ function cqcCheck(cqc: CqcSummary | null | "loading"): Check {
       : `${cqc.rated} rated within ~${cqc.radiusMiles} miles`,
     source: `${source} · ${cqc.rated} rated within ~${cqc.radiusMiles} mi${mix ? ` · ${mix}` : ""}`,
   };
+}
+
+function planningConstraintsCheck(c: PlanningConstraintsSummary | null | "loading"): Check {
+  const label = "Planning constraints";
+  const source = "planning.data.gov.uk · MHCLG";
+  if (c === "loading") return { label, status: "soon", value: "Checking…", source };
+  if (!c) return { label, status: "soon", value: "Temporarily unavailable", source };
+  const designations = Array.from(new Set(c.designations.map((d) => d.label)));
+  const parts: string[] = [];
+  if (designations.length) parts.push(designations.join(" · "));
+  if (c.listed.count)
+    parts.push(
+      `${c.listed.capped ? `${c.listed.count}+` : c.listed.count} listed building${c.listed.count === 1 ? "" : "s"} within ~${c.listed.radiusMetres} m`,
+    );
+  if (!parts.length)
+    return { label, status: "live", value: "No designations at this location", source };
+  return { label, status: "live", value: parts.join(" · "), source };
 }
 
 function truncate(s: string): string {

@@ -46,6 +46,11 @@ export const epcPostcodeUrl = (postcode: string) =>
 // (the record's `url`); this is the PlanIt search start page for the area attribution.
 export const planningSourceUrl = () => "https://www.planit.org.uk/";
 
+// planning.data.gov.uk (MHCLG): the platform start page, or a specific constraint entity's page.
+export const planningDataSourceUrl = () => "https://www.planning.data.gov.uk/";
+export const planningEntityUrl = (entity: number | string) =>
+  `https://www.planning.data.gov.uk/entity/${entity}`;
+
 // CQC: a specific location's profile page (deterministic from its Location ID), or the open-data page
 // for the area attribution. Ratings come from the committed "care directory with filters" (OGL).
 export const cqcLocationUrl = (id: string) => `https://www.cqc.org.uk/location/${enc(id)}`;

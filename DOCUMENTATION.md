@@ -195,22 +195,23 @@ src/
       flood/route.ts           EA flood-risk lookup
       planning/route.ts        fetchPlanning() — nearby planning applications for a point (PlanIt aggregator; for the area Property-checks row)
       cqc/route.ts             nearbyCqc() — nearest rated health/care services for a point (committed CQC directory; for the property report + area Property-checks row)
+      planning-constraints/route.ts  fetchPlanningConstraints() — designations + listed buildings at a point (live planning.data.gov.uk; property report + area Property-checks row)
       epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
       address-search/route.ts  addresses at a postcode — EPC register (fetchAddresses) MERGED with VOA council-tax dwellings (fetchVoaAddresses), so homes with no EPC still appear (best-effort)
-      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood + planning + nearest stations + CQC health/care)
+      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood + planning + planning constraints + nearest stations + CQC health/care)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  broadband.ts  broadbandForLaua()   ·  mobile.ts  mobileForLaua() (Ofcom 4G/5G by LAUA)
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  planning.ts  fetchPlanning() (nearby planning applications, PlanIt — runtime live fetch)  ·  census.ts  fetchCensus() (Census 2021 demographics by lsoa21, ONS/Nomis — runtime fetch, cached 30d)  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)  ·  cqc.ts  nearbyCqc() (nearest rated GP/dentist/care home/hospital/home-care from committed cqc-locations.json + rating mix)  ·  airQuality.ts  airQualityForPoint() (background NO₂/PM2.5 from committed air-quality-by-grid.json, by OSGB easting/northing)
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  planning.ts  fetchPlanning() (nearby planning applications, PlanIt — runtime live fetch)  ·  planningConstraints.ts  fetchPlanningConstraints() (designations + listed buildings at a point, planning.data.gov.uk — runtime)  ·  census.ts  fetchCensus() (Census 2021 demographics by lsoa21, ONS/Nomis — runtime fetch, cached 30d)  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)  ·  cqc.ts  nearbyCqc() (nearest rated GP/dentist/care home/hospital/home-care from committed cqc-locations.json + rating mix)  ·  airQuality.ts  airQualityForPoint() (background NO₂/PM2.5 from committed air-quality-by-grid.json, by OSGB easting/northing)
     epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (band) + fetchFullCertificate() (full cert by LMK)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
     routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales  ·  mapMarkers.ts  pin shape (phase) + colour/label (grade), shared by AreaMap/MapboxMap/legend
-    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM/PlanIt/ONS/CQC)  ·  types.ts  all shared types
+    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM/PlanIt/planning.data/ONS/CQC)  ·  types.ts  all shared types
   components/
     Dashboard.tsx        search, loading/error, Map/List toggle, Report + SidePanels
     AreaMap.tsx          Leaflet map: radius ring + school pins (shape = phase, colour = grade; popup name → detail drawer)
@@ -221,7 +222,7 @@ src/
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
     DeprivationPanel · DemographicsPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · MobilePanel · NoisePanel · AirQualityPanel · RankingsPanel  (area panels)
-    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, nearby health & care (CQC ratings), location map)
+    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, planning constraints (designations + listed buildings), nearby health & care (CQC ratings), location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
     PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications + health & care (CQC); in the area route's Area panels) · RouteSelector · RouteHeader (shared title + two-tile chooser, on both the area & property landings so navigation matches) · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
@@ -240,7 +241,7 @@ map remounts and re-fits when any of those change.
   postcodes.io Places, so a postcode isn't needed); adjustable **radius** (½–5 mi).
 - **Focus filter** on the area report - **Schools · Area · Schools + area** - toggles which side panels
   show; the **Property checks** panel (flood, sold prices, tenure, EPC, council-tax band — each with
-  band distribution bars — plus nearby planning applications and health & care (CQC) ratings) sits in
+  band distribution bars — plus nearby planning applications, planning constraints and health & care (CQC) ratings) sits in
   the **Area** set.
 - **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
   school type — special / independent / alternative) that drive the **map pins and the list together**.
@@ -263,18 +264,18 @@ map remounts and re-fits when any of those change.
   (Defra road & rail, England — Lden/Lnight
   at the point), **Air quality** (Defra PCM modelled background NO₂/PM2.5 on a 1 km grid, GB — annual mean
   + Low/Moderate/Elevated/High band vs the WHO guideline; pairs with Noise), Property prices, Property checks (EA flood + tenure + EPC energy ratings + **council-tax
-  band** — the VOA band mix for the surrounding neighbourhood/LSOA (not a single address), now with MHCLG's all-in ≈£/yr for the typical band — and **nearby planning applications** (PlanIt — the most-recent applications within ~0.5 km, each linking to the council's own record), and **health & care (CQC)** — the nearest *rated* GP, dentist, care home, hospital and home-care service within ~3 mi plus the local rating mix, from CQC's OGL care directory).
+  band** — the VOA band mix for the surrounding neighbourhood/LSOA (not a single address), now with MHCLG's all-in ≈£/yr for the typical band — and **nearby planning applications** (PlanIt — the most-recent applications within ~0.5 km, each linking to the council's own record), **planning constraints** (conservation area / listed buildings / article-4 / green belt etc. at the point, planning.data.gov.uk), and **health & care (CQC)** — the nearest *rated* GP, dentist, care home, hospital and home-care service within ~3 mi plus the local rating mix, from CQC's OGL care directory).
 - **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
   **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
   **council-tax band + the actual £/yr** (VOA band + MHCLG all-in cost, with the neighbourhood mix bar), its **sold-price history + tenure** (HM
-  Land Registry), **flood**, **nearby planning applications** (PlanIt, linking to the council record), **nearby health & care** (CQC — nearest rated GP/dentist/care home/hospital/home-care + the local rating mix), and the **nearest train/tram/metro stations** (OpenStreetMap, named + distance) - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
+  Land Registry), **flood**, **nearby planning applications** (PlanIt, linking to the council record), **planning constraints** (designations whose boundary contains the point + listed buildings within ~150 m, planning.data.gov.uk), **nearby health & care** (CQC — nearest rated GP/dentist/care home/hospital/home-care + the local rating mix), and the **nearest train/tram/metro stations** (OpenStreetMap, named + distance) - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
   neighbourhood"** toggle (collapsed by default) fetches the area report for the postcode and shows the
   area panels (schools, crime, deprivation, amenities, broadband, noise, prices) inline.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 - **Every panel links to its source** (a clickable "↗" in the footer): Ofsted/DfE (schools), HM Land
   Registry (prices), VOA (council tax), Environment Agency (flood), Ofcom (broadband), police.uk
-  (crime), MHCLG (IMD), Defra (noise), OpenStreetMap (amenities/stations), PlanIt (planning), CQC (health & care) — built by `lib/sources.ts`,
+  (crime), MHCLG (IMD), Defra (noise), OpenStreetMap (amenities/stations), PlanIt (planning applications), planning.data.gov.uk (planning constraints), CQC (health & care) — built by `lib/sources.ts`,
   rendered via the `SourceLink` primitive. The per-property report **deep-links per item** where a key
   exists: each EPC band → its certificate (LMK key), each nearest station → its OSM feature, each planning
   application → the council's own record; council
@@ -480,6 +481,20 @@ These cost real time to discover — don't re-learn them:
   no coverage) and "≥1 operator" = `100 − _0` = 100%. Treat blanks as 0 *within* a distribution, but
   return null when the whole `_0…_4` set is blank (real no-data). We surface 4G-indoor (≥1 op / all 4)
   and 5G-outdoor (≥1 op; 5G indoor isn't reported). Bands/panel mirror Broadband.
+- **Planning constraints: planning.data.gov.uk is a live point-query, not a dataset.** MHCLG's national
+  platform (OGL v3, **no key**) is distinct from the planning *applications* (PlanIt) — this is the
+  *designations*. `fetchPlanningConstraints()` (`src/lib/planningConstraints.ts`) makes two live
+  `entity.json` calls (cached 7 d): (1) **area designations** that contain the point —
+  `?dataset=conservation-area&dataset=article-4-direction-area&…&longitude=&latitude=&geometry_relation=intersects`
+  (repeat `dataset=` to query many at once; add `field=` to drop the huge `geometry` from the response);
+  (2) **listed buildings** near the point. Key gotcha: listed buildings are **point features**, so a
+  postcode-centroid `intersects` almost never hits one — instead pass a small **bbox `POLYGON`** as
+  `geometry` (~150 m) and rank by distance from the returned `point` field (so it's "nearby / could be
+  listed", not "this building is listed"; the report says as much). Listed buildings carry
+  `listed-building-grade` (I / II* / II) and a `documentation-url` deep-link to Historic England. Surfaced
+  on the property report (`PlanningConstraintsCard`) + the area Property-checks row via
+  `/api/planning-constraints`. Datasets are filtered to typology `geography`; we deliberately skip
+  `flood-risk-zone` (the EA flood panel already covers flooding).
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -529,7 +544,10 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (committed OSM dataset), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
 strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (a committed UK rail/metro/tram dataset from OSM via `etl:stations`, named — on the property *and* area reports), **nearby planning applications** (PlanIt — most-recent applications
-near a point, on the property + area reports), **CQC health & care ratings** (the nearest *rated* GP,
+near a point, on the property + area reports), **planning constraints** (conservation areas, listed
+buildings, article-4 directions, green belt, AONB, national parks, scheduled monuments, WHS & TPO zones
+at a point — a live `planning.data.gov.uk` query, on the property + area reports), **CQC health & care
+ratings** (the nearest *rated* GP,
 dentist, care home, hospital and home-care service within ~3 miles plus the local rating mix, from
 CQC's Open Government Licence "care directory with filters" — a committed dataset via `etl:cqc`, on the
 property + area reports), **air quality** (Defra PCM modelled background NO₂/PM2.5 on a 1 km grid, GB —
@@ -542,12 +560,13 @@ independent schools (filed by GIAS under phase "Not applicable") are now admitte
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).
 
-**Remaining (free data):** the Tier-1 set is complete, and several more free datasets are
-feasibility-checked and queued (spike each the way Census 2021 was before it shipped — probe the API,
-confirm it's free + joins to our geography, *then* build): **planning constraints**
-(`planning.data.gov.uk` — conservation areas, listed buildings, article-4, flood zones; national OGL,
-distinct from the shipped planning *applications* via PlanIt). (**Census 2021 demographics**,
-**CQC health/care ratings**, **air quality** and **mobile coverage** shipped this round. CQC was *not* built on the key-gated CQC Syndication API — that API has no radius search and
+**Remaining (free data): none queued — the free-data backlog is cleared.** The Tier-1 set and every
+queued free dataset have shipped (**planning constraints** was the last); what's left is the non-England
+nations follow-up below and the gated items. (**Census 2021 demographics**, **CQC health/care ratings**,
+**air quality**, **mobile coverage** and **planning constraints** shipped this round. Planning
+constraints is a live `planning.data.gov.uk` (MHCLG, OGL) spatial query — a multi-dataset point-intersect
+for area designations plus a small-box query for nearby listed buildings — *not* a committed dataset, and
+distinct from the planning *applications* (PlanIt). CQC was *not* built on the key-gated CQC Syndication API — that API has no radius search and
 exposes ratings only in its per-location *detail* endpoint (hundreds of calls per report), so a runtime
 radius query isn't viable. Instead `etl:cqc` ships CQC's free, no-key, OGL bulk "care directory with
 filters" as committed JSON: the `HSCA_Active_Locations` sheet already carries the overall rating, rating

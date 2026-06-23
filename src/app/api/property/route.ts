@@ -5,6 +5,7 @@ import { fetchAddressSales } from "@/lib/prices";
 import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
 import { fetchPlanning } from "@/lib/planning";
+import { fetchPlanningConstraints } from "@/lib/planningConstraints";
 import { nearestStations } from "@/lib/transport";
 import { nearbyCqc } from "@/lib/cqc";
 import { councilTaxCostForLaua } from "@/lib/councilTax";
@@ -36,12 +37,13 @@ export async function GET(req: NextRequest) {
   }
   const { centre, facts } = geo;
 
-  const [epcR, salesR, voaR, floodR, planningR] = await Promise.allSettled([
+  const [epcR, salesR, voaR, floodR, planningR, constraintsR] = await Promise.allSettled([
     fetchEpcByUprn(uprn),
     fetchAddressSales(postcode, line1),
     fetchCouncilTaxBand(postcode, line1),
     fetchFlood(centre),
     fetchPlanning(centre),
+    fetchPlanningConstraints(centre),
   ]);
 
   const epc = epcR.status === "fulfilled" ? epcR.value : null;
@@ -49,6 +51,7 @@ export async function GET(req: NextRequest) {
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
   const planning = planningR.status === "fulfilled" ? planningR.value : null;
+  const planningConstraints = constraintsR.status === "fulfilled" ? constraintsR.value : null;
   // Nearest stations + CQC-rated health/care services: committed-dataset lookups (no network) - see
   // src/lib/transport.ts / src/lib/cqc.ts.
   const transport = nearestStations(centre);
@@ -83,6 +86,7 @@ export async function GET(req: NextRequest) {
     tenure,
     flood,
     planning,
+    planningConstraints,
     transport,
     cqc,
     generatedAt: new Date().toISOString(),
