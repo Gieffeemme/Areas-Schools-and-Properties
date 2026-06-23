@@ -1,6 +1,15 @@
-import { AreaFacts, LatLng, PlaceMatch } from "./types";
+import { AreaFacts, CouncilTaxSummary, LatLng, PlaceMatch } from "./types";
 import { imdDomainsForLsoa } from "./imd";
-import { councilTaxForLsoa } from "./councilTax";
+import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
+
+// The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) — so the area
+// report's Property-checks panel can show the cost, like the per-property report does.
+function councilTaxFacts(lsoaCode?: string, lauaCode?: string): CouncilTaxSummary | null {
+  const ct = councilTaxForLsoa(lsoaCode);
+  if (!ct) return null;
+  if (ct.typicalBand) ct.typicalCost = councilTaxCostForLaua(lauaCode)?.[ct.typicalBand] ?? null;
+  return ct;
+}
 
 // Number of LSOAs in the English IMD 2019 ranking (used to derive a decile).
 const ENGLAND_LSOA_COUNT = 32844;
@@ -50,7 +59,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           imdRank,
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
-          councilTax: councilTaxForLsoa(lsoaCode) ?? null,
+          councilTax: councilTaxFacts(lsoaCode, r.codes?.admin_district),
         },
       };
     }

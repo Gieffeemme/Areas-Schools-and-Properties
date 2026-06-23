@@ -200,11 +200,11 @@ src/
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
-    routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales
+    routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales  ·  mapMarkers.ts  pin shape (phase) + colour/label (grade), shared by AreaMap/MapboxMap/legend
     distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  types.ts  all shared types
   components/
     Dashboard.tsx        search, loading/error, Map/List toggle, Report + SidePanels
-    AreaMap.tsx          Leaflet map: radius ring + school pins (popup name → detail drawer)
+    AreaMap.tsx          Leaflet map: radius ring + school pins (shape = phase, colour = grade; popup name → detail drawer)
     SchoolControls.tsx   phase chips + collapsible Filters (Ofsted/gender/faith/grammar)
     PhaseChips.tsx       the phase chip row (used inside SchoolControls)
     SchoolsPanel.tsx     league-table list: sort + shortlist (★, localStorage)
@@ -234,6 +234,8 @@ map remounts and re-fits when any of those change.
   band distribution bars) sits in the **Area** set.
 - **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
   school type — special / independent / alternative) that drive the **map pins and the list together**.
+  Map pins encode **Ofsted grade as colour and school phase as marker shape** (circle = primary, square =
+  secondary, triangle = sixth-form/college, diamond = all-through, hexagon = nursery; see the legend).
 - **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,
   Parent View; **shortlist** (★, localStorage). Metric sorts fall back to Ofsted then distance.
 - **School detail drawer:** Details, **Ofsted** — the new Nov-2025 **report card** (5-band scale +
@@ -247,7 +249,7 @@ map remounts and re-fits when any of those change.
   rail/metro/tram station, named — committed OSM dataset), **Broadband** (Ofcom coverage), **Noise**
   (Defra road & rail, England — Lden/Lnight
   at the point), Property prices, Property checks (EA flood + tenure + EPC energy ratings + **council-tax
-  band** — the VOA band mix for the surrounding neighbourhood/LSOA, not a single address).
+  band** — the VOA band mix for the surrounding neighbourhood/LSOA (not a single address), now with MHCLG's all-in ≈£/yr for the typical band).
 - **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
   **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
   **council-tax band + the actual £/yr** (VOA band + MHCLG all-in cost, with the neighbourhood mix bar), its **sold-price history + tenure** (HM

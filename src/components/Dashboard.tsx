@@ -18,6 +18,7 @@ import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
 import SchoolControls from "./SchoolControls";
 import { RATING_COLORS } from "@/lib/ratings";
+import { markerSvg, PHASE_SHAPES } from "@/lib/mapMarkers";
 import { SchoolFilters, DEFAULT_FILTERS, applyFilters } from "@/lib/schoolFilters";
 import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
 import { AreaReport, OfstedRating, PlaceMatch, School, SchoolMatch, SourceError } from "@/lib/types";
@@ -452,17 +453,32 @@ const LEGEND: { rating: OfstedRating; label: string }[] = [
 
 function Legend() {
   return (
-    <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 px-1 text-[11px] text-[var(--muted)]">
-      <span className="font-medium">Schools:</span>
-      {LEGEND.map((l) => (
-        <span key={l.label} className="inline-flex items-center gap-1">
-          <span
-            className="inline-block h-2.5 w-2.5 rounded-full"
-            style={{ backgroundColor: RATING_COLORS[l.rating] }}
-          />
-          {l.label}
-        </span>
-      ))}
+    <div className="mt-2 space-y-1 px-1 text-[11px] text-[var(--muted)]">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-medium">Grade (colour):</span>
+        {LEGEND.map((l) => (
+          <span key={l.label} className="inline-flex items-center gap-1">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full"
+              style={{ backgroundColor: RATING_COLORS[l.rating] }}
+            />
+            {l.label}
+          </span>
+        ))}
+      </div>
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <span className="font-medium">Phase (shape):</span>
+        {PHASE_SHAPES.map((p) => (
+          <span key={p.label} className="inline-flex items-center gap-1">
+            <span
+              className="inline-block h-3 w-3"
+              aria-hidden="true"
+              dangerouslySetInnerHTML={{ __html: markerSvg(p.shape, "#64748b", 12, false) }}
+            />
+            {p.label}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

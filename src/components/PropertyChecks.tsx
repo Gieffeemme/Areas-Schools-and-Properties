@@ -180,11 +180,12 @@ function councilTaxCheck(ct: CouncilTaxSummary | null | undefined): Check {
     return { label: "Council tax band", status: "soon", source: "VOA · England & Wales only" };
   }
   const dist = topBands(ct.bands, (b, n) => `${Math.round((n / ct.total) * 100)}% ${b}`);
+  const cost = ct.typicalCost ? ` · ≈ ${gbp(ct.typicalCost)}/yr` : "";
   return {
     label: "Council tax band",
     status: "live",
-    value: `Typical band ${ct.typicalBand} · ${dist}`,
-    source: `VOA 2025 · ~${ct.total} homes in this LSOA`,
+    value: `Typical band ${ct.typicalBand}${cost} · ${dist}`,
+    source: `VOA 2025 · ~${ct.total} homes in this LSOA${ct.typicalCost ? " · £ all-in (MHCLG)" : ""}`,
     bars: bandSegs(ct.bands, ctaxColor),
   };
 }

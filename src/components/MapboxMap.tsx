@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { GeoJSONSource, Map as MbMap, FilterSpecification } from "mapbox-gl";
 import { LatLng, School } from "@/lib/types";
-import { gradeDisplay } from "@/lib/reportCard";
+import { phaseShapeKey, pinGrade, SHAPE_PATH } from "@/lib/mapMarkers";
 
 const TOKEN = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || "";
 
@@ -60,16 +60,21 @@ export default function MapboxMap({ centre, schools, radiusMiles, activeLayers, 
           },
         });
 
+        // Phase-shape pin icons: one SDF image per shape, recoloured per feature by the grade colour
+        // (icon-color). SDF lets a single white shape be tinted any colour at draw time.
+        addShapeIcons(map);
         map.addSource("schools", { type: "geojson", data: schoolsGeo(schools) });
         map.addLayer({
-          id: "schools-circle", type: "circle", source: "schools",
-          layout: { visibility: vis(activeLayers, "schools") },
-          paint: {
-            "circle-radius": 7,
-            "circle-color": ["get", "color"],
-            "circle-stroke-width": 2,
-            "circle-stroke-color": "#ffffff",
+          // id kept as "schools-circle" (now a SYMBOL layer) so the layer refs below don't churn.
+          id: "schools-circle", type: "symbol", source: "schools",
+          layout: {
+            visibility: vis(activeLayers, "schools"),
+            "icon-image": ["concat", "shape-", ["get", "shape"]],
+            "icon-size": 1,
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
           },
+          paint: { "icon-color": ["get", "color"] },
         });
 
         map.addSource("crime", { type: "geojson", data: crimePoints ?? EMPTY });
@@ -245,9 +250,30 @@ function domainProp(domain: string): string {
   return domain === "overall" ? "decile" : domain;
 }
 
+// One SDF icon per phase shape (a solid white shape; icon-color tints it per feature). Drawn at 2×
+// for crispness, with Path2D parsing the same SVG path strings the Leaflet/legend markers use.
+function addShapeIcons(map: MbMap) {
+  const px = 2;
+  const size = 18 * px;
+  for (const [key, d] of Object.entries(SHAPE_PATH)) {
+    const id = `shape-${key}`;
+    if (map.hasImage(id)) continue;
+    const canvas = document.createElement("canvas");
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) continue;
+    ctx.scale(px, px);
+    ctx.fillStyle = "#ffffff";
+    ctx.fill(new Path2D(d));
+    map.addImage(id, ctx.getImageData(0, 0, size, size), { sdf: true, pixelRatio: px });
+  }
+}
+
 function schoolPinProps(s: School) {
-  // Prefer the new report-card band (current) over the legacy bulk-MI grade for colour + popup label.
-  const g = gradeDisplay(s.reportCard, s.ofsted);
+  // Shape = phase, colour = grade. pinGrade prefers the new report-card band and shows "No overall
+  // grade" (not a misleading "Not rated") for post-Sept-2024 graded-but-no-single-grade inspections.
+  const g = pinGrade(s);
   return {
     name: s.name,
     phase: s.phase ?? "",
@@ -255,6 +281,7 @@ function schoolPinProps(s: School) {
     ofsted: g.label,
     date: s.reportCard?.inspectionDate ?? s.ofstedDate ?? "",
     color: g.colour,
+    shape: phaseShapeKey(s.phase),
   };
 }
 

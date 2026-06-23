@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { LatLng, School } from "@/lib/types";
-import { gradeDisplay } from "@/lib/reportCard";
+import { markerSvg, phaseShapeKey, pinGrade } from "@/lib/mapMarkers";
 
 interface Props {
   centre: LatLng;
@@ -73,22 +73,21 @@ export default function AreaMap({ centre, schools, radiusMiles, onSelect }: Prop
         .addTo(map)
         .bindPopup("<strong>Your location</strong>");
 
-      // School pins, coloured by Ofsted rating. The name is a button that opens
+      // School pins: shape = phase, colour = Ofsted grade. The name is a button that opens
       // the full detail drawer (via onSelect) - same as clicking a list card.
       schools.forEach((s) => {
-        const g = gradeDisplay(s.reportCard, s.ofsted);
-        const color = g.colour;
+        const { label, colour } = pinGrade(s);
         const icon = L.divIcon({
           className: "",
-          html: `<div style="width:16px;height:16px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:${color};border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.4);"></div>`,
-          iconSize: [16, 16],
-          iconAnchor: [8, 15],
+          html: markerSvg(phaseShapeKey(s.phase), colour),
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
         });
         const popupEl = document.createElement("div");
         popupEl.innerHTML =
           `<button type="button" class="am-popup-name" title="View full details" style="display:inline;padding:0;border:0;background:none;font:inherit;font-weight:700;color:#6366f1;text-decoration:underline;cursor:pointer;text-align:left">${escapeHtml(s.name)}</button><br>` +
           `${s.phase ? escapeHtml(s.phase) + " · " : ""}${s.distanceMiles} mi<br>` +
-          `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${color}">${escapeHtml(g.label)}</span>`;
+          `<span style="display:inline-block;margin-top:4px;padding:1px 7px;border-radius:9px;color:#fff;font-size:11px;background:${colour}">${escapeHtml(label)}</span>`;
         popupEl.querySelector(".am-popup-name")?.addEventListener("click", () => {
           map.closePopup();
           onSelectRef.current?.(s);
