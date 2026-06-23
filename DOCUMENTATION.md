@@ -176,9 +176,9 @@ src/
   app/
     page.tsx              → <Dashboard/>            (home: postcode/school search → report)
     compare/page.tsx      → <Compare/>              (compare areas OR schools side by side)
-    map/page.tsx          → <MapExplorer/>          (Mapbox explorer with overlay layers)
+    map/page.tsx          → <MapExplorer/>          (Mapbox explorer with overlay layers; NOT in the header nav - reachable at /map directly)
     sources/page.tsx      → <SourcesPage/>          (data sources, licences & disclaimers; footer-linked)
-    layout.tsx, globals.css
+    layout.tsx (sticky header: <Logo/> + tagline, no nav links), icon.svg (favicon), globals.css
     api/
       area/route.ts            geocode + schools + crime + prices + amenities + transport + broadband + census → AreaReport (cached 6h)
       schools/route.ts         fetchSchoolsByIds() — full School objects by id (school compare)
@@ -216,10 +216,10 @@ src/
     DeprivationPanel · DemographicsPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · RankingsPanel  (area panels)
     PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
-    PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications; in the area route's Area panels) · RouteSelector · PostcodeSearch
+    PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications; in the area route's Area panels) · RouteSelector · RouteHeader (shared title + two-tile chooser, on both the area & property landings so navigation matches) · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
     Compare (Areas|Schools tabs) · AreasCompare · CompareTable · SchoolsCompare · SchoolCompareTable · SchoolSlotInput  (/compare)
-    Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge · SourceLink   (primitives)
+    Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge · SourceLink · Logo (official hexagon mark + "locale" wordmark; currentColor so it reads on the dark nav; header + favicon)   (primitives)
 ```
 
 `AreaMap` is **keyed on `centre + radius + layout + filter signature`** so the (mount-only) Leaflet
@@ -479,13 +479,16 @@ independent schools (filed by GIAS under phase "Not applicable") are now admitte
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).
 
-**Remaining (free data):** the Tier-1 set is complete. One optional free addition remains: **planning
-constraints** (`planning.data.gov.uk` — conservation areas, listed buildings, article-4 directions,
-flood zones), an authoritative national OGL dataset — distinct from the now-shipped planning
-*applications* (PlanIt). (The last Tier-1 item, **Defra noise**, was expected to need committed GIS
-contours + point-in-polygon, but Defra serves the Round 4 maps as a GeoServer **WMS raster**, so
-`fetchNoise()` does a live `GetFeatureInfo` point-query — no ETL and no committed data, like
-crime/prices/amenities.)
+**Remaining (free data):** the Tier-1 set is complete, and several more free datasets are
+feasibility-checked and queued (spike each the way Census 2021 was before it shipped — probe the API,
+confirm it's free + joins to our geography, *then* build): **planning constraints**
+(`planning.data.gov.uk` — conservation areas, listed buildings, article-4, flood zones; national OGL,
+distinct from the shipped planning *applications* via PlanIt); **CQC** health/care ratings (Ofsted-style
+grades for GPs / hospitals / care homes; free API, mirrors the schools pattern); **air quality** (Defra
+modelled background NO₂/PM2.5 on a 1 km grid, pairs with noise); and **mobile coverage** (Ofcom Connected
+Nations, reusing the broadband ETL). (**Census 2021 demographics** — the biggest of these — shipped this
+round. The last Tier-1 item, **Defra noise**, is a live `GetFeatureInfo` WMS point-query — no
+ETL/committed data, like crime/prices/amenities.)
 
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
