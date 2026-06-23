@@ -222,6 +222,7 @@ function ReportSection({ report, onBack }: { report: PropertyReport | "loading";
 function PropertyReportView({ report }: { report: PropertyReport }) {
   const f = report.facts;
   const ct = report.councilTax;
+  const propType = report.sales.find((s) => s.type)?.type;
   return (
     <div className="space-y-4">
       <div>
@@ -235,12 +236,7 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <div className="grid gap-3 sm:grid-cols-2">
         <Stat label="EPC / energy rating">
           {report.epc?.band ? (
-            <div className="flex items-baseline gap-2">
-              <Band letter={report.epc.band} bg={epcBg(report.epc.band)} fg="#fff" />
-              <span className="text-xs text-[var(--muted)]">
-                {report.epc.date ? `certified ${fmtMonth(report.epc.date)}` : "EPC register"}
-              </span>
-            </div>
+            <EpcScale band={report.epc.band} date={report.epc.date} />
           ) : (
             <p className="text-sm text-[var(--muted)]">No EPC lodged for this property.</p>
           )}
@@ -252,7 +248,7 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
               <div className="flex items-baseline gap-2">
                 <Band letter={ct.band} bg="#312e81" fg="#fff" />
                 <span className="text-xs text-[var(--muted)]">
-                  {ct.source === "voa" ? "exact band (VOA)" : "neighbourhood typical (VOA 2025)"}
+                  {ct.source === "voa" ? "this exact property (VOA)" : "typical for this area (VOA 2025)"}
                 </span>
               </div>
               {ct.neighbourhood?.total ? (
@@ -264,13 +260,16 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
           )}
         </Stat>
 
-        <Stat label="Tenure">
-          <p className="text-sm font-semibold capitalize">
-            {report.tenure ?? "Not recorded"}
-            {!report.tenure && (
-              <span className="ml-1 font-normal text-[var(--muted)]">(no sale on record)</span>
+        <Stat label="Tenure & type">
+          <p className="text-sm font-semibold">
+            {report.tenure ? titleCase(report.tenure) : "Tenure not recorded"}
+            {propType && (
+              <span className="font-normal text-[var(--muted)]"> · {titleCase(propType)}</span>
             )}
           </p>
+          {!report.tenure && !propType && (
+            <p className="mt-0.5 text-xs text-[var(--muted)]">No sale on record to derive these.</p>
+          )}
         </Stat>
 
         <Stat label="Flood risk">
@@ -287,11 +286,14 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
 
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
         {report.sales.length ? (
-          <ul className="divide-y divide-[var(--border)]">
-            {report.sales.map((s, i) => (
-              <SaleRow key={`${s.date}-${i}`} sale={s} />
-            ))}
-          </ul>
+          <>
+            {report.sales.length > 1 && <PriceGrowth sales={report.sales} />}
+            <ul className="divide-y divide-[var(--border)]">
+              {report.sales.map((s, i) => (
+                <SaleRow key={`${s.date}-${i}`} sale={s} />
+              ))}
+            </ul>
+          </>
         ) : (
           <p className="text-sm text-[var(--muted)]">
             No sales recorded for this address since 1995 (the property may not have changed hands, or
@@ -340,6 +342,67 @@ function Band({ letter, bg, fg }: { letter: string; bg: string; fg: string }) {
   );
 }
 
+const EPC_BANDS = ["A", "B", "C", "D", "E", "F", "G"];
+const EPC_FG: Record<string, string> = {
+  A: "#ffffff",
+  B: "#ffffff",
+  C: "#1a3a08",
+  D: "#3a3000",
+  E: "#ffffff",
+  F: "#ffffff",
+  G: "#ffffff",
+};
+
+// The A–G energy scale with the property's band highlighted and the rest dimmed - like an EPC chart.
+function EpcScale({ band, date }: { band: string; date?: string }) {
+  return (
+    <div>
+      <div className="flex gap-0.5">
+        {EPC_BANDS.map((b) => (
+          <div
+            key={b}
+            className={`grid flex-1 place-items-center rounded py-1.5 text-[11px] font-bold ${
+              b === band ? "ring-2 ring-slate-900/70" : "opacity-30"
+            }`}
+            style={{ backgroundColor: EPC_BG[b], color: EPC_FG[b] ?? "#ffffff" }}
+          >
+            {b}
+          </div>
+        ))}
+      </div>
+      <p className="mt-1.5 text-xs text-[var(--muted)]">
+        Current rating <span className="font-semibold text-[var(--foreground)]">{band}</span>
+        {date ? ` · certified ${fmtMonth(date)}` : ""}
+      </p>
+    </div>
+  );
+}
+
+// Oldest → newest price change for this address (shown above the sale list).
+function PriceGrowth({ sales }: { sales: PriceSale[] }) {
+  const newest = sales[0];
+  const oldest = sales[sales.length - 1];
+  if (!newest || !oldest || oldest.price <= 0) return null;
+  const pct = Math.round(((newest.price - oldest.price) / oldest.price) * 100);
+  const yrs = new Date(newest.date).getFullYear() - new Date(oldest.date).getFullYear();
+  return (
+    <p className="mb-2 text-sm">
+      <span className={`font-semibold ${pct >= 0 ? "text-emerald-700" : "text-red-700"}`}>
+        {pct >= 0 ? "+" : ""}
+        {pct}%
+      </span>
+      <span className="text-[var(--muted)]">
+        {yrs >= 1 ? ` over ${yrs} year${yrs === 1 ? "" : "s"}` : ""} · {gbp(oldest.price)} →{" "}
+        {gbp(newest.price)}
+      </span>
+    </p>
+  );
+}
+
+function titleCase(s: string): string {
+  return s.replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
 // The neighbourhood council-tax band mix (the LSOA distribution) as a compact stacked bar,
 // light A → dark H/I, beneath the property's own band.
 function CtaxBar({ bands, total }: { bands: Record<string, number>; total: number }) {
@@ -376,7 +439,6 @@ const EPC_BG: Record<string, string> = {
   F: "#e9633b",
   G: "#e9153b",
 };
-const epcBg = (band: string) => EPC_BG[band] ?? "#94a3b8";
 
 const gbp = (n: number) => "£" + Math.round(n).toLocaleString("en-GB");
 
