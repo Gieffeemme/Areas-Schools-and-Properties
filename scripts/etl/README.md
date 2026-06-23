@@ -24,6 +24,7 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 | `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) |
 | `npm run etl:cqc` | `cqc-locations.json` | **CQC health/care ratings** (GP/dentist/care home/hospital/home-care) + coords — runtime radius lookup like amenities/stations |
 | `npm run etl:air-quality` | `air-quality-by-grid.json` | **Defra PCM** modelled background **NO₂ + PM2.5** per 1 km cell (GB) — keyed by OS grid cell for the air-quality panel |
+| `npm run etl:mobile` | `mobile-by-laua.json` | **Ofcom** Connected Nations **mobile** coverage (4G/5G % premises) per local authority (UK) — same release/join as broadband |
 | `npm run etl:benchmarks` | `benchmarks.json` | sampled national crime & price distributions |
 
 ## Conventions & gotchas
@@ -48,6 +49,11 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
   from postcodes.io (now surfaced by `geocode.ts`). **Gotcha:** postcodes.io returns **Irish-grid**
   coords for NI, which alias onto a GB cell, so `/api/area` only does the lookup for England/Scotland/
   Wales (PCM is OSGB-only). Pairs with the noise panel.
+- **`etl:mobile` reuses `etl:broadband` — but blank means 0.** Same Ofcom Connected Nations release and
+  LAUA join. The mobile zip URL **301-redirects** (Node `fetch` follows it). Columns are
+  `{tech}_{prem|geo}_{in|out}_{N}` with N = number of the four MNOs covering that location; **a blank
+  cell is 0, not missing**, so "4G from ≥1 operator" = `100 − the _0 column` (a dense city leaves `_0`
+  blank). UK-wide incl. NI.
 - **`etl:report-cards` is scraped, not bulk.** From Nov 2025 Ofsted grades early years on a new
   5-band "report card" (Exceptional → Urgent improvement) that the childcare MI CSV does **not** yet
   carry, so a re-inspected setting otherwise shows a stale old grade (e.g. URN 2821756 reads

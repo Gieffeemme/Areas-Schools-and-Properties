@@ -344,6 +344,15 @@ export interface BroadbandSummary {
   belowUso: number | null; // % below the USO (can't get a decent connection)
 }
 
+// Ofcom mobile coverage for a local authority (Connected Nations, by LAUA - same release/join as
+// broadband). Percentages of premises; "any" = at least one of the four MNOs, "all" = all four.
+export interface MobileSummary {
+  laName: string;
+  fourGAny: number | null; // % premises with indoor 4G from at least one operator
+  fourGAll: number | null; // % premises with indoor 4G from all four operators
+  fiveGAny: number | null; // % premises with outdoor 5G from at least one operator
+}
+
 // Environmental noise at the searched point, from Defra strategic noise mapping (Round 4, 2021).
 // Each level is the modelled dB at the location; null = below the mapping threshold (40 dB Lden /
 // 35 dB Lnight), i.e. no significant source of that kind nearby.
@@ -449,6 +458,7 @@ export interface AreaReport {
   amenities: AmenitySummary | null;
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); supplementary, non-blocking
   broadband: BroadbandSummary | null;
+  mobile: MobileSummary | null; // Ofcom mobile coverage (4G/5G) for the LAUA; UK-wide
   noise: NoiseSummary | null;
   airQuality: AirQualitySummary | null; // modelled background NO2/PM2.5 at the point (Defra PCM); GB only
   census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only

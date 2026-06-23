@@ -19,6 +19,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Census 2021 demographics", provider: "Office for National Statistics (via Nomis)", licence: "OGL v3.0" },
   { name: "Council-tax bands (stock of properties) & levels", provider: "Valuation Office Agency / MHCLG", licence: "OGL v3.0" },
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
+  { name: "Mobile coverage (Connected Nations, 4G / 5G)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },
   { name: "Air quality (modelled background NO₂ / PM2.5, PCM 1 km maps)", provider: "Defra", licence: "OGL v3.0" },
   { name: "Health & care ratings (care directory with filters)", provider: "Care Quality Commission", licence: "OGL v3.0" },

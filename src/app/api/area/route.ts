@@ -8,6 +8,7 @@ import { nearestStations } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
 import { fetchCensus } from "@/lib/census";
 import { broadbandForLaua } from "@/lib/broadband";
+import { mobileForLaua } from "@/lib/mobile";
 import { airQualityForPoint } from "@/lib/airQuality";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
@@ -94,6 +95,7 @@ export async function GET(req: NextRequest) {
   const amenities = nearbyAmenities(centre);
 
   const broadband = broadbandForLaua(facts.lauaCode);
+  const mobile = mobileForLaua(facts.lauaCode);
   // Modelled background NO2/PM2.5 at the point — a committed-dataset lookup (Defra PCM 1 km grid), keyed
   // by the postcode's OSGB easting/northing. GB only: the PCM grid is OSGB, and postcodes.io returns the
   // IRISH GRID easting/northing for NI — which would otherwise alias onto an unrelated GB cell — so gate
@@ -119,6 +121,7 @@ export async function GET(req: NextRequest) {
     amenities,
     transport,
     broadband,
+    mobile,
     noise,
     airQuality,
     census,

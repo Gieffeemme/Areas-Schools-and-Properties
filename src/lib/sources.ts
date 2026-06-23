@@ -20,6 +20,8 @@ export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 
 export const broadbandSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/broadband-coverage";
 
+export const mobileSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/mobile-coverage";
+
 export const noiseSourceUrl = () =>
   "https://www.gov.uk/government/publications/strategic-noise-mapping-2019";
 

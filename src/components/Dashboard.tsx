@@ -13,6 +13,7 @@ import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
 import AirQualityPanel from "./AirQualityPanel";
+import MobilePanel from "./MobilePanel";
 import DemographicsPanel from "./DemographicsPanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
@@ -295,6 +296,7 @@ function SidePanels({
   const transport = <TransportPanel transport={report.transport} />;
   const rankings = <RankingsPanel report={report} />;
   const broadband = <BroadbandPanel broadband={report.broadband} />;
+  const mobile = <MobilePanel mobile={report.mobile} />;
   // Defra noise is England-only; hide the panel elsewhere (report.noise is null there because the
   // lookup was skipped, so within England a null unambiguously means the service failed).
   const noise =
@@ -318,6 +320,7 @@ function SidePanels({
       {amenities}
       {transport}
       {broadband}
+      {mobile}
       {noise}
       {airQuality}
       {demographics}
