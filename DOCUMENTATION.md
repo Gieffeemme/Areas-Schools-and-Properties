@@ -177,6 +177,7 @@ src/
     page.tsx              → <Dashboard/>            (home: postcode/school search → report)
     compare/page.tsx      → <Compare/>              (compare areas OR schools side by side)
     map/page.tsx          → <MapExplorer/>          (Mapbox explorer with overlay layers)
+    sources/page.tsx      → <SourcesPage/>          (data sources, licences & disclaimers; footer-linked)
     layout.tsx, globals.css
     api/
       area/route.ts            geocode + schools + crime + prices + amenities + transport + broadband → AreaReport (cached 6h)
@@ -264,6 +265,12 @@ map remounts and re-fits when any of those change.
   rendered via the `SourceLink` primitive. The per-property report **deep-links per item** where a key
   exists: each EPC band → its certificate (LMK key), each nearest station → its OSM feature; council
   tax / flood link to the official checkers. Form-only services (VOA, EA) link to their start page.
+- **Licences & disclaimers:** a footer-linked **`/sources`** page lists every dataset, its open-data
+  licence and the required attributions (OGL / ODbL / HM Land Registry / EPB), plus the site
+  disclaimers (information-only, not advice, verify-with-source, no-affiliation, liability limit). The
+  global footer carries the OGL + "© OpenStreetMap contributors (ODbL)" attribution and the headline
+  disclaimer; **`NOTICE.md`** records the third-party data licences and marks the OSM-derived committed
+  datasets (`stations.json`, `amenities.json`) as ODbL.
 
 ---
 
