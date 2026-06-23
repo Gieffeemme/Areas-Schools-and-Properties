@@ -31,6 +31,8 @@ export default function SchoolCard({
   // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade - show
   // "Independent" rather than a misleading "Not rated". Special/alternative get a neutral type tag.
   const indie = s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
+  // Inspected since Sept 2024 with sub-judgements but no single overall grade — don't show "Not rated".
+  const noOverall = !s.reportCard && !indie && !!s.ofstedNoOverall;
   const kindTag = s.kind && s.kind !== "independent" ? KIND_LABEL[s.kind] : null;
   const year = s.reportCard?.inspectionDate
     ? Number(s.reportCard.inspectionDate.slice(0, 4))
@@ -111,10 +113,22 @@ export default function SchoolCard({
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <Pill
-          color={indie ? KIND_NEUTRAL : grade.colour}
-          title={indie ? "Independent - inspected by ISI, not Ofsted" : `Ofsted: ${grade.label}`}
+          color={indie || noOverall ? KIND_NEUTRAL : grade.colour}
+          title={
+            indie
+              ? "Independent - inspected by ISI, not Ofsted"
+              : noOverall
+                ? "Inspected since Sept 2024 - Ofsted no longer gives a single overall grade; see the detail"
+                : `Ofsted: ${grade.label}`
+          }
         >
-          {indie ? "Independent" : grade.isReportCard ? grade.label : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
+          {indie
+            ? "Independent"
+            : noOverall
+              ? "No overall"
+              : grade.isReportCard
+                ? grade.label
+                : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
         </Pill>
         {kindTag && (
           <Pill

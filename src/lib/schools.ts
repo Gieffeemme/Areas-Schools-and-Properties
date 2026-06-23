@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
 import { ofstedReportUrl, ofstedEarlyYearsUrl } from "./links";
-import type { ReportCard } from "./reportCard";
+import { REPORT_CARD_BANDS, REPORT_CARD_LABEL, type ReportCard, type ReportCardBand } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
 // so `next build`'s type-checker never has to infer literal types for ~26 MB of JSON - that inference
@@ -27,7 +27,7 @@ function memo<T>(load: () => T): () => T {
 }
 
 interface OfstedRecord {
-  rating: OfstedRating;
+  rating?: OfstedRating; // absent for "Not judged" (post-Sept-2024) or report-card inspections
   date?: string;
   name?: string;
   report?: string;
@@ -38,6 +38,36 @@ interface OfstedRecord {
     leadership?: OfstedRating;
     eyfs?: OfstedRating;
     sixthForm?: OfstedRating;
+  };
+  card?: {
+    // new (Nov-2025) school report card from the MI: evaluation area → 5-band grade
+    areas: Record<string, ReportCardBand>;
+    safeguarding?: "met" | "not met";
+    concern?: string;
+  };
+}
+
+// Turn a school's new-framework report-card areas into the shared ReportCard model so it renders with
+// the same UI as the early-years cards. There's no official single overall, so we summarise: the most
+// common area band (ties broken toward the weaker band) — the per-area breakdown is shown alongside.
+function schoolReportCard(urn: string, card: NonNullable<OfstedRecord["card"]>, date?: string): ReportCard {
+  const areas: Partial<Record<ReportCardBand, number>> = {};
+  for (const b of Object.values(card.areas)) areas[b] = (areas[b] ?? 0) + 1;
+  let overall: ReportCardBand = "expected";
+  let best = -1;
+  for (const { code } of REPORT_CARD_BANDS) {
+    const n = areas[code] ?? 0;
+    if (n >= best) { best = n; overall = code; } // best→worst order + >= ⇒ ties resolve to the weaker band
+  }
+  return {
+    urn,
+    framework: "report-card",
+    inspectionDate: date,
+    overall,
+    overallLabel: REPORT_CARD_LABEL[overall],
+    safeguarding: card.safeguarding,
+    areas,
+    source: ofstedReportUrl(urn),
   };
 }
 
@@ -255,6 +285,7 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
 function buildGiasSchool(g: GiasRecord, dist: number): School {
   const urn = g.urn;
   const enr = ofstedMap()[urn];
+  const reportCard = enr?.card ? schoolReportCard(urn, enr.card, enr.date) : null;
   const ks4 = ks4Map()[urn];
   const ks5 = ks5Map()[urn];
   const pv = pvMap()[urn];
@@ -280,7 +311,10 @@ function buildGiasSchool(g: GiasRecord, dist: number): School {
     ageHigh: g.ageHigh,
     selective: g.admissions === "Selective" || undefined,
     ofsted: enr?.rating ?? (ofstedLoaded() ? "Not rated" : "Not loaded"),
+    // Inspected since Sept 2024 with sub-judgements but no single overall grade (Ofsted dropped it).
+    ofstedNoOverall: !!(enr?.date && !enr?.rating && !enr?.card),
     ofstedDate: enr?.date,
+    reportCard,
     progress8: ks4?.p8 ?? null,
     attainment8: ks4?.att8 ?? null,
     gcse5EM: ks4?.em5 ?? null,

@@ -44,8 +44,9 @@ export interface School {
   ageHigh?: number; // statutory high age
   selective?: boolean; // selective (grammar) admissions
   ofsted: OfstedRating;
+  ofstedNoOverall?: boolean; // inspected since Sept 2024 — sub-judgements but no single overall grade
   ofstedDate?: string; // last inspection date, once enriched
-  reportCard?: ReportCard | null; // new-framework (Nov 2025+) EY report card, when scraped
+  reportCard?: ReportCard | null; // new-framework report card (Nov 2025+): EY (scraped) or school (MI)
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE
   attainment8?: number | null; // KS4 Attainment 8
   gcse5EM?: number | null; // % achieving grade 5+ in English & Maths (headline "strong pass")
