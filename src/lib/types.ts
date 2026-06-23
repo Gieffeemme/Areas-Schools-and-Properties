@@ -443,6 +443,8 @@ export interface CensusSummary {
   economic: { inEmployment: number; active: number; inactive: number } | null; // % of usual residents 16+
   qualifications: { level4plus: number; none: number } | null; // % of usual residents 16+
   household: { onePerson: number; family: number; other: number } | null; // % of households
+  cars: { none: number; one: number; twoPlus: number } | null; // % of households by car/van availability
+  health: { good: number; fair: number; bad: number } | null; // % of residents: good/very good, fair, bad/very bad
 }
 
 // A report for ONE specific property (the property route): per-address facts from EPC, VOA and

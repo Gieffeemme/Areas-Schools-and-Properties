@@ -15,6 +15,8 @@ const TABLES = {
   economic: "NM_2083_1", // TS066 - economic activity status
   quals: "NM_2084_1", // TS067 - highest qualification
   household: "NM_2023_1", // TS003 - household composition
+  cars: "NM_2063_1", // TS045 - car or van availability (households)
+  health: "NM_2055_1", // TS037 - general health (residents)
 } as const;
 
 type Table = { pct: Map<string, number>; count: Map<string, number> };
@@ -62,19 +64,23 @@ async function table(id: string, geo: string): Promise<Table> {
 export async function fetchCensus(lsoa21?: string): Promise<CensusSummary | null> {
   // Census 2021 covers England & Wales; their 2021 LSOA codes are E01.../W01...
   if (!lsoa21 || !/^[EW]01/.test(lsoa21)) return null;
-  const [ageR, tenureR, ecoR, qualR, hhR] = await Promise.allSettled([
+  const [ageR, tenureR, ecoR, qualR, hhR, carsR, healthR] = await Promise.allSettled([
     table(TABLES.age, lsoa21),
     table(TABLES.tenure, lsoa21),
     table(TABLES.economic, lsoa21),
     table(TABLES.quals, lsoa21),
     table(TABLES.household, lsoa21),
+    table(TABLES.cars, lsoa21),
+    table(TABLES.health, lsoa21),
   ]);
   const ageT = val(ageR);
   const tenureT = val(tenureR);
   const ecoT = val(ecoR);
   const qualT = val(qualR);
   const hhT = val(hhR);
-  if (!ageT && !tenureT && !ecoT && !qualT && !hhT) return null;
+  const carsT = val(carsR);
+  const healthT = val(healthR);
+  if (!ageT && !tenureT && !ecoT && !qualT && !hhT && !carsT && !healthT) return null;
   return {
     population: ageT ? findTotal(ageT.count) : null,
     households: tenureT ? findTotal(tenureT.count) : null,
@@ -83,6 +89,8 @@ export async function fetchCensus(lsoa21?: string): Promise<CensusSummary | null
     economic: ecoT ? parseEconomic(ecoT) : null,
     qualifications: qualT ? parseQuals(qualT) : null,
     household: hhT ? parseHousehold(hhT) : null,
+    cars: carsT ? parseCars(carsT) : null,
+    health: healthT ? parseHealth(healthT) : null,
   };
 }
 
@@ -154,4 +162,27 @@ function parseHousehold(t: Table): CensusSummary["household"] {
   const other = t.pct.get(norm("Other household types"));
   if (one == null && fam == null) return null;
   return { onePerson: round1(one ?? 0), family: round1(fam ?? 0), other: round1(other ?? 0) };
+}
+
+// TS045: households by car/van availability → no car, 1, 2+ (2 and 3+ combined).
+function parseCars(t: Table): CensusSummary["cars"] {
+  const g = (d: string) => t.pct.get(norm(d)) ?? 0;
+  const none = g("No cars or vans in household");
+  const one = g("1 car or van in household");
+  const two = g("2 cars or vans in household");
+  const three = g("3 or more cars or vans in household");
+  if (!none && !one && !two && !three) return null;
+  return { none: round1(none), one: round1(one), twoPlus: round1(two + three) };
+}
+
+// TS037: residents by general health → good (very good + good), fair, bad (bad + very bad).
+function parseHealth(t: Table): CensusSummary["health"] {
+  const g = (d: string) => t.pct.get(norm(d)) ?? 0;
+  const veryGood = g("Very good health");
+  const good = g("Good health");
+  const fair = g("Fair health");
+  const bad = g("Bad health");
+  const veryBad = g("Very bad health");
+  if (!veryGood && !good && !fair && !bad && !veryBad) return null;
+  return { good: round1(veryGood + good), fair: round1(fair), bad: round1(bad + veryBad) };
 }

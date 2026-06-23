@@ -15,7 +15,7 @@ export default function DemographicsPanel({ census }: { census: CensusSummary | 
       </Card>
     );
   }
-  const { age, tenure, economic, qualifications, household } = census;
+  const { age, tenure, economic, qualifications, household, cars, health } = census;
   const bits = [
     census.population != null ? `${census.population.toLocaleString("en-GB")} residents` : null,
     census.households != null ? `${census.households.toLocaleString("en-GB")} households` : null,
@@ -33,6 +33,21 @@ export default function DemographicsPanel({ census }: { census: CensusSummary | 
           </Row>
         )}
 
+        {health && (
+          <Row
+            label="Health (self-reported)"
+            value={`${pct(health.good)} good or very good · ${pct(health.fair)} fair · ${pct(health.bad)} bad or very bad`}
+          >
+            <StackBar
+              segs={[
+                { label: "Good/very good", pct: health.good, color: "#4338ca" },
+                { label: "Fair", pct: health.fair, color: "#a5b4fc" },
+                { label: "Bad/very bad", pct: health.bad, color: "#e0e7ff" },
+              ]}
+            />
+          </Row>
+        )}
+
         {tenure && (
           <Row
             label="Tenure"
@@ -44,6 +59,21 @@ export default function DemographicsPanel({ census }: { census: CensusSummary | 
                 { label: "Private rented", pct: tenure.privateRented, color: "#818cf8" },
                 { label: "Social rented", pct: tenure.socialRented, color: "#a5b4fc" },
                 { label: "Other", pct: tenure.other, color: "#e0e7ff" },
+              ]}
+            />
+          </Row>
+        )}
+
+        {cars && (
+          <Row
+            label="Cars & vans"
+            value={`${pct(cars.none)} no car · ${pct(cars.one)} one · ${pct(cars.twoPlus)} two or more`}
+          >
+            <StackBar
+              segs={[
+                { label: "No car", pct: cars.none, color: "#a5b4fc" },
+                { label: "One", pct: cars.one, color: "#4338ca" },
+                { label: "Two or more", pct: cars.twoPlus, color: "#312e81" },
               ]}
             />
           </Row>

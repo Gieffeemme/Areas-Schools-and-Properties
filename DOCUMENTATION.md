@@ -257,7 +257,8 @@ map remounts and re-fits when any of those change.
   (incl. 5+/4+ E&M), A-level, KS2, Destinations, Pupil composition, **Workforce**, **Finances**, full
   **Parent View**. Nurseries deep-link to the live Ofsted page.
 - **Area panels:** **Area rankings** (national-percentile summary), **Who lives here** (Census 2021
-  demographics — age structure + median, tenure mix, work, education, household composition; England &
+  demographics — age structure + median, self-reported health, tenure mix, car/van availability, work,
+  education, household composition; England &
   Wales), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (committed OSM dataset — supermarkets,
   convenience, GPs, pharmacies, parks, gyms, dining, + the station count), **Transport** (the nearest
@@ -436,7 +437,8 @@ These cost real time to discover — don't re-learn them:
   (`Promise.allSettled` per table), **England & Wales only** (E01/W01 LSOAs; Scotland = NRS, NI = NISRA are
   separate). Could move to a committed ETL later (the amenities/stations trajectory) if per-report Nomis
   calls ever matter. Table ids: TS007A age `NM_2020_1`, TS054 tenure `NM_2072_1`, TS066 economic activity
-  `NM_2083_1`, TS067 qualifications `NM_2084_1`, TS003 household composition `NM_2023_1`.
+  `NM_2083_1`, TS067 qualifications `NM_2084_1`, TS003 household composition `NM_2023_1`, TS045 car/van
+  availability `NM_2063_1`, TS037 general health `NM_2055_1`.
 - **CQC ratings: the API is key-gated AND radius-less — use the free OGL bulk file instead.** The CQC
   Syndication API (`api.service.cqc.org.uk/public/v1`) needs a (free, but interactive-signup)
   subscription key — 401 *"missing subscription key"* without `Ocp-Apim-Subscription-Key` — **and**
