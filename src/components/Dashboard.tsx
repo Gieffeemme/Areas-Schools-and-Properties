@@ -256,7 +256,7 @@ function Report({
       {report.errors.length > 0 && <PartialNote errors={report.errors} />}
 
       <p className="mt-4 text-xs text-[var(--muted)]">
-        Data may contain errors — verify with the official source before making any decision.{" "}
+        Data may contain errors - verify with the official source before making any decision.{" "}
         <a
           href="/sources"
           className="text-[var(--primary)] underline underline-offset-2 hover:no-underline"

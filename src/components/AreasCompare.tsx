@@ -42,7 +42,7 @@ export default function AreasCompare({ initialPostcodes }: { initialPostcodes: s
   return (
     <>
       <p className="mt-4 max-w-2xl text-sm text-[var(--muted)]">
-        Enter 2–4 UK postcodes. Schools, crime, property prices and deprivation line up side by side.
+        Enter 2-4 UK postcodes. Schools, crime, property prices and deprivation line up side by side.
       </p>
       <form
         onSubmit={(e) => {

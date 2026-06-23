@@ -1,6 +1,6 @@
 // "View the source" links for the area & property data, so every panel can cite where its numbers
 // come from. (School links live in links.ts.) Where a service is a stateful form with no GET deep-link
-// — VOA council tax, EA flood, police.uk, Ofcom — we link its start page; where a clean key exists
+// - VOA council tax, EA flood, police.uk, Ofcom - we link its start page; where a clean key exists
 // (EPC certificate, OSM feature, postcode) we deep-link. URL patterns current as of Jun 2026.
 const enc = encodeURIComponent;
 
@@ -23,7 +23,7 @@ export const noiseSourceUrl = () =>
 // Stateful Play form, no GET deep-link by location → its start page.
 export const floodSourceUrl = () => "https://check-long-term-flood-risk.service.gov.uk/postcode";
 
-// VOA "Check your Council Tax band" — also a stateful form → its start page.
+// VOA "Check your Council Tax band" - also a stateful form → its start page.
 export const councilTaxSourceUrl = () =>
   "https://www.tax.service.gov.uk/check-council-tax-band/search";
 

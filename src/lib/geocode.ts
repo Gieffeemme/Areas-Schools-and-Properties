@@ -2,7 +2,7 @@ import { AreaFacts, CouncilTaxSummary, LatLng, PlaceMatch } from "./types";
 import { imdDomainsForLsoa } from "./imd";
 import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
 
-// The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) — so the area
+// The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) - so the area
 // report's Property-checks panel can show the cost, like the per-property report does.
 function councilTaxFacts(lsoaCode?: string, lauaCode?: string): CouncilTaxSummary | null {
   const ct = councilTaxForLsoa(lsoaCode);
@@ -184,7 +184,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
     /* fall through to a minimal result */
   }
   if (!r) {
-    // No postcode within range (rare) — still give a usable centre + label, just no postcode facts.
+    // No postcode within range (rare) - still give a usable centre + label, just no postcode facts.
     return { centre: { lat, lng }, facts: { postcode: "", label } };
   }
   const isEngland = r.country === "England";

@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
   const sales = salesR.status === "fulfilled" ? salesR.value : [];
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
-  // Nearest stations: a committed-dataset lookup (no network) — see src/lib/transport.ts.
+  // Nearest stations: a committed-dataset lookup (no network) - see src/lib/transport.ts.
   const transport = nearestStations(centre);
 
   const ctBand = voa ? voa.band : (facts.councilTax?.typicalBand ?? null);

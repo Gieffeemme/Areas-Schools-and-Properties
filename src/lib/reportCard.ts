@@ -1,7 +1,7 @@
 // Ofsted early-years "report card" model - the NEW framework that took effect November 2025.
 //
 // This is a different scale from the legacy `OfstedRating` (Outstanding/Good/RI/Inadequate) in
-// types.ts: a 5-band judgement per evaluation area, with no single 1–4 "overall effectiveness".
+// types.ts: a 5-band judgement per evaluation area, with no single 1-4 "overall effectiveness".
 // Records are produced by scripts/etl/build-report-cards.mjs, which SCRAPES the live provider pages
 // (reports.ofsted.gov.uk/provider/16/{urn}) because Ofsted's bulk MI download does not yet carry
 // new-framework outcomes - so a re-inspected setting otherwise shows a stale old grade.

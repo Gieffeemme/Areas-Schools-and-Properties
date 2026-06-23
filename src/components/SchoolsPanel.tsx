@@ -11,7 +11,7 @@ type SortKey = "distance" | "name" | "ofsted" | "p8" | "att8" | "em5" | "ks2" | 
 
 const SORTS: { key: SortKey; label: string }[] = [
   { key: "distance", label: "Distance" },
-  { key: "name", label: "Name (A–Z)" },
+  { key: "name", label: "Name (A-Z)" },
   { key: "ofsted", label: "Ofsted" },
   { key: "p8", label: "GCSE · Progress 8" },
   { key: "att8", label: "GCSE · Attainment 8" },

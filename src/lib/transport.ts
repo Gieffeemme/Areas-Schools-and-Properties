@@ -4,10 +4,10 @@ import { LatLng, TransportStation, TransportSummary } from "./types";
 import { distanceMiles } from "./distance";
 
 // Nearest rail / metro / tram stations to a point, from the committed UK stations dataset
-// (build-stations.mjs, sourced once from OSM at build time). A *connectivity* signal — the named
-// nearest station, however far — distinct from the amenities walkable density count (stations within
+// (build-stations.mjs, sourced once from OSM at build time). A *connectivity* signal - the named
+// nearest station, however far - distinct from the amenities walkable density count (stations within
 // 1 mile). Read from disk at runtime (memoised, like imd.ts), so there's NO per-request Overpass call:
-// instant and rate-limit-free. Straight-line distance, not routed — door-to-door commute times would
+// instant and rate-limit-free. Straight-line distance, not routed - door-to-door commute times would
 // need a paid routing API, deliberately out of scope.
 const SEARCH_MILES = 5; // how far to look for a station (a connectivity radius, not a walkable cap)
 const MAX_STATIONS = 3;
@@ -60,7 +60,7 @@ export function nearestStations(centre: LatLng): TransportSummary | null {
   return { stations, searchRadiusMiles: SEARCH_MILES };
 }
 
-// The raw committed stations, for the amenities "station" count — so stations.json stays the single
+// The raw committed stations, for the amenities "station" count - so stations.json stays the single
 // source of truth for stations. Empty array if the dataset file is missing.
 export function stationsData(): Station[] {
   return all() ?? [];

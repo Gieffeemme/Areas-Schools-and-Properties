@@ -3,7 +3,7 @@ import { gradeDisplay } from "./reportCard";
 import { RATING_COLORS } from "./ratings";
 
 // Map markers encode two things at once: SHAPE = school phase, COLOUR = Ofsted grade. The shapes are
-// SVG path data in an 18×18 box, reused three ways — Leaflet divIcon HTML, Mapbox SDF icons (via
+// SVG path data in an 18×18 box, reused three ways - Leaflet divIcon HTML, Mapbox SDF icons (via
 // Path2D, which parses the same path strings), and the dashboard legend.
 export type ShapeKey = "circle" | "square" | "triangle" | "diamond" | "hexagon";
 

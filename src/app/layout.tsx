@@ -43,7 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <footer className="mt-8 border-t border-[var(--border)] py-5">
           <div className="mx-auto max-w-6xl space-y-1 px-4 text-xs text-[var(--muted)]">
             <p>
-              Compiled from open data — postcodes.io · OpenStreetMap · police.uk · HM Land Registry ·
+              Compiled from open data - postcodes.io · OpenStreetMap · police.uk · HM Land Registry ·
               DfE · Ofsted · VOA · Ofcom · Defra · Environment Agency · MHCLG.{" "}
               <a
                 href="/sources"
@@ -57,8 +57,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               © OpenStreetMap contributors (ODbL).
             </p>
             <p>
-              <strong>Indicative information only — not professional advice.</strong> Data may contain
-              errors — verify with the official source before making any decision.
+              <strong>Indicative information only - not professional advice.</strong> Data may contain
+              errors - verify with the official source before making any decision.
             </p>
             <p>© GFM 2026 · Not affiliated with or endorsed by the data providers.</p>
           </div>

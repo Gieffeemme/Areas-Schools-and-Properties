@@ -1,6 +1,6 @@
 import { TransportStation, TransportSummary } from "@/lib/types";
 
-// Nearest rail/metro/tram stations (OpenStreetMap) — a connectivity signal: the named nearest
+// Nearest rail/metro/tram stations (OpenStreetMap) - a connectivity signal: the named nearest
 // station(s), however far, distinct from the amenities walkable density count (stations within 1 mi).
 export default function TransportPanel({ transport }: { transport: TransportSummary | null }) {
   if (!transport) {

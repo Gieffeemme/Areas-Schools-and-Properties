@@ -104,7 +104,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const pv = s.parentView ?? null;
   const pvList = pv ? pvRows(pv) : [];
   const recommend = pv?.["14"]?.pos;
-  const ageRange = s.ageLow != null && s.ageHigh != null ? `${s.ageLow}–${s.ageHigh}` : null;
+  const ageRange = s.ageLow != null && s.ageHigh != null ? `${s.ageLow}-${s.ageHigh}` : null;
   const hasDetails = !!(s.type || s.pupils != null || s.gender || s.religion || ageRange || s.selective);
 
   return (
@@ -254,7 +254,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 <Stat label="Progress 8" value={signed(s.progress8)} color={tint(s.progress8, p8Color)} />
                 <Stat label="Attainment 8" value={s.attainment8 != null ? String(s.attainment8) : "-"} />
                 <Stat label="EBacc entry" value={pct(s.ebaccEntry)} color={tint(s.ebaccEntry, pctColor)} />
-                <Stat label="EBacc grades 9–4" value={pct(s.ebacc94)} color={tint(s.ebacc94, pctColor)} />
+                <Stat label="EBacc grades 9-4" value={pct(s.ebacc94)} color={tint(s.ebacc94, pctColor)} />
                 <Stat
                   label="Progress 8 - disadvantaged"
                   value={signed(s.disadvantagedP8)}

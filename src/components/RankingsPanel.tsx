@@ -3,7 +3,7 @@ import { gradeRank } from "@/lib/reportCard";
 import { pctColor } from "@/lib/scoreColors";
 
 // Consolidated "how this area ranks nationally" summary, reusing the benchmarks/facts/schools already
-// in the area report (no extra fetch). Each row is shown as a 0–100 score where higher = better, so
+// in the area report (no extra fetch). Each row is shown as a 0-100 score where higher = better, so
 // they read consistently; property price is left neutral (pricier isn't inherently good or bad).
 export default function RankingsPanel({ report }: { report: AreaReport }) {
   const rated = report.schools.filter((s) => gradeRank(s.reportCard, s.ofsted) <= 8);
@@ -79,6 +79,6 @@ export default function RankingsPanel({ report }: { report: AreaReport }) {
 interface Row {
   label: string;
   value: string | null;
-  score: number | null; // 0–100, higher = better (drives the bar + colour)
+  score: number | null; // 0-100, higher = better (drives the bar + colour)
   neutral: boolean;
 }

@@ -44,7 +44,7 @@ export interface School {
   ageHigh?: number; // statutory high age
   selective?: boolean; // selective (grammar) admissions
   ofsted: OfstedRating;
-  ofstedNoOverall?: boolean; // inspected since Sept 2024 — sub-judgements but no single overall grade
+  ofstedNoOverall?: boolean; // inspected since Sept 2024 - sub-judgements but no single overall grade
   ofstedDate?: string; // last inspection date, once enriched
   reportCard?: ReportCard | null; // new-framework report card (Nov 2025+): EY (scraped) or school (MI)
   progress8?: number | null; // KS4 Progress 8 (secondary only), from DfE
@@ -159,15 +159,15 @@ export interface FloodSummary {
 export interface EpcSummary {
   postcode: string;
   count: number; // distinct dwellings with an EPC (latest certificate each)
-  bands: Record<string, number>; // energy band A–G → count
+  bands: Record<string, number>; // energy band A-G → count
   typicalBand: string | null; // most common band
 }
 
 // Council Tax band mix for an LSOA (neighbourhood), from the VOA "stock of properties" stats
-// (table CTSOP4.1). Counts are VOA-rounded to 10; England has bands A–H, Wales A–I.
+// (table CTSOP4.1). Counts are VOA-rounded to 10; England has bands A-H, Wales A-I.
 export interface CouncilTaxSummary {
   total: number; // dwellings on the valuation list in the LSOA
-  bands: Record<string, number>; // band A–I → count
+  bands: Record<string, number>; // band A-I → count
   typicalBand: string | null; // most common band
   typicalCost?: number | null; // actual £/yr for the typical band, all precepts in (MHCLG, England)
 }
@@ -242,7 +242,7 @@ export interface AreaFacts {
 }
 
 export interface MetricBenchmark {
-  percentile: number; // 0–100 position within the England sample (higher value ⇒ higher %)
+  percentile: number; // 0-100 position within the England sample (higher value ⇒ higher %)
   sampleSize: number;
 }
 
@@ -270,7 +270,7 @@ export interface AmenitySummary {
 }
 
 // Nearest public-transport station to a point, from OpenStreetMap (Overpass). A *connectivity* signal
-// — the named nearest rail/metro/tram station however far — distinct from the amenities walkable
+// - the named nearest rail/metro/tram station however far - distinct from the amenities walkable
 // density count (stations within 1 mile). Distances are straight-line, not routed (no commute times:
 // that needs a paid routing API).
 export interface TransportStation {
@@ -300,7 +300,7 @@ export interface BroadbandSummary {
 // Each level is the modelled dB at the location; null = below the mapping threshold (40 dB Lden /
 // 35 dB Lnight), i.e. no significant source of that kind nearby.
 export interface NoiseSource {
-  lden: number | null; // day–evening–night level (overall annoyance)
+  lden: number | null; // day-evening-night level (overall annoyance)
   lnight: number | null; // night-time level (sleep disturbance)
 }
 

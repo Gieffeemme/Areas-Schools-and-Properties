@@ -42,7 +42,7 @@ export async function fetchFlood(centre: LatLng): Promise<FloodSummary> {
   const chosen = warning ?? alert;
   const status: FloodSummary["status"] = warning ? "warning-area" : alert ? "alert-area" : "clear";
 
-  // Warnings/alerts currently in force near the point (severityLevel 1–3 are active; 4 = stood down).
+  // Warnings/alerts currently in force near the point (severityLevel 1-3 are active; 4 = stood down).
   let activeWarnings = 0;
   let topSeverity: string | undefined;
   try {

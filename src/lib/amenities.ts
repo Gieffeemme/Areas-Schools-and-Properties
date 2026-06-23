@@ -5,9 +5,9 @@ import { distanceMiles } from "./distance";
 import { stationsData } from "./transport";
 
 // Everyday amenities near a point, from a COMMITTED OSM dataset (build-amenities.mjs) plus the committed
-// stations dataset — read from disk at runtime (memoised, like imd.ts). NO per-request Overpass call, so
+// stations dataset - read from disk at runtime (memoised, like imd.ts). NO per-request Overpass call, so
 // it's instant and rate-limit-free. For each category: the count within ~1 mile + the nearest one.
-// (Bus stops are intentionally not committed — ~370k nationally, low signal; rail/metro/tram is the
+// (Bus stops are intentionally not committed - ~370k nationally, low signal; rail/metro/tram is the
 // Transport panel. The "station" count reuses stations.json so there's one source of truth for stations.)
 const RADIUS_MILES = 1; // fixed walkable radius
 // Cheap bounding-box guard (a bit over 1 mile at UK latitudes) to skip the haversine for far-away

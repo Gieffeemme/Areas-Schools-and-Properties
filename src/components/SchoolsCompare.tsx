@@ -60,7 +60,7 @@ export default function SchoolsCompare({ initialSchools }: { initialSchools: str
   return (
     <>
       <p className="mt-4 max-w-2xl text-sm text-[var(--muted)]">
-        Find 2–4 schools or nurseries by name, then line up their Ofsted, results, Parent View,
+        Find 2-4 schools or nurseries by name, then line up their Ofsted, results, Parent View,
         workforce and finances side by side.
       </p>
       <form

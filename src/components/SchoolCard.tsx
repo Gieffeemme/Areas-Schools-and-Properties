@@ -31,7 +31,7 @@ export default function SchoolCard({
   // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade - show
   // "Independent" rather than a misleading "Not rated". Special/alternative get a neutral type tag.
   const indie = s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
-  // Inspected since Sept 2024 with sub-judgements but no single overall grade — don't show "Not rated".
+  // Inspected since Sept 2024 with sub-judgements but no single overall grade - don't show "Not rated".
   const noOverall = !s.reportCard && !indie && !!s.ofstedNoOverall;
   const kindTag = s.kind && s.kind !== "independent" ? KIND_LABEL[s.kind] : null;
   const year = s.reportCard?.inspectionDate

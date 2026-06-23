@@ -190,7 +190,7 @@ function AddressPicker({
         <p className="text-sm leading-relaxed text-[var(--muted)]">
           Type a UK <strong>postcode</strong> (e.g. <span className="font-mono">M14 5SZ</span>) and we’ll
           list the addresses at it to pick from. A full address works too, as long as it includes the
-          postcode — we can’t search by street name alone on the free tier.
+          postcode - we can’t search by street name alone on the free tier.
         </p>
       </Card>
     );
@@ -216,7 +216,7 @@ function AddressPicker({
     <Card title={`${list.length} addresses`} subtitle="Pick the exact property">
       {notFound && (
         <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-relaxed text-amber-800">
-          We couldn’t find <strong>“{notFound}”</strong> here — the picker only lists properties with a
+          We couldn’t find <strong>“{notFound}”</strong> here - the picker only lists properties with a
           lodged EPC, and many homes don’t have one. Showing all {list.length} EPC-listed addresses at
           this postcode; pick the closest, or it may not be checkable on free data.
         </div>
@@ -392,7 +392,7 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <NeighbourhoodToggle postcode={report.postcode} />
 
       <p className="text-[11px] leading-relaxed text-[var(--muted)]">
-        <strong>Data may contain errors — verify with the official source before making any decision.</strong>{" "}
+        <strong>Data may contain errors - verify with the official source before making any decision.</strong>{" "}
         <a
           href="/sources"
           className="text-[var(--primary)] underline underline-offset-2 hover:no-underline"
@@ -485,7 +485,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
   );
 }
 
-// Nearest rail/metro/tram stations (OpenStreetMap). A connectivity signal — the named nearest
+// Nearest rail/metro/tram stations (OpenStreetMap). A connectivity signal - the named nearest
 // station(s), not the walkable amenity count in "See the neighbourhood". Distances are straight-line.
 function TransportCard({ transport }: { transport: TransportSummary | null }) {
   if (!transport) {
@@ -535,7 +535,7 @@ function TransportCard({ transport }: { transport: TransportSummary | null }) {
         ))}
       </ul>
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Straight-line distance from the postcode to the nearest stations (OpenStreetMap) — not walking
+        Straight-line distance from the postcode to the nearest stations (OpenStreetMap) - not walking
         time.
       </p>
     </Card>
@@ -591,7 +591,7 @@ const EPC_FG: Record<string, string> = {
   G: "#ffffff",
 };
 
-// The A–G energy scale with the property's band highlighted and the rest dimmed - like an EPC chart.
+// The A-G energy scale with the property's band highlighted and the rest dimmed - like an EPC chart.
 function EpcScale({ band, date }: { band: string; date?: string }) {
   return (
     <div>

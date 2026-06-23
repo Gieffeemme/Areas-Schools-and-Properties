@@ -177,7 +177,7 @@ function Muted() {
 // Best (rated) setting near an area, ranked across both the legacy and report-card scales.
 function bestSchool(r: AreaReport): School | null {
   let best: School | null = null;
-  let bestRank = 9; // 9 = unrated; anything rated (0–8) beats it
+  let bestRank = 9; // 9 = unrated; anything rated (0-8) beats it
   for (const s of r.schools) {
     const rank = gradeRank(s.reportCard, s.ofsted);
     if (rank < bestRank) {

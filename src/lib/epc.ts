@@ -1,7 +1,7 @@
 import { AddressMatch, EpcSummary } from "./types";
 
 // Domestic Energy Performance Certificates for a postcode, from MHCLG's "Get energy performance of
-// buildings data" service — the successor to epc.opendatacommunities.org, which was retired in
+// buildings data" service - the successor to epc.opendatacommunities.org, which was retired in
 // May 2026. Live query; the Bearer token (EPC_API_KEY) is server-only and never reaches the browser.
 // Returns null when no key is configured or the call fails; an empty summary (count 0) when the
 // postcode simply has no certificates.

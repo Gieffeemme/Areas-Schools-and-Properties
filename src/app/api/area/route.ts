@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
     errors.push({ source: "noise", message: reason(noiseR) });
 
   // Stations and amenities are committed-dataset lookups (build-stations.mjs / build-amenities.mjs), not
-  // network calls — instant and effectively never failing, so they're not `errors` sources. `null` only
+  // network calls - instant and effectively never failing, so they're not `errors` sources. `null` only
   // if a dataset file is missing (a deploy bug); the cache guard below then treats that as not-cacheable.
   const transport = nearestStations(centre);
   const amenities = nearbyAmenities(centre);

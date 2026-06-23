@@ -19,7 +19,7 @@ export const benchmarksLoaded: boolean =
 
 export const benchmarkGeneratedAt: string | null = benchmarks.generatedAt;
 
-/** Percentile (0–100) of `value` within an ascending-sorted sample (share strictly below). */
+/** Percentile (0-100) of `value` within an ascending-sorted sample (share strictly below). */
 function percentileOf(value: number, samples: number[]): number {
   const n = samples.length;
   if (n === 0) return 0;

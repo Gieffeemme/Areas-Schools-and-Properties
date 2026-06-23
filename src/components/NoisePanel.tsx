@@ -58,7 +58,7 @@ export default function NoisePanel({ noise }: { noise: NoiseSummary | null }) {
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Source: <SourceLink href={noiseSourceUrl()}>Defra strategic noise mapping</SourceLink> (Round 4, {noise.year}). Modelled level at the searched
-        point - Lden is the day–evening–night average, Lnight the night-time level. Areas quieter than
+        point - Lden is the day-evening-night average, Lnight the night-time level. Areas quieter than
         40 dB (35 dB at night) aren’t mapped.
       </p>
     </section>
@@ -70,7 +70,7 @@ function SourceRows({ title, src }: { title: string; src: NoiseSource }) {
     <div>
       <div className="text-xs font-semibold text-[var(--muted)]">{title}</div>
       <dl className="mt-1.5 space-y-1.5">
-        <MetricRow label="Day–evening–night (Lden)" db={src.lden} floor={40} band={ldenBand} />
+        <MetricRow label="Day-evening-night (Lden)" db={src.lden} floor={40} band={ldenBand} />
         <MetricRow label="Night (Lnight)" db={src.lnight} floor={35} band={lnightBand} />
       </dl>
     </div>

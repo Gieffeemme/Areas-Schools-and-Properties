@@ -20,7 +20,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },
   { name: "Flood risk & warnings", provider: "Environment Agency", licence: "OGL v3.0" },
-  { name: "Energy performance certificates (EPC)", provider: "MHCLG — Get energy performance of buildings data", licence: "EPB reuse terms" },
+  { name: "Energy performance certificates (EPC)", provider: "MHCLG - Get energy performance of buildings data", licence: "EPB reuse terms" },
   { name: "Amenities, stations & base map data", provider: "OpenStreetMap contributors", licence: "ODbL (data) · tiles © CARTO / © Mapbox" },
   { name: "Postcode & place geocoding", provider: "postcodes.io (ONS / OS Open Names / Royal Mail)", licence: "OGL v3.0" },
 ];
@@ -101,7 +101,7 @@ export default function SourcesPage() {
           </li>
           <li>
             <strong className="text-[var(--foreground)]">Verify with the official source.</strong>{" "}
-            Always confirm before acting — school admissions and catchment with the local authority and
+            Always confirm before acting - school admissions and catchment with the local authority and
             school; council-tax band with the Valuation Office Agency; energy rating with the EPC
             certificate; school performance and inspection with Ofsted, the DfE and the school directly.
             Figures such as “nearest station”, prices and amenity counts are indicative.
@@ -139,7 +139,7 @@ export default function SourcesPage() {
       </Section>
 
       <p className="mt-10 text-xs text-[var(--muted)]">
-        Spotted something wrong? Data is only as good as its source — please check the linked official
+        Spotted something wrong? Data is only as good as its source - please check the linked official
         source, which is authoritative.
       </p>
     </div>

@@ -21,7 +21,7 @@ export default function Compare({
     <div className="mx-auto max-w-6xl px-4 py-6">
       <h1 className="text-2xl font-bold tracking-tight">Compare areas or schools side by side</h1>
       <p className="mt-1 max-w-2xl text-sm text-[var(--muted)]">
-        Choose what to compare, then line up 2–4 of them - the strongest in each row is highlighted.
+        Choose what to compare, then line up 2-4 of them - the strongest in each row is highlighted.
       </p>
 
       <div

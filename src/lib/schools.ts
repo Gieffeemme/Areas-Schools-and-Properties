@@ -49,7 +49,7 @@ interface OfstedRecord {
 
 // Turn a school's new-framework report-card areas into the shared ReportCard model so it renders with
 // the same UI as the early-years cards. There's no official single overall, so we summarise: the most
-// common area band (ties broken toward the weaker band) — the per-area breakdown is shown alongside.
+// common area band (ties broken toward the weaker band) - the per-area breakdown is shown alongside.
 function schoolReportCard(urn: string, card: NonNullable<OfstedRecord["card"]>, date?: string): ReportCard {
   const areas: Partial<Record<ReportCardBand, number>> = {};
   for (const b of Object.values(card.areas)) areas[b] = (areas[b] ?? 0) + 1;
