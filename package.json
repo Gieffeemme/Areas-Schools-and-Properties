@@ -28,7 +28,8 @@
     "etl:amenities": "node scripts/etl/build-amenities.mjs",
     "etl:cqc": "node scripts/etl/build-cqc.mjs",
     "etl:air-quality": "node scripts/etl/build-air-quality.mjs",
-    "etl:mobile": "node scripts/etl/build-mobile.mjs"
+    "etl:mobile": "node scripts/etl/build-mobile.mjs",
+    "etl:ev-charging": "node scripts/etl/build-ev-charging.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

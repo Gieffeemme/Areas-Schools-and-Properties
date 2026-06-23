@@ -14,6 +14,7 @@ import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
 import AirQualityPanel from "./AirQualityPanel";
 import MobilePanel from "./MobilePanel";
+import EvChargingPanel from "./EvChargingPanel";
 import DemographicsPanel from "./DemographicsPanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
@@ -294,6 +295,7 @@ function SidePanels({
   const deprivation = <DeprivationPanel facts={report.facts} />;
   const amenities = <AmenitiesPanel amenities={report.amenities} centre={report.centre} />;
   const transport = <TransportPanel transport={report.transport} />;
+  const evCharging = <EvChargingPanel ev={report.evCharging} centre={report.centre} />;
   const rankings = <RankingsPanel report={report} />;
   const broadband = <BroadbandPanel broadband={report.broadband} />;
   const mobile = <MobilePanel mobile={report.mobile} />;
@@ -319,6 +321,7 @@ function SidePanels({
       {crime}
       {amenities}
       {transport}
+      {evCharging}
       {broadband}
       {mobile}
       {noise}

@@ -24,7 +24,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Flood risk & warnings | Environment Agency | OGL v3.0 |
 | Energy performance certificates (EPC) | MHCLG (Get energy performance of buildings data) | EPB reuse terms |
 | Planning applications | PlanIt (aggregates UK local-authority planning registers) | Third-party aggregator (see note) |
-| Amenities, stations & base maps | OpenStreetMap contributors | **ODbL** (data); tiles © CARTO / © Mapbox |
+| Amenities, stations, EV charging & base maps | OpenStreetMap contributors | **ODbL** (data); tiles © CARTO / © Mapbox |
 | Postcode & place geocoding | postcodes.io (ONS / OS Open Names / Royal Mail) | OGL v3.0 |
 
 ## Required attribution statements
@@ -54,6 +54,7 @@ available under the **Open Database Licence (ODbL)** — © OpenStreetMap contri
 
 - `src/data/stations.json` (rail/metro/tram/light-rail stations)
 - `src/data/amenities.json` (everyday-amenity coordinates)
+- `src/data/ev-charging.json` (public EV charging locations)
 
 All other committed datasets in `src/data/` are derived from UK public-sector sources under the Open
 Government Licence v3.0 (or, for EPC, the EPB reuse terms), as listed above.

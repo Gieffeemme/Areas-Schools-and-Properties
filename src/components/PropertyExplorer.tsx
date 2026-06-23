@@ -14,6 +14,7 @@ import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
 import AirQualityPanel from "./AirQualityPanel";
 import MobilePanel from "./MobilePanel";
+import EvChargingPanel from "./EvChargingPanel";
 import DemographicsPanel from "./DemographicsPanel";
 import RankingsPanel from "./RankingsPanel";
 import {
@@ -492,6 +493,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
               />
               <CrimePanel crime={area.crime} benchmark={area.benchmarks.crime} />
               <AmenitiesPanel amenities={area.amenities} />
+              <EvChargingPanel ev={area.evCharging} centre={area.centre} />
               <BroadbandPanel broadband={area.broadband} />
               <MobilePanel mobile={area.mobile} />
               {area.facts.country === "England" && <NoisePanel noise={area.noise} />}

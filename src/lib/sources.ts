@@ -56,6 +56,10 @@ export const planningEntityUrl = (entity: number | string) =>
 export const cqcLocationUrl = (id: string) => `https://www.cqc.org.uk/location/${enc(id)}`;
 export const cqcSourceUrl = () => "https://www.cqc.org.uk/about-us/transparency/using-cqc-data";
 
+// EV charging is committed from OpenStreetMap; cite a map of charging stations centred on the point.
+export const evChargingSourceUrl = (lat: number, lng: number) =>
+  `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=15/${lat}/${lng}&layers=O`;
+
 // OpenStreetMap: a specific feature ("node/123") or a map centred on a point.
 export const osmFeatureUrl = (osm: string) => `https://www.openstreetmap.org/${osm}`;
 export const osmMapUrl = (lat: number, lng: number, zoom = 16) =>

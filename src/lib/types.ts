@@ -325,6 +325,21 @@ export interface AmenitySummary {
   categories: AmenityCategory[];
 }
 
+// Public EV charging near a point, from a committed OpenStreetMap dataset (build-ev-charging.mjs). The
+// National Chargepoint Registry was decommissioned (Nov 2024); OSM is the free national source. Location,
+// operator and capacity (number of charge points) only - connector type/power are too sparsely tagged.
+export interface EvCharger {
+  operator: string; // OSM operator / network / name (may be empty)
+  capacity: number | null; // number of charge points at the site, where recorded
+  distanceMiles: number;
+}
+
+export interface EvChargingSummary {
+  radiusMiles: number;
+  count: number; // charging locations within the radius
+  nearest: EvCharger[]; // nearest first, a handful
+}
+
 // Nearest public-transport station to a point, from OpenStreetMap (Overpass). A *connectivity* signal
 // - the named nearest rail/metro/tram station however far - distinct from the amenities walkable
 // density count (stations within 1 mile). Distances are straight-line, not routed (no commute times:
@@ -487,6 +502,7 @@ export interface AreaReport {
   crime: CrimeSummary | null;
   prices: PriceSummary | null;
   amenities: AmenitySummary | null;
+  evCharging: EvChargingSummary | null; // public EV charging near the point (committed OSM); supplementary
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); supplementary, non-blocking
   broadband: BroadbandSummary | null;
   mobile: MobileSummary | null; // Ofcom mobile coverage (4G/5G) for the LAUA; UK-wide

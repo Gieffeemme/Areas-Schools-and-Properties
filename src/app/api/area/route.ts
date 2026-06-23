@@ -4,6 +4,7 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { nearbyAmenities } from "@/lib/amenities";
+import { nearbyEvCharging } from "@/lib/evCharging";
 import { nearestStations } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
 import { fetchCensus } from "@/lib/census";
@@ -93,6 +94,7 @@ export async function GET(req: NextRequest) {
   // if a dataset file is missing (a deploy bug); the cache guard below then treats that as not-cacheable.
   const transport = nearestStations(centre);
   const amenities = nearbyAmenities(centre);
+  const evCharging = nearbyEvCharging(centre);
 
   const broadband = broadbandForLaua(facts.lauaCode);
   const mobile = mobileForLaua(facts.lauaCode);
@@ -119,6 +121,7 @@ export async function GET(req: NextRequest) {
     crime,
     prices,
     amenities,
+    evCharging,
     transport,
     broadband,
     mobile,
