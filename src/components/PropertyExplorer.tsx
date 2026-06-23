@@ -4,8 +4,18 @@ import { useMemo, useState } from "react";
 import RouteSelector from "./RouteSelector";
 import Card from "./Card";
 import PropertyMap from "./PropertyMap";
-import { AddressMatch, PriceSale, PropertyReport } from "@/lib/types";
+import SchoolsPanel from "./SchoolsPanel";
+import SchoolDetail from "./SchoolDetail";
+import CrimePanel from "./CrimePanel";
+import PricePanel from "./PricePanel";
+import DeprivationPanel from "./DeprivationPanel";
+import AmenitiesPanel from "./AmenitiesPanel";
+import BroadbandPanel from "./BroadbandPanel";
+import NoisePanel from "./NoisePanel";
+import RankingsPanel from "./RankingsPanel";
+import { AddressMatch, AreaReport, PriceSale, PropertyReport, School } from "@/lib/types";
 import { Route, routeDef } from "@/lib/routes";
+import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
 
 type AddrState = AddressMatch[] | "loading" | "no-postcode" | null;
 type ReportState = PropertyReport | "loading" | null;
@@ -334,12 +344,88 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         )}
       </Card>
 
+      <NeighbourhoodToggle postcode={report.postcode} />
+
       <p className="text-[11px] leading-relaxed text-[var(--muted)]">
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
-        Environment Agency at the postcode location. Wider-area stats (schools, crime, deprivation) are
-        on the “Find a school & search an area” tab for {report.postcode}.
+        Environment Agency at the postcode location.
       </p>
+    </div>
+  );
+}
+
+// Opt-in "see the neighbourhood" panel: fetches the area report for the property's postcode (once)
+// and shows the area panels inline. Manages its own school-detail drawer. Collapsed by default.
+function NeighbourhoodToggle({ postcode }: { postcode: string }) {
+  const [open, setOpen] = useState(false);
+  const [area, setArea] = useState<AreaReport | "loading" | null>(null);
+  const [filters, setFilters] = useState<SchoolFilters>(DEFAULT_FILTERS);
+  const [school, setSchool] = useState<School | null>(null);
+
+  async function toggle() {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    setOpen(true);
+    if (area) return; // fetched once, kept
+    setArea("loading");
+    try {
+      const res = await fetch(`/api/area?postcode=${encodeURIComponent(postcode)}&radius=1`);
+      const d = await res.json();
+      setArea(res.ok ? (d as AreaReport) : null);
+    } catch {
+      setArea(null);
+    }
+  }
+
+  return (
+    <div>
+      <button
+        onClick={toggle}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between gap-2 rounded-2xl border border-[var(--border)] bg-white px-4 py-3 text-left text-sm font-semibold shadow-sm transition hover:bg-slate-50"
+      >
+        <span>{open ? "Hide neighbourhood" : "See the neighbourhood"}</span>
+        <span className="text-[11px] font-normal text-[var(--muted)]">
+          schools · crime · deprivation · amenities · broadband · noise {open ? "▲" : "▼"}
+        </span>
+      </button>
+
+      {open && (
+        <div className="mt-4 space-y-4">
+          {area === "loading" && (
+            <p className="text-center text-sm text-[var(--muted)]">Loading the neighbourhood…</p>
+          )}
+          {area === null && (
+            <p className="text-center text-sm text-[var(--muted)]">
+              Couldn’t load the neighbourhood just now.
+            </p>
+          )}
+          {area && area !== "loading" && (
+            <>
+              <RankingsPanel report={area} />
+              <SchoolsPanel
+                schools={area.schools}
+                radiusMiles={area.radiusMiles}
+                ofstedLoaded={area.ofstedLoaded}
+                onSelect={setSchool}
+                filters={filters}
+                onChange={setFilters}
+              />
+              <CrimePanel crime={area.crime} benchmark={area.benchmarks.crime} />
+              <AmenitiesPanel amenities={area.amenities} />
+              <BroadbandPanel broadband={area.broadband} />
+              {area.facts.country === "England" && <NoisePanel noise={area.noise} />}
+              <DeprivationPanel facts={area.facts} />
+              <PricePanel prices={area.prices} benchmark={area.benchmarks.price} />
+            </>
+          )}
+        </div>
+      )}
+
+      {school && <SchoolDetail school={school} onClose={() => setSchool(null)} />}
     </div>
   );
 }

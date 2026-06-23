@@ -241,7 +241,9 @@ map remounts and re-fits when any of those change.
 - **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
   **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
   exact **council-tax band** (VOA, with the neighbourhood mix bar), its **sold-price history + tenure** (HM
-  Land Registry), and **flood** - via `PropertyExplorer` + `/api/property`.
+  Land Registry), and **flood** - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
+  neighbourhood"** toggle (collapsed by default) fetches the area report for the postcode and shows the
+  area panels (schools, crime, deprivation, amenities, broadband, noise, prices) inline.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 
