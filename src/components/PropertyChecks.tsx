@@ -62,7 +62,7 @@ export default function PropertyChecks({
   ];
 
   return (
-    <Card title="Property checks" subtitle="Due diligence for a specific address">
+    <Card title="Property checks" subtitle="Flood, energy, council tax, tenure & prices for this area">
       <ul className="space-y-3">
         {checks.map((c) => (
           <li key={c.label} className="flex items-start justify-between gap-3">

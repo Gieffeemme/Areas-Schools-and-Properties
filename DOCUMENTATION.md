@@ -201,7 +201,7 @@ src/
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
     DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · BroadbandPanel · RankingsPanel  (area panels)
     PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report)
-    PropertyChecks (legacy postcode-area checks panel, superseded by PropertyExplorer) · RouteSelector · PostcodeSearch
+    PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars; in the area route's Area panels) · RouteSelector · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
     Compare (Areas|Schools tabs) · AreasCompare · CompareTable · SchoolsCompare · SchoolCompareTable · SchoolSlotInput  (/compare)
     Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge   (primitives)
@@ -216,6 +216,9 @@ map remounts and re-fits when any of those change.
 
 - **Search:** postcode, **school name, or place** (town / city / borough — autocomplete; places via
   postcodes.io Places, so a postcode isn't needed); adjustable **radius** (½–5 mi).
+- **Focus filter** on the area report - **Schools · Area · Schools + area** - toggles which side panels
+  show; the **Property checks** panel (flood, sold prices, tenure, EPC, council-tax band, each with the
+  band distribution bars) sits in the **Area** set.
 - **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
   school type — special / independent / alternative) that drive the **map pins and the list together**.
 - **League table:** sort by distance, name, Ofsted, P8, Attainment 8, GCSE 5+ E&M, KS2, A-level,

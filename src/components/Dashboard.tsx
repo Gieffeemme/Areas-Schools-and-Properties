@@ -11,6 +11,7 @@ import AmenitiesPanel from "./AmenitiesPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
+import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
@@ -21,6 +22,8 @@ import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
 import { AreaReport, OfstedRating, PlaceMatch, School, SchoolMatch, SourceError } from "@/lib/types";
 
 type Query = { kind: "postcode"; value: string } | { kind: "place"; place: PlaceMatch };
+// Which panels the area report shows: schools only, area only, or both.
+type Focus = "schools" | "area" | "both";
 
 export default function Dashboard() {
   const [route, setRoute] = useState<Route>(DEFAULT_ROUTE);
@@ -167,6 +170,7 @@ function Report({
   // School filters are lifted here so the map pins and the list stay in sync, and the controls can
   // show in the map-only view (where the list panel that normally hosts them is hidden).
   const [filters, setFilters] = useState<SchoolFilters>(DEFAULT_FILTERS);
+  const [focus, setFocus] = useState<Focus>("both");
   const mapSchools = applyFilters(report.schools, filters);
   const filterKey = `${filters.phase}|${filters.gender}|${filters.faith}|${filters.selective}|${filters.rating}`;
 
@@ -194,9 +198,12 @@ function Report({
       </div>
 
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-          <span className="text-xs font-medium text-[var(--muted)]">Show area within</span>
-          <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <FocusToggle value={focus} onChange={setFocus} />
+          <div className="flex items-center gap-x-2">
+            <span className="text-xs font-medium text-[var(--muted)]">within</span>
+            <RadiusSelector value={report.radiusMiles} onChange={onRadius} />
+          </div>
         </div>
         <ViewToggle showMap={showMap} showList={showList} onMap={toggleMap} onList={toggleList} />
       </div>
@@ -205,7 +212,7 @@ function Report({
         {showMap && (
           <div className={both ? "lg:sticky lg:top-4" : "flex h-[calc(100vh-9rem)] flex-col"}>
             {/* Map-only: the list panel that normally hosts the controls is hidden, so show them here. */}
-            {!showList && (
+            {!showList && focus !== "area" && (
               <SchoolControls
                 schools={report.schools}
                 filters={filters}
@@ -235,6 +242,7 @@ function Report({
           <div className="space-y-4">
             <SidePanels
               report={report}
+              focus={focus}
               onSelect={onSelect}
               filters={filters}
               onChange={setFilters}
@@ -257,11 +265,13 @@ function Report({
 // Panel order/emphasis tailored to the chosen route (all data shared).
 function SidePanels({
   report,
+  focus,
   onSelect,
   filters,
   onChange,
 }: {
   report: AreaReport;
+  focus: Focus;
   onSelect: (s: School) => void;
   filters: SchoolFilters;
   onChange: (f: SchoolFilters) => void;
@@ -286,10 +296,17 @@ function SidePanels({
   // lookup was skipped, so within England a null unambiguously means the service failed).
   const noise =
     report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
+  const propertyChecks = (
+    <PropertyChecks
+      centre={report.centre}
+      prices={report.prices}
+      postcode={report.facts.postcode}
+      councilTax={report.facts.councilTax}
+    />
+  );
 
-  return (
+  const area = (
     <>
-      {schools}
       {rankings}
       {crime}
       {amenities}
@@ -297,6 +314,16 @@ function SidePanels({
       {noise}
       {deprivation}
       {price}
+      {propertyChecks}
+    </>
+  );
+
+  if (focus === "schools") return schools;
+  if (focus === "area") return area;
+  return (
+    <>
+      {schools}
+      {area}
     </>
   );
 }
@@ -316,6 +343,31 @@ function RadiusSelector({ value, onChange }: { value: number; onChange: (r: numb
           }`}
         >
           {r === 0.5 ? "½" : r} mi
+        </button>
+      ))}
+    </div>
+  );
+}
+
+const FOCI: { id: Focus; label: string }[] = [
+  { id: "schools", label: "Schools" },
+  { id: "area", label: "Area" },
+  { id: "both", label: "Schools + area" },
+];
+function FocusToggle({ value, onChange }: { value: Focus; onChange: (f: Focus) => void }) {
+  return (
+    <div className="inline-flex overflow-hidden rounded-lg border border-[var(--border)] bg-white text-xs">
+      {FOCI.map((o, i) => (
+        <button
+          key={o.id}
+          type="button"
+          onClick={() => onChange(o.id)}
+          aria-pressed={value === o.id}
+          className={`px-3 py-1.5 font-medium transition ${i > 0 ? "border-l border-[var(--border)]" : ""} ${
+            value === o.id ? "bg-[var(--primary)] text-white" : "text-[var(--muted)] hover:bg-slate-50"
+          }`}
+        >
+          {o.label}
         </button>
       ))}
     </div>
