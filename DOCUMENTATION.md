@@ -203,7 +203,8 @@ src/
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
     DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · BroadbandPanel · RankingsPanel  (area panels)
-    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report)
+    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, location map)
+    PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
     PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars; in the area route's Area panels) · RouteSelector · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
     Compare (Areas|Schools tabs) · AreasCompare · CompareTable · SchoolsCompare · SchoolCompareTable · SchoolSlotInput  (/compare)

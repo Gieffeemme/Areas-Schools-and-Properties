@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import RouteSelector from "./RouteSelector";
 import Card from "./Card";
+import PropertyMap from "./PropertyMap";
 import { AddressMatch, PriceSale, PropertyReport } from "@/lib/types";
 import { Route, routeDef } from "@/lib/routes";
 
@@ -230,6 +231,15 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         <p className="text-sm text-[var(--muted)]">
           {report.address}
           {f.district ? ` · ${f.district}` : ""}
+        </p>
+      </div>
+
+      <div>
+        <div className="h-60 overflow-hidden rounded-2xl border border-[var(--border)] shadow-sm">
+          <PropertyMap centre={report.centre} label={report.line1} />
+        </div>
+        <p className="mt-1 text-[11px] text-[var(--muted)]">
+          Approximate location (postcode centroid), not the exact plot.
         </p>
       </div>
 
