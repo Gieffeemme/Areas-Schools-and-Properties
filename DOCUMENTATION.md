@@ -411,15 +411,18 @@ For agents working in this repo: the Bash cwd can drift back to a sibling projec
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
 in-tool browser preview is sandboxed and can't load this app).
 
-> **⚠️ Known setup issue — TO ADDRESS.** These sessions have been run from an *unrelated* sibling
-> workspace (the `Whatson` project), with `area-intel` only an additional working directory. Two
-> consequences leak from that: (1) the built-in **Preview** integration is bound to the Whatson root,
-> so it can't load this app and just nags to start a preview server after every edit (harmless, but
-> noise — ignore it); (2) `area-intel`-specific permissions (`curl localhost`, `node` scripts over
-> `area-intel/src/data`, the Vercel URL, …) have accumulated in **`Whatson/.claude/settings.local.json`**,
-> tangling two projects that have nothing in common. **Fix (later):** run `area-intel` from its own
-> workspace root with its own `.claude/` settings, and prune the area-intel entries out of Whatson's
-> local settings. Until then: verify via `tsc` / `build` / `curl` + the live URL.
+> **⚠️ Known setup issue — SETTINGS NOW DECOUPLED (Jun 2026).** These sessions have historically run
+> from an *unrelated* sibling workspace (the `Whatson` project), with `area-intel` only an additional
+> working directory, which tangled the two. **Now fixed for permissions:** `area-intel` has its **own**
+> `.claude/settings.local.json` (gitignored), and the ~45 area-intel permission entries that had piled
+> up in **`Whatson/.claude/settings.local.json`** were pruned out — the two projects no longer share a
+> permission list. **Remaining (for full separation):** launch Claude Code with **`~/Desktop/area-intel`
+> as the workspace root** for area-intel work, not from Whatson. That also clears the two leftover
+> leaks: (1) the built-in **Preview** integration binds to whatever root you launch from, so from
+> Whatson it can't load this app (harmless nag — ignore it until you switch); (2) this project's
+> **auto-memory** still lives under Whatson's project path (`~/.claude/projects/-Users-…-Whatson/memory/`)
+> and only binds to an area-intel path once you run from area-intel's own root. Until then: verify via
+> `tsc` / `build` / `curl` + the live URL.
 
 ---
 
