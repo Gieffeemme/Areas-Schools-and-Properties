@@ -86,6 +86,11 @@ PostcodeSearch / school-name search (client)
   `geocodePoint()` reverse-geocodes to the nearest postcode so IMD / prices / broadband still resolve,
   and the **place name shows as the header**. `geocodePostcode()` also falls back to a place lookup, so
   typing "Leeds" and pressing Enter works without picking from the list.
+- **Property route (address-led):** the "Check a property" route is its own flow (`PropertyExplorer`):
+  `GET /api/address-search?postcode=` → `fetchAddresses()` (EPC register) lists the specific addresses;
+  picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` + `fetchAddressSales`
+  (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus
+  geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated).
 - **Map overlay layers** (the `/map` explorer) are separate point-grid endpoints:
   `/api/crime-points`, `/api/deprivation-points`, `/api/flood` — each samples a grid in the radius
   and bulk reverse-geocodes via postcodes.io (no boundary polygons bundled).
@@ -170,13 +175,16 @@ src/
       deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
       flood/route.ts           EA flood-risk lookup
       epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
+      address-search/route.ts  fetchAddresses() — the specific addresses at a postcode (EPC register)
+      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  amenities.ts  fetchAmenities() (Overpass)   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()  ·  flood.ts  fetchFlood()  ·  epc.ts  fetchEpc()
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()
+    epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (property picker)  ·  voa.ts  fetchCouncilTaxBand() (exact band for one address, scrape, best-effort)
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
@@ -192,7 +200,8 @@ src/
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
     DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · BroadbandPanel · RankingsPanel  (area panels)
-    PropertyChecks · RouteSelector · PostcodeSearch
+    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report)
+    PropertyChecks (legacy postcode-area checks panel, superseded by PropertyExplorer) · RouteSelector · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
     Compare (Areas|Schools tabs) · AreasCompare · CompareTable · SchoolsCompare · SchoolCompareTable · SchoolSlotInput  (/compare)
     Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge   (primitives)
@@ -221,6 +230,10 @@ map remounts and re-fits when any of those change.
   GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail, England — Lden/Lnight
   at the point), Property prices, Property checks (EA flood + tenure + EPC energy ratings + **council-tax
   band** — the VOA band mix for the surrounding neighbourhood/LSOA, not a single address).
+- **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
+  **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
+  exact **council-tax band** (VOA, with the neighbourhood mix bar), its **sold-price history + tenure** (HM
+  Land Registry), and **flood** - via `PropertyExplorer` + `/api/property`.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 
@@ -314,6 +327,17 @@ These cost real time to discover — don't re-learn them:
   systems), so `councilTaxForLsoa` returns undefined there and the row falls back to "soon". CTSOP4.x is
   the LSOA table; 4.1 is "by band" — the file is 65 MB (band × build-period), but we keep only band ×
   `all_properties`, so the committed JSON is ~2.7 MB.
+- **Per-property report: what's free vs not.** A true type-the-address autocomplete needs PAF/AddressBase,
+  which is **paid** (OS Places is *excluded* from OS Data Hub's free credits — 60-day/2,000-call trial only),
+  so the property route is **postcode → pick the exact address**, sourced free from the **EPC register**
+  (`fetchAddresses`; covers only certificated dwellings). EPC's **full certificate** (floor area, heating,
+  potential rating) is a **separate "Domestic Certificates API"** the Search-API key doesn't carry (its
+  `/certificate/{lmk}` routes 404), so per-property EPC is **band + lodgement date** only for now. The exact
+  council-tax band is the **VOA scrape matched by building number** (best-effort, 429-prone) with an
+  LSOA-typical fallback; sold-price history filters the postcode's LR sales by PAON (numbered houses match
+  cleanly, flats are approximate); flood uses the postcode centroid (no exact per-building point without OS
+  Places). `/api/property` reads the committed LSOA JSON via geocode, so it's listed in
+  `outputFileTracingIncludes`.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the

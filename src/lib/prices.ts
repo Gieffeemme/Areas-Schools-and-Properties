@@ -22,6 +22,23 @@ export async function fetchPrices(postcode: string): Promise<PriceSummary> {
   return summarise(postcode, postcode, "postcode", exact);
 }
 
+/** Every recorded HM Land Registry sale of ONE specific address at a postcode, newest first. */
+export async function fetchAddressSales(postcode: string, line1: string): Promise<PriceSale[]> {
+  if (!postcode.trim() || !line1.trim()) return [];
+  const want = buildingToken(line1);
+  if (!want) return [];
+  const all = await fetchExact(postcode).catch(() => [] as PriceSale[]);
+  return all.filter((s) => buildingToken(s.paon ?? "") === want);
+}
+
+// The building identifier at the start of an address line / PAON, normalised for matching:
+// "42 Oxney Road" → "42", "44, Oxney Road" → "44"; falls back to the first word for named houses.
+function buildingToken(s: string): string {
+  const t = s.trim().toUpperCase().replace(/,/g, " ").replace(/\s+/g, " ").trim();
+  const num = t.match(/^(\d+[A-Z]?)\b/);
+  return num ? num[1] : (t.split(" ")[0] ?? "");
+}
+
 /** Exact-postcode sales from the Price Paid linked-data API. */
 async function fetchExact(postcode: string): Promise<PriceSale[]> {
   const ctrl = new AbortController();

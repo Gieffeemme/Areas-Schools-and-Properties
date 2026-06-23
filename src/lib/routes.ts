@@ -24,9 +24,9 @@ export const ROUTES: RouteDef[] = [
     id: "property",
     label: "Check a property",
     emoji: "🏠",
-    blurb: "Due diligence on a specific address.",
-    headline: "Check a property before you offer",
-    sub: "Sold-price history and area checks for an address. Energy, flood and tenure checks are coming.",
+    blurb: "Pick a specific address - EPC, council tax, sold prices, tenure & flood.",
+    headline: "Check a specific property",
+    sub: "Enter a postcode, pick the exact address, and get that property's report: EPC, council-tax band, sold-price history, tenure and flood risk.",
   },
 ];
 

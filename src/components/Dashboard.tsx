@@ -11,7 +11,7 @@ import AmenitiesPanel from "./AmenitiesPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
-import PropertyChecks from "./PropertyChecks";
+import PropertyExplorer from "./PropertyExplorer";
 import RouteSelector from "./RouteSelector";
 import SchoolDetail from "./SchoolDetail";
 import SchoolControls from "./SchoolControls";
@@ -66,6 +66,16 @@ export default function Dashboard() {
     const hit = data?.schools.find((s) => s.id === m.id);
     if (hit) setSelected(hit);
   };
+
+  // The "Check a property" route is its own address-led flow (postcode → pick address → property
+  // report), separate from the area report machinery above.
+  if (route === "property") {
+    return (
+      <div className="mx-auto max-w-6xl px-4 py-6">
+        <PropertyExplorer route={route} onRoute={setRoute} />
+      </div>
+    );
+  }
 
   if (!report && !loading) {
     const def = routeDef(route);
@@ -225,7 +235,6 @@ function Report({
           <div className="space-y-4">
             <SidePanels
               report={report}
-              route={route}
               onSelect={onSelect}
               filters={filters}
               onChange={setFilters}
@@ -248,13 +257,11 @@ function Report({
 // Panel order/emphasis tailored to the chosen route (all data shared).
 function SidePanels({
   report,
-  route,
   onSelect,
   filters,
   onChange,
 }: {
   report: AreaReport;
-  route: Route;
   onSelect: (s: School) => void;
   filters: SchoolFilters;
   onChange: (f: SchoolFilters) => void;
@@ -280,28 +287,6 @@ function SidePanels({
   const noise =
     report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
 
-  if (route === "property") {
-    return (
-      <>
-        {price}
-        <PropertyChecks
-          centre={report.centre}
-          prices={report.prices}
-          postcode={report.facts.postcode}
-          councilTax={report.facts.councilTax}
-        />
-        {crime}
-        {amenities}
-        {broadband}
-        {noise}
-        {deprivation}
-        {rankings}
-        {schools}
-      </>
-    );
-  }
-
-  // area + schools (the default)
   return (
     <>
       {schools}

@@ -126,6 +126,17 @@ export interface SchoolMatch {
   lng: number;
 }
 
+// One specific address at a postcode (from the EPC register), for the property picker.
+export interface AddressMatch {
+  uprn: string;
+  certificateNumber?: string;
+  line1: string; // leading address line, e.g. "68 Oxney Road"
+  address: string; // full single-line address
+  postcode: string;
+  epcBand: string | null; // current energy band, when certificated
+  epcDate?: string; // certificate registration date (ISO)
+}
+
 // A place (town / city / suburb / borough) name-search hit, from postcodes.io Places (OS Open Names).
 export interface PlaceMatch {
   id: string;
@@ -277,6 +288,27 @@ export interface NoiseSummary {
   road: NoiseSource;
   rail: NoiseSource;
   year: string; // snapshot year of the Round 4 maps ("2021")
+}
+
+// A report for ONE specific property (the property route): per-address facts from EPC, VOA and
+// HM Land Registry + the Environment Agency, plus the LSOA/area context it sits in.
+export interface PropertyReport {
+  address: string; // full single-line address
+  line1: string; // leading line, e.g. "42 Oxney Road"
+  postcode: string;
+  uprn: string;
+  centre: LatLng; // postcode-centroid coordinates (no exact per-building point without OS Places)
+  facts: AreaFacts; // the LSOA/area context around it
+  epc: { band: string | null; date?: string } | null; // current energy band (EPC register)
+  councilTax: {
+    band: string | null;
+    source: "voa" | "lsoa-typical"; // exact band (VOA) vs the neighbourhood's typical band (LSOA)
+    neighbourhood?: CouncilTaxSummary | null; // the LSOA band distribution, for context
+  };
+  sales: PriceSale[]; // this address's sale history, newest first
+  tenure: "freehold" | "leasehold" | null; // from the most recent sale that records it
+  flood: FloodSummary | null;
+  generatedAt: string;
 }
 
 export interface AreaReport {
