@@ -22,7 +22,8 @@
     "etl:imd": "node scripts/etl/build-imd.mjs",
     "etl:report-cards": "node scripts/etl/build-report-cards.mjs",
     "etl:broadband": "node scripts/etl/build-broadband.mjs",
-    "etl:council-tax": "node scripts/etl/build-council-tax.mjs"
+    "etl:council-tax": "node scripts/etl/build-council-tax.mjs",
+    "etl:council-tax-cost": "node scripts/etl/build-council-tax-cost.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

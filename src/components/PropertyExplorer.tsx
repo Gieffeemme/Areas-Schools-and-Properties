@@ -287,11 +287,17 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         <Stat label="Council tax band">
           {ct.band ? (
             <>
-              <div className="flex items-baseline gap-2">
+              <div className="flex items-center gap-2">
                 <Band letter={ct.band} bg="#312e81" fg="#fff" />
-                <span className="text-xs text-[var(--muted)]">
-                  {ct.source === "voa" ? "this exact property (VOA)" : "typical for this area (VOA 2025)"}
-                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold leading-tight">
+                    {ct.annualCost ? `≈ ${gbp(ct.annualCost)}/yr` : `Band ${ct.band}`}
+                  </p>
+                  <p className="text-[11px] leading-tight text-[var(--muted)]">
+                    {ct.source === "voa" ? "exact band (VOA)" : "typical for this area"}
+                    {ct.annualCost ? " · all-in, 2026-27" : ""}
+                  </p>
+                </div>
               </div>
               {ct.neighbourhood?.total ? (
                 <CtaxBar bands={ct.neighbourhood.bands} total={ct.neighbourhood.total} />

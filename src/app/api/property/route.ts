@@ -4,6 +4,7 @@ import { fetchEpcByUprn } from "@/lib/epc";
 import { fetchAddressSales } from "@/lib/prices";
 import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
+import { councilTaxCostForLaua } from "@/lib/councilTax";
 import { PropertyReport } from "@/lib/types";
 
 // A report for one SPECIFIC property (picked from the address list). Assembles per-address facts from
@@ -44,13 +45,14 @@ export async function GET(req: NextRequest) {
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
 
-  const councilTax: PropertyReport["councilTax"] = voa
-    ? { band: voa.band, source: "voa", neighbourhood: facts.councilTax ?? null }
-    : {
-        band: facts.councilTax?.typicalBand ?? null,
-        source: "lsoa-typical",
-        neighbourhood: facts.councilTax ?? null,
-      };
+  const ctBand = voa ? voa.band : (facts.councilTax?.typicalBand ?? null);
+  const ctCosts = councilTaxCostForLaua(facts.lauaCode);
+  const councilTax: PropertyReport["councilTax"] = {
+    band: ctBand,
+    source: voa ? "voa" : "lsoa-typical",
+    annualCost: ctBand && ctCosts ? (ctCosts[ctBand] ?? null) : null,
+    neighbourhood: facts.councilTax ?? null,
+  };
 
   const tenure = sales.find((s) => s.tenure)?.tenure ?? null;
 

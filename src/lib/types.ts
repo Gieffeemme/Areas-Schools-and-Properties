@@ -304,6 +304,7 @@ export interface PropertyReport {
   councilTax: {
     band: string | null;
     source: "voa" | "lsoa-typical"; // exact band (VOA) vs the neighbourhood's typical band (LSOA)
+    annualCost?: number | null; // actual £/yr for that band, all precepts in (MHCLG, England)
     neighbourhood?: CouncilTaxSummary | null; // the LSOA band distribution, for context
   };
   sales: PriceSale[]; // this address's sale history, newest first
