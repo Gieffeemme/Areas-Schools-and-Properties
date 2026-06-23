@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Logo from "@/components/Logo";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 
@@ -16,14 +17,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-[1000] bg-[var(--nav)] text-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="/" className="flex items-center gap-2">
-              <span className="grid h-7 w-7 place-items-center rounded-lg bg-[var(--primary)] text-white">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5A2.5 2.5 0 1 1 12 6.5a2.5 2.5 0 0 1 0 5z" />
-                </svg>
-              </span>
-              <span className="text-lg font-bold tracking-tight">Locale</span>
-              <span className="hidden text-xs text-white/45 sm:inline">
+            <a href="/" className="flex items-center gap-2.5">
+              <Logo className="h-8 w-auto" />
+              <span className="hidden border-l border-white/15 pl-2.5 text-xs text-white/45 sm:inline">
                 UK area &amp; school intelligence
               </span>
             </a>
