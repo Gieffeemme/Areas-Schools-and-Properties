@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Card from "./Card";
+import RouteHeader from "./RouteHeader";
 import PropertyMap from "./PropertyMap";
 import SchoolsPanel from "./SchoolsPanel";
 import SchoolDetail from "./SchoolDetail";
@@ -23,7 +24,7 @@ import {
   TransportStation,
   TransportSummary,
 } from "@/lib/types";
-import { routeDef } from "@/lib/routes";
+import { Route } from "@/lib/routes";
 import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
 import SourceLink from "./SourceLink";
 import {
@@ -44,8 +45,13 @@ const POSTCODE_RE = /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i;
 const norm = (s: string) => s.trim().toLowerCase().replace(/,/g, " ").replace(/\s+/g, " ").trim();
 
 // The "Check a property" route: enter a postcode → pick the exact address → that property's report.
-export default function PropertyExplorer() {
-  const def = routeDef("property");
+export default function PropertyExplorer({
+  route,
+  onRoute,
+}: {
+  route: Route;
+  onRoute: (r: Route) => void;
+}) {
   const [postcode, setPostcode] = useState("");
   const [addresses, setAddresses] = useState<AddrState>(null);
   const [report, setReport] = useState<ReportState>(null);
@@ -107,12 +113,19 @@ export default function PropertyExplorer() {
     }
   }
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-8 sm:py-12">
-      <div className="text-center">
-        <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{def.headline}</h1>
-        <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--muted)]">{def.sub}</p>
+  // The property report is a focused view; the two-tile header belongs to the search/landing state
+  // (so navigation matches the area path, where the report likewise drops the landing chrome).
+  if (report) {
+    return (
+      <div className="mx-auto max-w-3xl px-4 py-6">
+        <ReportSection report={report} onBack={() => setReport(null)} />
       </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-14 sm:py-20">
+      <RouteHeader route={route} onRoute={onRoute} />
 
       <form onSubmit={lookupPostcode} className="mx-auto mt-6 flex max-w-md gap-2">
         <input
@@ -138,20 +151,16 @@ export default function PropertyExplorer() {
       )}
 
       <div className="mt-6">
-        {report ? (
-          <ReportSection report={report} onBack={() => setReport(null)} />
-        ) : (
-          <AddressPicker
-            addresses={addresses}
-            onPick={pickAddress}
-            filter={filter}
-            onFilter={(v) => {
-              setNotFound(null);
-              setFilter(v);
-            }}
-            notFound={notFound}
-          />
-        )}
+        <AddressPicker
+          addresses={addresses}
+          onPick={pickAddress}
+          filter={filter}
+          onFilter={(v) => {
+            setNotFound(null);
+            setFilter(v);
+          }}
+          notFound={notFound}
+        />
       </div>
     </div>
   );

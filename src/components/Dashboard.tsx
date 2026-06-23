@@ -15,12 +15,13 @@ import NoisePanel from "./NoisePanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
 import RouteSelector from "./RouteSelector";
+import RouteHeader from "./RouteHeader";
 import SchoolDetail from "./SchoolDetail";
 import SchoolControls from "./SchoolControls";
 import { RATING_COLORS } from "@/lib/ratings";
 import { markerSvg, PHASE_SHAPES } from "@/lib/mapMarkers";
 import { SchoolFilters, DEFAULT_FILTERS, applyFilters } from "@/lib/schoolFilters";
-import { DEFAULT_ROUTE, Route, routeDef } from "@/lib/routes";
+import { DEFAULT_ROUTE, Route } from "@/lib/routes";
 import { AreaReport, OfstedRating, PlaceMatch, School, SchoolMatch, SourceError } from "@/lib/types";
 
 type Query = { kind: "postcode"; value: string } | { kind: "place"; place: PlaceMatch };
@@ -75,26 +76,13 @@ export default function Dashboard() {
   // The "Check a property" route is its own address-led flow (postcode → pick address → property
   // report), separate from the area report machinery above.
   if (route === "property") {
-    return (
-      <div className="mx-auto max-w-6xl px-4 py-6">
-        <PropertyExplorer />
-      </div>
-    );
+    return <PropertyExplorer route={route} onRoute={setRoute} />;
   }
 
   if (!report && !loading) {
-    const def = routeDef(route);
     return (
       <div className="mx-auto max-w-3xl px-4 py-14 sm:py-20">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight sm:text-4xl">{def.headline}</h1>
-          <p className="mx-auto mt-3 max-w-xl text-[var(--muted)]">{def.sub}</p>
-        </div>
-
-        <p className="mt-8 mb-2 text-center text-xs font-semibold uppercase tracking-wide text-[var(--muted)]">
-          What are you trying to do?
-        </p>
-        <RouteSelector value={route} onChange={setRoute} variant="cards" />
+        <RouteHeader route={route} onRoute={setRoute} />
 
         <div className="mx-auto mt-6 max-w-xl">
           <PostcodeSearch
