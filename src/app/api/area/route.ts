@@ -4,7 +4,7 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { fetchAmenities } from "@/lib/amenities";
-import { fetchTransport } from "@/lib/transport";
+import { nearestStations } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
 import { broadbandForLaua } from "@/lib/broadband";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -54,13 +54,12 @@ export async function GET(req: NextRequest) {
   // Defra strategic noise is England-only; skip the lookup elsewhere (geocoding is UK-wide) so we
   // neither show a false "quiet" nor a spurious error for Scotland/Wales/NI.
   const wantNoise = facts.country === "England";
-  const [schoolsR, crimeR, pricesR, amenitiesR, noiseR, transportR] = await Promise.allSettled([
+  const [schoolsR, crimeR, pricesR, amenitiesR, noiseR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
     fetchAmenities(centre),
     wantNoise ? fetchNoise(centre) : Promise.resolve(null),
-    fetchTransport(centre),
   ]);
 
   const errors: SourceError[] = [];
@@ -85,10 +84,10 @@ export async function GET(req: NextRequest) {
   if (wantNoise && noiseR.status === "rejected")
     errors.push({ source: "noise", message: reason(noiseR) });
 
-  // Transport (OSM nearest stations) is supplementary and hits the same flaky Overpass as amenities.
-  // Keep it OUT of `errors` (no partial-data banner for a nice-to-have), but a null result still
-  // suppresses caching below — so a transient miss self-heals next request instead of freezing for 6h.
-  const transport = transportR.status === "fulfilled" ? transportR.value : null;
+  // Nearest stations: a committed-dataset lookup (build-stations.mjs), not a network call — instant and
+  // effectively never fails. Not an `errors` source; `null` only if the dataset file is missing (a
+  // deploy bug), which the cache guard below then treats as not-cacheable as cheap insurance.
+  const transport = nearestStations(centre);
 
   const broadband = broadbandForLaua(facts.lauaCode);
 
@@ -116,9 +115,8 @@ export async function GET(req: NextRequest) {
     generatedAt: new Date().toISOString(),
   };
 
-  // Only cache a fully successful report - never freeze a partial/failed result. Transport isn't an
-  // `errors` source (it's supplementary), but a transport miss (null) still suppresses caching so a
-  // transient "unavailable" doesn't freeze for the 6h TTL; an empty-but-non-null result caches fine.
+  // Only cache a fully successful report - never freeze a partial/failed result. Transport is committed
+  // data (always present), but keep the null guard as cheap insurance against a missing dataset file.
   if (errors.length === 0 && transport !== null) await cacheSet(cacheKey, report, CACHE_TTL_SECONDS);
 
   return NextResponse.json(report);

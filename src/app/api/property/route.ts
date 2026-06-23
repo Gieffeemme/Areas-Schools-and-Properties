@@ -4,7 +4,7 @@ import { fetchEpcByUprn } from "@/lib/epc";
 import { fetchAddressSales } from "@/lib/prices";
 import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
-import { fetchTransport } from "@/lib/transport";
+import { nearestStations } from "@/lib/transport";
 import { councilTaxCostForLaua } from "@/lib/councilTax";
 import { PropertyReport } from "@/lib/types";
 
@@ -34,19 +34,19 @@ export async function GET(req: NextRequest) {
   }
   const { centre, facts } = geo;
 
-  const [epcR, salesR, voaR, floodR, transportR] = await Promise.allSettled([
+  const [epcR, salesR, voaR, floodR] = await Promise.allSettled([
     fetchEpcByUprn(uprn),
     fetchAddressSales(postcode, line1),
     fetchCouncilTaxBand(postcode, line1),
     fetchFlood(centre),
-    fetchTransport(centre),
   ]);
 
   const epc = epcR.status === "fulfilled" ? epcR.value : null;
   const sales = salesR.status === "fulfilled" ? salesR.value : [];
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
-  const transport = transportR.status === "fulfilled" ? transportR.value : null;
+  // Nearest stations: a committed-dataset lookup (no network) — see src/lib/transport.ts.
+  const transport = nearestStations(centre);
 
   const ctBand = voa ? voa.band : (facts.councilTax?.typicalBand ?? null);
   const ctCosts = councilTaxCostForLaua(facts.lauaCode);
