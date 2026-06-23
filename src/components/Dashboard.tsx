@@ -77,7 +77,7 @@ export default function Dashboard() {
   if (route === "property") {
     return (
       <div className="mx-auto max-w-6xl px-4 py-6">
-        <PropertyExplorer route={route} onRoute={setRoute} />
+        <PropertyExplorer />
       </div>
     );
   }

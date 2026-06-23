@@ -17,20 +17,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body className="flex min-h-screen flex-col">
         <header className="sticky top-0 z-[1000] bg-[var(--nav)] text-white">
           <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-            <a href="/" className="flex items-center gap-2.5">
-              <Logo className="h-8 w-auto" />
-              <span className="hidden border-l border-white/15 pl-2.5 text-xs text-white/45 sm:inline">
+            <a href="/" className="flex items-center gap-3">
+              <Logo className="h-10 w-auto" />
+              <span className="hidden border-l border-white/15 pl-3 text-xs text-white/45 sm:inline">
                 UK area &amp; school intelligence
               </span>
             </a>
-            <nav className="flex items-center gap-5 text-sm">
-              <a href="/map" className="text-white/70 transition hover:text-white">
-                Map
-              </a>
-              <a href="/compare" className="text-white/70 transition hover:text-white">
-                Compare
-              </a>
-            </nav>
           </div>
         </header>
 

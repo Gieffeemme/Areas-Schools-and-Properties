@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import RouteSelector from "./RouteSelector";
 import Card from "./Card";
 import PropertyMap from "./PropertyMap";
 import SchoolsPanel from "./SchoolsPanel";
@@ -24,7 +23,7 @@ import {
   TransportStation,
   TransportSummary,
 } from "@/lib/types";
-import { Route, routeDef } from "@/lib/routes";
+import { routeDef } from "@/lib/routes";
 import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
 import SourceLink from "./SourceLink";
 import {
@@ -45,13 +44,7 @@ const POSTCODE_RE = /[A-Z]{1,2}\d[A-Z\d]?\s*\d[A-Z]{2}/i;
 const norm = (s: string) => s.trim().toLowerCase().replace(/,/g, " ").replace(/\s+/g, " ").trim();
 
 // The "Check a property" route: enter a postcode → pick the exact address → that property's report.
-export default function PropertyExplorer({
-  route,
-  onRoute,
-}: {
-  route: Route;
-  onRoute: (r: Route) => void;
-}) {
+export default function PropertyExplorer() {
   const def = routeDef("property");
   const [postcode, setPostcode] = useState("");
   const [addresses, setAddresses] = useState<AddrState>(null);
@@ -119,10 +112,6 @@ export default function PropertyExplorer({
       <div className="text-center">
         <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">{def.headline}</h1>
         <p className="mx-auto mt-2 max-w-xl text-sm text-[var(--muted)]">{def.sub}</p>
-      </div>
-
-      <div className="mt-6 flex justify-center">
-        <RouteSelector value={route} onChange={onRoute} variant="tabs" />
       </div>
 
       <form onSubmit={lookupPostcode} className="mx-auto mt-6 flex max-w-md gap-2">
