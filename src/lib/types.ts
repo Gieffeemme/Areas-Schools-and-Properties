@@ -135,6 +135,7 @@ export interface AddressMatch {
   postcode: string;
   epcBand: string | null; // current energy band, when certificated
   epcDate?: string; // certificate registration date (ISO)
+  ctaxBand?: string | null; // council-tax band, for VOA-sourced rows with no EPC
 }
 
 // A place (town / city / suburb / borough) name-search hit, from postcodes.io Places (OS Open Names).

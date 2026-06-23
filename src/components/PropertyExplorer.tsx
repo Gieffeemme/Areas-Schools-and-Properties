@@ -209,14 +209,14 @@ function AddressPicker({
       )}
       <ul className="max-h-[26rem] divide-y divide-[var(--border)] overflow-auto">
         {shown.map((a) => (
-          <li key={a.uprn}>
+          <li key={a.uprn || a.line1}>
             <button
               onClick={() => onPick(a)}
               className="flex w-full items-center justify-between gap-3 py-2.5 text-left hover:bg-slate-50"
             >
               <span className="min-w-0 truncate text-sm font-medium">{a.line1}</span>
               <span className="shrink-0 text-[11px] text-[var(--muted)]">
-                {a.epcBand ? `EPC ${a.epcBand}` : "no EPC"} →
+                {a.epcBand ? `EPC ${a.epcBand}` : a.ctaxBand ? `Tax ${a.ctaxBand}` : "no EPC"} →
               </span>
             </button>
           </li>
