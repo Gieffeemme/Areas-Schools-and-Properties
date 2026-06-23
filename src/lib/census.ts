@@ -29,7 +29,7 @@ const findTotal = (m: Map<string, number>): number | null => {
 
 interface Obs {
   measures?: { value?: number }; // 20100 = count, 20301 = percent
-  obs_value?: { value?: number };
+  obs_value?: { value?: number | string }; // Nomis mixes string + number values, so coerce
   [k: string]: unknown;
 }
 
@@ -51,8 +51,8 @@ async function table(id: string, geo: string): Promise<Table> {
       }
     }
     const measure = o.measures?.value;
-    const v = o.obs_value?.value;
-    if (!desc || typeof v !== "number") continue;
+    const v = Number(o.obs_value?.value); // Nomis returns some values as strings, others as numbers
+    if (!desc || !Number.isFinite(v)) continue;
     if (measure === 20301) pct.set(desc, v);
     else if (measure === 20100) count.set(desc, v);
   }
