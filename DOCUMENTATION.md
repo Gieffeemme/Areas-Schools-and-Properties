@@ -87,7 +87,8 @@ PostcodeSearch / school-name search (client)
   and the **place name shows as the header**. `geocodePostcode()` also falls back to a place lookup, so
   typing "Leeds" and pressing Enter works without picking from the list.
 - **Property route (address-led):** the "Check a property" route is its own flow (`PropertyExplorer`):
-  `GET /api/address-search?postcode=` → `fetchAddresses()` (EPC register) lists the specific addresses;
+  `GET /api/address-search?postcode=` lists the specific addresses (EPC register merged with VOA
+  council-tax dwellings, so homes with no EPC still appear);
   picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` + `fetchAddressSales`
   (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus
   geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated). The search box accepts
@@ -178,7 +179,7 @@ src/
       deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
       flood/route.ts           EA flood-risk lookup
       epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
-      address-search/route.ts  fetchAddresses() — the specific addresses at a postcode (EPC register)
+      address-search/route.ts  addresses at a postcode — EPC register (fetchAddresses) MERGED with VOA council-tax dwellings (fetchVoaAddresses), so homes with no EPC still appear (best-effort)
       property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
@@ -187,7 +188,7 @@ src/
     imd.ts  imdDomainsForLsoa()   ·  amenities.ts  fetchAmenities() (Overpass)   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
     crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()
-    epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (property picker)  ·  voa.ts  fetchCouncilTaxBand() (exact band for one address, scrape, best-effort)
+    epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (property picker)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
