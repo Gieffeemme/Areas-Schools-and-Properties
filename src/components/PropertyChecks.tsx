@@ -4,7 +4,9 @@ import { useEffect, useState } from "react";
 import { CouncilTaxSummary, EpcSummary, FloodSummary, LatLng, PriceSummary } from "@/lib/types";
 import Card from "./Card";
 
-type Check = { label: string; status: "live" | "soon"; note: string };
+// A row: `value` is the actual finding (shown prominently); `source` is the attribution (fine print).
+// `value` is undefined for a check that has nothing to report yet (its row stays a quiet "Soon").
+type Check = { label: string; status: "live" | "soon"; value?: string; source: string };
 
 export default function PropertyChecks({
   centre,
@@ -50,24 +52,27 @@ export default function PropertyChecks({
 
   const checks: Check[] = [
     floodCheck(flood),
-    { label: "Sold price history", status: "live", note: "HM Land Registry - see the prices panel" },
+    soldPriceCheck(prices),
     tenureCheck(prices),
     epcCheck(epc),
     councilTaxCheck(councilTax),
-    { label: "Planning applications nearby", status: "soon", note: "Local authority" },
+    { label: "Planning applications nearby", status: "soon", source: "Local authority" },
   ];
 
   return (
     <Card title="Property checks" subtitle="Due diligence for a specific address">
-      <ul className="space-y-2">
+      <ul className="space-y-3">
         {checks.map((c) => (
-          <li key={c.label} className="flex items-center justify-between gap-2">
+          <li key={c.label} className="flex items-start justify-between gap-3">
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{c.label}</p>
-              <p className="text-[11px] text-[var(--muted)]">{c.note}</p>
+              <p className="text-xs font-medium text-[var(--muted)]">{c.label}</p>
+              {c.value && (
+                <p className="mt-0.5 text-sm font-semibold leading-snug">{c.value}</p>
+              )}
+              <p className="mt-0.5 text-[10px] leading-tight text-[var(--muted)]">{c.source}</p>
             </div>
             <span
-              className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+              className={`mt-0.5 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
                 c.status === "live"
                   ? "bg-emerald-100 text-emerald-700"
                   : "bg-slate-100 text-[var(--muted)]"
@@ -88,44 +93,70 @@ export default function PropertyChecks({
   );
 }
 
-function epcCheck(epc: EpcSummary | null | "loading"): Check {
-  if (epc === "loading")
-    return { label: "EPC / energy", status: "soon", note: "EPC register - checking…" };
-  if (!epc) return { label: "EPC / energy", status: "soon", note: "MHCLG EPC register" };
-  if (!epc.count)
-    return { label: "EPC / energy", status: "live", note: "EPC register - no certificate lodged for this postcode" };
-  const top = Object.entries(epc.bands)
+const gbp = (n: number): string => "£" + Math.round(n).toLocaleString("en-GB");
+
+// Build the "top three bands as `n unit`" string both EPC and council tax share.
+function topBands(bands: Record<string, number>, unit: (band: string, n: number) => string): string {
+  return Object.entries(bands)
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, 3)
-    .map(([b, n]) => `${n} ${b}`)
+    .map(([b, n]) => unit(b, n))
     .join(" · ");
+}
+
+function epcCheck(epc: EpcSummary | null | "loading"): Check {
+  if (epc === "loading")
+    return { label: "EPC / energy", status: "soon", value: "Checking…", source: "MHCLG EPC register" };
+  if (!epc) return { label: "EPC / energy", status: "soon", source: "MHCLG EPC register" };
+  if (!epc.count)
+    return {
+      label: "EPC / energy",
+      status: "live",
+      value: "No certificate lodged for this postcode",
+      source: "MHCLG EPC register",
+    };
   return {
     label: "EPC / energy",
     status: "live",
-    note: `EPC register - typical band ${epc.typicalBand} of ${epc.count} (${top})`,
+    value: `Typical band ${epc.typicalBand} · ${topBands(epc.bands, (b, n) => `${n} ${b}`)}`,
+    source: `MHCLG EPC register · ${epc.count} certificate${epc.count === 1 ? "" : "s"}`,
   };
 }
 
 function councilTaxCheck(ct: CouncilTaxSummary | null | undefined): Check {
   if (!ct || !ct.total || !ct.typicalBand) {
-    return { label: "Council tax band", status: "soon", note: "VOA - England & Wales" };
+    return { label: "Council tax band", status: "soon", source: "VOA · England & Wales only" };
   }
-  const top = Object.entries(ct.bands)
-    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
-    .slice(0, 3)
-    .map(([b, n]) => `${Math.round((n / ct.total) * 100)}% ${b}`)
-    .join(" · ");
+  const dist = topBands(ct.bands, (b, n) => `${Math.round((n / ct.total) * 100)}% ${b}`);
   return {
     label: "Council tax band",
     status: "live",
-    note: `VOA 2025 - typical band ${ct.typicalBand} (${top}) of ~${ct.total} homes nearby`,
+    value: `Typical band ${ct.typicalBand} · ${dist}`,
+    source: `VOA 2025 · ~${ct.total} homes in this LSOA`,
+  };
+}
+
+function soldPriceCheck(prices: PriceSummary | null): Check {
+  if (prices?.medianPrice) {
+    return {
+      label: "Sold price history",
+      status: "live",
+      value: `Median ${gbp(prices.medianPrice)}${prices.count ? ` · ${prices.count} sales` : ""}`,
+      source: "HM Land Registry · full trend in the prices panel",
+    };
+  }
+  return {
+    label: "Sold price history",
+    status: "live",
+    value: "See the prices panel",
+    source: "HM Land Registry",
   };
 }
 
 function tenureCheck(prices: PriceSummary | null): Check {
   const t = prices?.tenure;
   if (!t || !(t.freehold || t.leasehold)) {
-    return { label: "Tenure (freehold / leasehold)", status: "soon", note: "HM Land Registry" };
+    return { label: "Tenure (freehold / leasehold)", status: "soon", source: "HM Land Registry" };
   }
   const total = t.freehold + t.leasehold;
   const fhPct = Math.round((t.freehold / total) * 100);
@@ -133,16 +164,22 @@ function tenureCheck(prices: PriceSummary | null): Check {
   return {
     label: "Tenure (freehold / leasehold)",
     status: "live",
-    note: `HM Land Registry - recent sales ${lead} (${t.freehold} FH · ${t.leasehold} LH)`,
+    value: `${lead} · ${t.freehold} FH · ${t.leasehold} LH`,
+    source: "HM Land Registry · recent sales",
   };
 }
 
 function floodCheck(flood: FloodSummary | null | "loading"): Check {
   if (flood === "loading") {
-    return { label: "Flood risk", status: "soon", note: "Environment Agency - checking…" };
+    return { label: "Flood risk", status: "soon", value: "Checking…", source: "Environment Agency" };
   }
   if (!flood) {
-    return { label: "Flood risk", status: "soon", note: "Environment Agency - temporarily unavailable" };
+    return {
+      label: "Flood risk",
+      status: "soon",
+      value: "Temporarily unavailable",
+      source: "Environment Agency",
+    };
   }
   const where =
     flood.status === "warning-area"
@@ -155,7 +192,7 @@ function floodCheck(flood: FloodSummary | null | "loading"): Check {
     flood.activeWarnings > 0
       ? ` · ${flood.activeWarnings} active ${(flood.topSeverity ?? "warning").toLowerCase()} now`
       : "";
-  return { label: "Flood risk", status: "live", note: `Environment Agency - ${where}${name}${active}` };
+  return { label: "Flood risk", status: "live", value: `${where}${name}${active}`, source: "Environment Agency" };
 }
 
 function truncate(s: string): string {
