@@ -92,7 +92,7 @@ PostcodeSearch / school-name search (client)
   `GET /api/address-search?postcode=` lists the specific addresses (EPC register merged with VOA
   council-tax dwellings, so homes with no EPC still appear);
   picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` (band) + `fetchFullCertificate` (full cert by LMK) + `fetchAddressSales`
-  (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus `nearestStations` (committed dataset) and
+  (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood` + `fetchPlanning` (PlanIt, nearby applications), plus `nearestStations` (committed dataset) and
   geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated). The search box accepts
   a **postcode or a full address** — a postcode is extracted from anywhere in the input (and the leading
   street pre-filters the address list); input with no postcode shows guidance, since the free address
@@ -187,22 +187,23 @@ src/
       crime-points/route.ts    point-grid crime layer (police.uk)
       deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
       flood/route.ts           EA flood-risk lookup
+      planning/route.ts        fetchPlanning() — nearby planning applications for a point (PlanIt aggregator; for the area Property-checks row)
       epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
       address-search/route.ts  addresses at a postcode — EPC register (fetchAddresses) MERGED with VOA council-tax dwellings (fetchVoaAddresses), so homes with no EPC still appear (best-effort)
-      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood + nearest stations)
+      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood + planning + nearest stations)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  planning.ts  fetchPlanning() (nearby planning applications, PlanIt — runtime live fetch)  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)
     epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (band) + fetchFullCertificate() (full cert by LMK)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
     routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales  ·  mapMarkers.ts  pin shape (phase) + colour/label (grade), shared by AreaMap/MapboxMap/legend
-    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM)  ·  types.ts  all shared types
+    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM/PlanIt)  ·  types.ts  all shared types
   components/
     Dashboard.tsx        search, loading/error, Map/List toggle, Report + SidePanels
     AreaMap.tsx          Leaflet map: radius ring + school pins (shape = phase, colour = grade; popup name → detail drawer)
@@ -213,9 +214,9 @@ src/
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
     DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · RankingsPanel  (area panels)
-    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, location map)
+    PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
-    PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars; in the area route's Area panels) · RouteSelector · PostcodeSearch
+    PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications; in the area route's Area panels) · RouteSelector · PostcodeSearch
     MapExplorer · MapboxMap · LayerControl   (the /map page; LayerControl carries the crime-category filter)
     Compare (Areas|Schools tabs) · AreasCompare · CompareTable · SchoolsCompare · SchoolCompareTable · SchoolSlotInput  (/compare)
     Card · Pill · RatingBadge · ParentViewBadge · Progress8Badge · SourceLink   (primitives)
@@ -231,8 +232,8 @@ map remounts and re-fits when any of those change.
 - **Search:** postcode, **school name, or place** (town / city / borough — autocomplete; places via
   postcodes.io Places, so a postcode isn't needed); adjustable **radius** (½–5 mi).
 - **Focus filter** on the area report - **Schools · Area · Schools + area** - toggles which side panels
-  show; the **Property checks** panel (flood, sold prices, tenure, EPC, council-tax band, each with the
-  band distribution bars) sits in the **Area** set.
+  show; the **Property checks** panel (flood, sold prices, tenure, EPC, council-tax band — each with
+  band distribution bars — plus nearby planning applications) sits in the **Area** set.
 - **Map / List view toggle**; phase chips + a **Filters** panel (Ofsted, gender, faith, grammar,
   school type — special / independent / alternative) that drive the **map pins and the list together**.
   Map pins encode **Ofsted grade as colour and school phase as marker shape** (circle = primary, square =
@@ -250,23 +251,26 @@ map remounts and re-fits when any of those change.
   rail/metro/tram station, named — committed OSM dataset), **Broadband** (Ofcom coverage), **Noise**
   (Defra road & rail, England — Lden/Lnight
   at the point), Property prices, Property checks (EA flood + tenure + EPC energy ratings + **council-tax
-  band** — the VOA band mix for the surrounding neighbourhood/LSOA (not a single address), now with MHCLG's all-in ≈£/yr for the typical band).
+  band** — the VOA band mix for the surrounding neighbourhood/LSOA (not a single address), now with MHCLG's all-in ≈£/yr for the typical band — and **nearby planning applications** (PlanIt — the most-recent applications within ~0.5 km, each linking to the council's own record)).
 - **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
   **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
   **council-tax band + the actual £/yr** (VOA band + MHCLG all-in cost, with the neighbourhood mix bar), its **sold-price history + tenure** (HM
-  Land Registry), **flood**, and the **nearest train/tram/metro stations** (OpenStreetMap, named + distance) - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
+  Land Registry), **flood**, **nearby planning applications** (PlanIt, linking to the council record), and the **nearest train/tram/metro stations** (OpenStreetMap, named + distance) - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
   neighbourhood"** toggle (collapsed by default) fetches the area report for the postcode and shows the
   area panels (schools, crime, deprivation, amenities, broadband, noise, prices) inline.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
   the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
 - **Every panel links to its source** (a clickable "↗" in the footer): Ofsted/DfE (schools), HM Land
   Registry (prices), VOA (council tax), Environment Agency (flood), Ofcom (broadband), police.uk
-  (crime), MHCLG (IMD), Defra (noise), OpenStreetMap (amenities/stations) — built by `lib/sources.ts`,
+  (crime), MHCLG (IMD), Defra (noise), OpenStreetMap (amenities/stations), PlanIt (planning) — built by `lib/sources.ts`,
   rendered via the `SourceLink` primitive. The per-property report **deep-links per item** where a key
-  exists: each EPC band → its certificate (LMK key), each nearest station → its OSM feature; council
+  exists: each EPC band → its certificate (LMK key), each nearest station → its OSM feature, each planning
+  application → the council's own record; council
   tax / flood link to the official checkers. Form-only services (VOA, EA) link to their start page.
 - **Licences & disclaimers:** a footer-linked **`/sources`** page lists every dataset, its open-data
-  licence and the required attributions (OGL / ODbL / HM Land Registry / EPB), plus the site
+  licence and the required attributions (OGL / ODbL / HM Land Registry / EPB) — and flags **PlanIt**
+  (planning) as a **third-party aggregator** rather than open data, with the council record noted as
+  authoritative — plus the site
   disclaimers (information-only, not advice, verify-with-source, no-affiliation, liability limit). The
   global footer carries the OGL + "© OpenStreetMap contributors (ODbL)" attribution and the headline
   disclaimer; **`NOTICE.md`** records the third-party data licences and marks the OSM-derived committed
@@ -388,6 +392,20 @@ These cost real time to discover — don't re-learn them:
   **Amenities** moved to committed data the same way (`etl:amenities` → `amenities.json`; bus stops
   dropped, the station count reuses `stations.json`), so the app now makes **no runtime Overpass call at
   all** — the only OSM dependency is the two build-time ETLs (`etl:stations`, `etl:amenities`).
+- **Planning applications: no official national API — PlanIt is the practical source.** UK planning
+  applications are published per local authority with **no single government API**; `planning.data.gov.uk`
+  serves planning **constraints** (conservation areas, listed buildings, article-4) — *not* application
+  records — and the GLA Datahub is London-only. **PlanIt** (`planit.org.uk/api/applics/json`) aggregates
+  the council registers into one keyless JSON API (send a real `User-Agent`). Gotchas: geo is
+  `?lat=&lng=&krad=` where **`krad` is the radius in km** (or `?bbox=w,s,e,n`); **the default order is
+  NOT recency — pass `sort=-start_date`** for newest-first; the response `total` is the **all-time** count
+  for the area, not the page; each record's **`url` is a deep link to the council's own register**
+  (authoritative — prefer it), `link` (the PlanIt page) is the fallback, and **`uid`** is the council
+  reference (the top-level `reference` is often null). `fetchPlanning()` (`src/lib/planning.ts`) is a
+  runtime live fetch — cached 6 h, fails gracefully to null, no ETL / no committed data (like flood) —
+  feeding the per-property "Planning applications nearby" card and the area Property-checks row (via
+  `/api/planning`). Attribution: it is a **third-party aggregator, not OGL / Crown-copyright open data** —
+  flagged as such on `/sources` + `NOTICE.md`, with each item linking to the authoritative council record.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -433,15 +451,19 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **runtime-load build cleanup** (datasets read at runtime; in-build type-check re-enabled),
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (committed OSM dataset), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
-strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (a committed UK rail/metro/tram dataset from OSM via `etl:stations`, named — on the property *and* area reports), and a **complete school register** — special, alternative/PRU &
+strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (a committed UK rail/metro/tram dataset from OSM via `etl:stations`, named — on the property *and* area reports), **nearby planning applications** (PlanIt — most-recent applications
+near a point, on the property + area reports), and a **complete school register** — special, alternative/PRU &
 independent schools (filed by GIAS under phase "Not applicable") are now admitted instead of silently
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).
 
-**Remaining (free data):** none outstanding — the Tier-1 set is complete. (The last of them, **Defra
-noise**, was expected to need committed GIS contours + point-in-polygon, but Defra serves the Round 4
-maps as a GeoServer **WMS raster**, so `fetchNoise()` does a live `GetFeatureInfo` point-query — no
-ETL and no committed data, like crime/prices/amenities.)
+**Remaining (free data):** the Tier-1 set is complete. One optional free addition remains: **planning
+constraints** (`planning.data.gov.uk` — conservation areas, listed buildings, article-4 directions,
+flood zones), an authoritative national OGL dataset — distinct from the now-shipped planning
+*applications* (PlanIt). (The last Tier-1 item, **Defra noise**, was expected to need committed GIS
+contours + point-in-polygon, but Defra serves the Round 4 maps as a GeoServer **WMS raster**, so
+`fetchNoise()` does a live `GetFeatureInfo` point-query — no ETL and no committed data, like
+crime/prices/amenities.)
 
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
