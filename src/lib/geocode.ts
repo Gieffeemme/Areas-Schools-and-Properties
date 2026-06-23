@@ -55,6 +55,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           constituency: r.parliamentary_constituency,
           lsoa: r.lsoa,
           lsoaCode,
+          lsoa21Code: r.codes?.lsoa21,
           lauaCode: r.codes?.admin_district,
           imdRank,
           imdDecile,
@@ -170,7 +171,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
         country?: string;
         parliamentary_constituency?: string;
         lsoa?: string;
-        codes?: { lsoa?: string; admin_district?: string };
+        codes?: { lsoa?: string; lsoa21?: string; admin_district?: string };
         index_of_multiple_deprivation?: number;
       }
     | null = null;
@@ -206,6 +207,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       constituency: r.parliamentary_constituency,
       lsoa: r.lsoa,
       lsoaCode,
+      lsoa21Code: r.codes?.lsoa21,
       lauaCode: r.codes?.admin_district,
       imdRank,
       imdDecile,

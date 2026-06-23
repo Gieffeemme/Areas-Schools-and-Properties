@@ -15,6 +15,9 @@ export const crimeSourceUrl = () => "https://www.police.uk/";
 export const imdSourceUrl = () =>
   "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019";
 
+// ONS Census 2021 - the interactive area maps where the same neighbourhood figures can be explored.
+export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
+
 export const broadbandSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/broadband-coverage";
 
 export const noiseSourceUrl = () =>

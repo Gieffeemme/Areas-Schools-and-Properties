@@ -180,7 +180,7 @@ src/
     sources/page.tsx      → <SourcesPage/>          (data sources, licences & disclaimers; footer-linked)
     layout.tsx, globals.css
     api/
-      area/route.ts            geocode + schools + crime + prices + amenities + transport + broadband → AreaReport (cached 6h)
+      area/route.ts            geocode + schools + crime + prices + amenities + transport + broadband + census → AreaReport (cached 6h)
       schools/route.ts         fetchSchoolsByIds() — full School objects by id (school compare)
       school-search/route.ts   searchSchools() autocomplete
       place-search/route.ts    searchPlaces() autocomplete (town/city/borough, postcodes.io Places)
@@ -197,13 +197,13 @@ src/
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  planning.ts  fetchPlanning() (nearby planning applications, PlanIt — runtime live fetch)  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  planning.ts  fetchPlanning() (nearby planning applications, PlanIt — runtime live fetch)  ·  census.ts  fetchCensus() (Census 2021 demographics by lsoa21, ONS/Nomis — runtime fetch, cached 30d)  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)
     epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (band) + fetchFullCertificate() (full cert by LMK)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
     routes.ts       Route = "area" | "property"  ·  ratings.ts / scoreColors.ts colour scales  ·  mapMarkers.ts  pin shape (phase) + colour/label (grade), shared by AreaMap/MapboxMap/legend
-    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM/PlanIt)  ·  types.ts  all shared types
+    distance.ts     haversine miles  ·  links.ts  DfE/Ofsted URLs  ·  sources.ts  source links (EPC/VOA/EA/LR/Ofcom/police.uk/MHCLG/Defra/OSM/PlanIt/ONS)  ·  types.ts  all shared types
   components/
     Dashboard.tsx        search, loading/error, Map/List toggle, Report + SidePanels
     AreaMap.tsx          Leaflet map: radius ring + school pins (shape = phase, colour = grade; popup name → detail drawer)
@@ -213,7 +213,7 @@ src/
     SchoolCard.tsx       list card (pills: Ofsted, P8, GCSE%, Parent View; pupils in meta)
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
-    DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · RankingsPanel  (area panels)
+    DeprivationPanel · DemographicsPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · RankingsPanel  (area panels)
     PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
     PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications; in the area route's Area panels) · RouteSelector · PostcodeSearch
@@ -245,7 +245,9 @@ map remounts and re-fits when any of those change.
   with a caveat note linking to the live Ofsted report — see §9) — GCSE
   (incl. 5+/4+ E&M), A-level, KS2, Destinations, Pupil composition, **Workforce**, **Finances**, full
   **Parent View**. Nurseries deep-link to the live Ofsted page.
-- **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
+- **Area panels:** **Area rankings** (national-percentile summary), **Who lives here** (Census 2021
+  demographics — age structure + median, tenure mix, work, education, household composition; England &
+  Wales), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (committed OSM dataset — supermarkets,
   convenience, GPs, pharmacies, parks, gyms, dining, + the station count), **Transport** (the nearest
   rail/metro/tram station, named — committed OSM dataset), **Broadband** (Ofcom coverage), **Noise**
@@ -406,6 +408,18 @@ These cost real time to discover — don't re-learn them:
   feeding the per-property "Planning applications nearby" card and the area Property-checks row (via
   `/api/planning`). Attribution: it is a **third-party aggregator, not OGL / Crown-copyright open data** —
   flagged as such on `/sources` + `NOTICE.md`, with each item linking to the authoritative council record.
+- **Census 2021 demographics are free via Nomis, and the geography join is clean.** "Who lives here"
+  (age, tenure, economic activity, qualifications, household composition) comes from the ONS Census 2021
+  "TS" tables on the **Nomis API** (`nomisweb.co.uk/api/v01/dataset/{id}.data.json?geography={gss}&measures=20100,20301`,
+  no key; 20100 = count, 20301 = percent). The vintage trap is handled for free: **postcodes.io returns
+  `codes.lsoa21` natively** (alongside the 2011 `codes.lsoa` used for IMD), so a postcode maps straight onto
+  the 2021 census LSOA — no 2011→2021 lookup. Gotcha that cost a debug cycle: `obs[].measures.value` is a
+  **number**, not a string — compare numerically (`=== 20301`, not `"20301"`). `fetchCensus()`
+  (`src/lib/census.ts`) is a runtime fetch (cached 30 d; Census 2021 is static), partial-tolerant
+  (`Promise.allSettled` per table), **England & Wales only** (E01/W01 LSOAs; Scotland = NRS, NI = NISRA are
+  separate). Could move to a committed ETL later (the amenities/stations trajectory) if per-report Nomis
+  calls ever matter. Table ids: TS007A age `NM_2020_1`, TS054 tenure `NM_2072_1`, TS066 economic activity
+  `NM_2083_1`, TS067 qualifications `NM_2084_1`, TS003 household composition `NM_2023_1`.
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -455,7 +469,9 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (committed OSM dataset), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
 strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (a committed UK rail/metro/tram dataset from OSM via `etl:stations`, named — on the property *and* area reports), **nearby planning applications** (PlanIt — most-recent applications
-near a point, on the property + area reports), and a **complete school register** — special, alternative/PRU &
+near a point, on the property + area reports), **Census 2021 demographics** ("Who lives here" — age,
+tenure, work, education and household mix, ONS via Nomis, England & Wales), and a **complete school
+register** — special, alternative/PRU &
 independent schools (filed by GIAS under phase "Not applicable") are now admitted instead of silently
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).

@@ -257,6 +257,7 @@ export interface AreaFacts {
   constituency?: string;
   lsoa?: string; // LSOA name (display)
   lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
+  lsoa21Code?: string; // LSOA 2021 code (join key for Census 2021)
   lauaCode?: string; // local authority (LAUA) ONS code (join key for broadband)
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
@@ -333,6 +334,30 @@ export interface NoiseSummary {
   year: string; // snapshot year of the Round 4 maps ("2021")
 }
 
+// One 5-year age band as a share of residents (for the age sparkline).
+export interface AgeBand {
+  label: string; // e.g. "30-34" or "85+"
+  pct: number;
+}
+
+// Census 2021 area demographics ("who lives here") for the LSOA, from ONS via Nomis. England & Wales
+// only. Each block is null if that table didn't resolve; the whole summary is null off-coverage.
+export interface CensusSummary {
+  population: number | null; // usual residents (Census 2021)
+  households: number | null;
+  age: {
+    median: number | null; // interpolated from the 5-year bands
+    under15: number | null; // % aged 0-14
+    working: number | null; // % aged 15-64 (approx)
+    over65: number | null; // % aged 65+
+    bands: AgeBand[];
+  } | null;
+  tenure: { owned: number; socialRented: number; privateRented: number; other: number } | null; // %
+  economic: { inEmployment: number; active: number; inactive: number } | null; // % of usual residents 16+
+  qualifications: { level4plus: number; none: number } | null; // % of usual residents 16+
+  household: { onePerson: number; family: number; other: number } | null; // % of households
+}
+
 // A report for ONE specific property (the property route): per-address facts from EPC, VOA and
 // HM Land Registry + the Environment Agency, plus the LSOA/area context it sits in.
 // Full domestic EPC certificate details (MHCLG /api/certificate?certificate_number=), beyond the band.
@@ -391,6 +416,7 @@ export interface AreaReport {
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); supplementary, non-blocking
   broadband: BroadbandSummary | null;
   noise: NoiseSummary | null;
+  census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)

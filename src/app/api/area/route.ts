@@ -6,6 +6,7 @@ import { fetchPrices } from "@/lib/prices";
 import { nearbyAmenities } from "@/lib/amenities";
 import { nearestStations } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
+import { fetchCensus } from "@/lib/census";
 import { broadbandForLaua } from "@/lib/broadband";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
@@ -54,11 +55,14 @@ export async function GET(req: NextRequest) {
   // Defra strategic noise is England-only; skip the lookup elsewhere (geocoding is UK-wide) so we
   // neither show a false "quiet" nor a spurious error for Scotland/Wales/NI.
   const wantNoise = facts.country === "England";
-  const [schoolsR, crimeR, pricesR, noiseR] = await Promise.allSettled([
+  // Census 2021 covers England & Wales; skip elsewhere (geocoding is UK-wide).
+  const wantCensus = facts.country === "England" || facts.country === "Wales";
+  const [schoolsR, crimeR, pricesR, noiseR, censusR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
     wantNoise ? fetchNoise(centre) : Promise.resolve(null),
+    wantCensus ? fetchCensus(facts.lsoa21Code) : Promise.resolve(null),
   ]);
 
   const errors: SourceError[] = [];
@@ -78,6 +82,9 @@ export async function GET(req: NextRequest) {
   const noise = noiseR.status === "fulfilled" ? noiseR.value : null;
   if (wantNoise && noiseR.status === "rejected")
     errors.push({ source: "noise", message: reason(noiseR) });
+
+  // Census is supplementary - a Nomis hiccup hides the panel, it doesn't fail (or block caching of) the report.
+  const census = censusR.status === "fulfilled" ? censusR.value : null;
 
   // Stations and amenities are committed-dataset lookups (build-stations.mjs / build-amenities.mjs), not
   // network calls - instant and effectively never failing, so they're not `errors` sources. `null` only
@@ -105,6 +112,7 @@ export async function GET(req: NextRequest) {
     transport,
     broadband,
     noise,
+    census,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),
     errors,

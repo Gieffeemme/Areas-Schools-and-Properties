@@ -17,6 +17,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Street-level crime | police.uk / data.police.uk | OGL v3.0 |
 | Sold prices (Price Paid Data) | HM Land Registry | OGL v3.0 |
 | Deprivation (IoD 2019) | MHCLG | OGL v3.0 |
+| Census 2021 demographics | Office for National Statistics (via Nomis) | OGL v3.0 |
 | Council-tax bands (stock) & levels | Valuation Office Agency / MHCLG | OGL v3.0 |
 | Broadband (Connected Nations) | Ofcom | OGL v3.0 |
 | Environmental noise (strategic noise mapping) | Defra | OGL v3.0 |

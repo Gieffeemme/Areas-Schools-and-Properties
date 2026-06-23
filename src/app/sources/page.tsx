@@ -16,6 +16,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Street-level crime", provider: "police.uk / data.police.uk", licence: "OGL v3.0" },
   { name: "Sold prices (Price Paid Data)", provider: "HM Land Registry", licence: "OGL v3.0 (see attribution)" },
   { name: "Deprivation (Indices of Deprivation 2019)", provider: "MHCLG", licence: "OGL v3.0" },
+  { name: "Census 2021 demographics", provider: "Office for National Statistics (via Nomis)", licence: "OGL v3.0" },
   { name: "Council-tax bands (stock of properties) & levels", provider: "Valuation Office Agency / MHCLG", licence: "OGL v3.0" },
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },

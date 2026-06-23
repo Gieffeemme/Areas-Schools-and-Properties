@@ -12,6 +12,7 @@ import TransportPanel from "./TransportPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
+import DemographicsPanel from "./DemographicsPanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
 import RouteSelector from "./RouteSelector";
@@ -297,6 +298,7 @@ function SidePanels({
   // lookup was skipped, so within England a null unambiguously means the service failed).
   const noise =
     report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
+  const demographics = <DemographicsPanel census={report.census} />;
   const propertyChecks = (
     <PropertyChecks
       centre={report.centre}
@@ -314,6 +316,7 @@ function SidePanels({
       {transport}
       {broadband}
       {noise}
+      {demographics}
       {deprivation}
       {price}
       {propertyChecks}

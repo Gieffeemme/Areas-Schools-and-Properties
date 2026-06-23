@@ -12,6 +12,7 @@ import DeprivationPanel from "./DeprivationPanel";
 import AmenitiesPanel from "./AmenitiesPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
+import DemographicsPanel from "./DemographicsPanel";
 import RankingsPanel from "./RankingsPanel";
 import {
   AddressMatch,
@@ -479,6 +480,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
               <AmenitiesPanel amenities={area.amenities} />
               <BroadbandPanel broadband={area.broadband} />
               {area.facts.country === "England" && <NoisePanel noise={area.noise} />}
+              <DemographicsPanel census={area.census} />
               <DeprivationPanel facts={area.facts} />
               <PricePanel prices={area.prices} benchmark={area.benchmarks.price} />
             </>
