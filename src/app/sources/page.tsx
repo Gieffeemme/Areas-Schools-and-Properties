@@ -20,6 +20,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Council-tax bands (stock of properties) & levels", provider: "Valuation Office Agency / MHCLG", licence: "OGL v3.0" },
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },
+  { name: "Health & care ratings (care directory with filters)", provider: "Care Quality Commission", licence: "OGL v3.0" },
   { name: "Flood risk & warnings", provider: "Environment Agency", licence: "OGL v3.0" },
   { name: "Energy performance certificates (EPC)", provider: "MHCLG - Get energy performance of buildings data", licence: "EPB reuse terms" },
   { name: "Planning applications", provider: "PlanIt (aggregates UK local-authority planning registers)", licence: "Third-party - see note" },

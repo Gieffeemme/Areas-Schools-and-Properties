@@ -6,6 +6,7 @@ import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
 import { fetchPlanning } from "@/lib/planning";
 import { nearestStations } from "@/lib/transport";
+import { nearbyCqc } from "@/lib/cqc";
 import { councilTaxCostForLaua } from "@/lib/councilTax";
 import { PropertyReport } from "@/lib/types";
 
@@ -48,8 +49,10 @@ export async function GET(req: NextRequest) {
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
   const planning = planningR.status === "fulfilled" ? planningR.value : null;
-  // Nearest stations: a committed-dataset lookup (no network) - see src/lib/transport.ts.
+  // Nearest stations + CQC-rated health/care services: committed-dataset lookups (no network) - see
+  // src/lib/transport.ts / src/lib/cqc.ts.
   const transport = nearestStations(centre);
+  const cqc = nearbyCqc(centre);
 
   // Full EPC certificate (floor area, heating, fabric, current/potential rating) by the LMK from the
   // band lookup above. Same token as the search; fails gracefully to null.
@@ -81,6 +84,7 @@ export async function GET(req: NextRequest) {
     flood,
     planning,
     transport,
+    cqc,
     generatedAt: new Date().toISOString(),
   };
   return NextResponse.json(report);

@@ -311,6 +311,28 @@ export interface TransportSummary {
   searchRadiusMiles: number; // how far we looked (a station may simply be beyond it)
 }
 
+// One CQC-regulated health/care location near a point (GP, dentist, care home, hospital, home-care
+// agency), with its latest CQC overall rating. From the committed CQC directory (build-cqc.mjs).
+export interface CqcLocation {
+  name: string;
+  category: string; // display label: "GP practice" / "Dentist" / "Care home" / "Hospital" / "Home care agency"
+  rating: OfstedRating; // latest CQC overall rating (shares Ofsted's Outstanding→Inadequate scale)
+  ratingDate: string | null; // ISO date that rating was published; null if unrated
+  distanceMiles: number; // straight-line from the point
+  url: string; // CQC profile page (https://www.cqc.org.uk/location/{id})
+}
+
+// CQC-rated health & care services near a point, from the committed directory (CQC "care directory with
+// filters", Open Government Licence) - a radius lookup like amenities/stations, not a live API call.
+export interface CqcSummary {
+  radiusMiles: number; // how far we looked
+  total: number; // CQC-regulated locations within the radius
+  rated: number; // how many of those carry an actual overall rating (CQC doesn't rate every service)
+  byRating: Partial<Record<OfstedRating, number>>; // Outstanding/Good/Requires improvement/Inadequate → count
+  asAt: string | null; // snapshot date of the CQC directory, for provenance
+  nearest: CqcLocation[]; // nearest first, a handful (rated preferred)
+}
+
 export interface BroadbandSummary {
   laName: string;
   superfast: number | null; // % premises with superfast (30+ Mbit/s)
@@ -401,6 +423,7 @@ export interface PropertyReport {
   flood: FloodSummary | null;
   planning: PlanningSummary | null; // planning applications near the point (PlanIt); null = lookup failed
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); null = lookup failed
+  cqc: CqcSummary | null; // CQC-rated health/care services near the point (committed directory); null = dataset missing
   generatedAt: string;
 }
 

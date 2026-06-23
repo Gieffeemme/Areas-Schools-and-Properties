@@ -17,7 +17,9 @@ import RankingsPanel from "./RankingsPanel";
 import {
   AddressMatch,
   AreaReport,
+  CqcSummary,
   EpcCertificate,
+  OfstedRating,
   PlanningSummary,
   PriceSale,
   PropertyReport,
@@ -28,8 +30,10 @@ import {
 import { Route } from "@/lib/routes";
 import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
 import SourceLink from "./SourceLink";
+import RatingBadge from "./RatingBadge";
 import {
   councilTaxSourceUrl,
+  cqcSourceUrl,
   epcCertificateUrl,
   epcPostcodeUrl,
   floodSourceUrl,
@@ -374,6 +378,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
 
       <PlanningCard planning={report.planning} />
 
+      <CqcCard cqc={report.cqc} />
+
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
         {report.sales.length ? (
           <>
@@ -411,7 +417,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
         Environment Agency at the postcode location; nearest stations from OpenStreetMap; planning
-        applications from PlanIt, which aggregates council registers.
+        applications from PlanIt, which aggregates council registers; health &amp; care ratings from the
+        CQC care directory (Open Government Licence).
       </p>
     </div>
   );
@@ -819,6 +826,77 @@ const EPC_BG: Record<string, string> = {
 };
 
 const gbp = (n: number) => "£" + Math.round(n).toLocaleString("en-GB");
+
+// Health & care: the nearest CQC-rated GP, dentist, care home, hospital and home-care service, plus the
+// rating mix across the radius. Mirrors PlanningCard. Data is the committed CQC directory (src/lib/cqc.ts).
+const CQC_RATING_ORDER: OfstedRating[] = ["Outstanding", "Good", "Requires improvement", "Inadequate"];
+
+function CqcCard({ cqc }: { cqc: CqcSummary | null }) {
+  if (!cqc) {
+    return (
+      <Card title="Health &amp; care nearby" subtitle="CQC ratings">
+        <p className="text-sm text-[var(--muted)]">CQC ratings data is temporarily unavailable.</p>
+      </Card>
+    );
+  }
+  if (!cqc.nearest.length) {
+    return (
+      <Card title="Health &amp; care nearby" subtitle={`Within ~${cqc.radiusMiles} miles · CQC`}>
+        <p className="text-sm text-[var(--muted)]">
+          No CQC-registered health or care services within ~{cqc.radiusMiles} miles of this postcode.
+        </p>
+        <p className="mt-3 text-[11px]">
+          <SourceLink href={cqcSourceUrl()}>CQC care directory</SourceLink>
+        </p>
+      </Card>
+    );
+  }
+  const mix = CQC_RATING_ORDER.filter((r) => cqc.byRating[r]);
+  return (
+    <Card
+      title="Health &amp; care nearby"
+      subtitle={`${cqc.total.toLocaleString("en-GB")} CQC-registered service${cqc.total === 1 ? "" : "s"} within ~${cqc.radiusMiles} miles`}
+    >
+      {mix.length > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+          {mix.map((r) => (
+            <span key={r} className="inline-flex items-center gap-1.5">
+              <RatingBadge rating={r} small />
+              <span className="text-xs font-semibold tabular-nums">{cqc.byRating[r]}</span>
+            </span>
+          ))}
+          <span className="text-[11px] text-[var(--muted)]">of {cqc.rated} rated nearby</span>
+        </div>
+      )}
+      <ul className="divide-y divide-[var(--border)]">
+        {cqc.nearest.map((l, i) => (
+          <li key={`${l.url}-${i}`} className="flex items-start justify-between gap-3 py-2.5">
+            <div className="min-w-0">
+              <p className="text-[11px] font-medium uppercase tracking-wide text-[var(--muted)]">
+                {l.category}
+              </p>
+              <p className="text-sm font-medium leading-snug">{l.name}</p>
+              <p className="mt-0.5 text-[11px] text-[var(--muted)]">
+                {l.distanceMiles} mi
+                {l.ratingDate ? ` · rated ${fmtDate(l.ratingDate)}` : " · not yet rated"}
+                {" · "}
+                <SourceLink href={l.url}>CQC record</SourceLink>
+              </p>
+            </div>
+            <RatingBadge rating={l.rating} small />
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+        The nearest <em>rated</em> GP, dentist, care home, hospital and home-care service within
+        ~{cqc.radiusMiles} miles, from the{" "}
+        <SourceLink href={cqcSourceUrl()}>CQC care directory</SourceLink>
+        {cqc.asAt ? ` (as at ${fmtMonth(cqc.asAt)})` : ""}. CQC doesn’t rate every service; ratings change
+        at inspection, so the CQC record is authoritative.
+      </p>
+    </Card>
+  );
+}
 
 function fmtDate(iso: string): string {
   const d = new Date(iso);

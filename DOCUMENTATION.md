@@ -472,7 +472,10 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (committed OSM dataset), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
 strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (a committed UK rail/metro/tram dataset from OSM via `etl:stations`, named — on the property *and* area reports), **nearby planning applications** (PlanIt — most-recent applications
-near a point, on the property + area reports), **Census 2021 demographics** ("Who lives here" — age,
+near a point, on the property + area reports), **CQC health & care ratings** (the nearest *rated* GP,
+dentist, care home, hospital and home-care service within ~3 miles plus the local rating mix, from
+CQC's Open Government Licence "care directory with filters" — a committed dataset via `etl:cqc`, on the
+property + area reports), **Census 2021 demographics** ("Who lives here" — age,
 tenure, work, education and household mix, ONS via Nomis, England & Wales), and a **complete school
 register** — special, alternative/PRU &
 independent schools (filed by GIAS under phase "Not applicable") are now admitted instead of silently
@@ -483,11 +486,15 @@ ISI-inspected, no Ofsted grade).
 feasibility-checked and queued (spike each the way Census 2021 was before it shipped — probe the API,
 confirm it's free + joins to our geography, *then* build): **planning constraints**
 (`planning.data.gov.uk` — conservation areas, listed buildings, article-4, flood zones; national OGL,
-distinct from the shipped planning *applications* via PlanIt); **CQC** health/care ratings (Ofsted-style
-grades for GPs / hospitals / care homes; free API, mirrors the schools pattern); **air quality** (Defra
+distinct from the shipped planning *applications* via PlanIt); **air quality** (Defra
 modelled background NO₂/PM2.5 on a 1 km grid, pairs with noise); and **mobile coverage** (Ofcom Connected
-Nations, reusing the broadband ETL). (**Census 2021 demographics** — the biggest of these — shipped this
-round. The last Tier-1 item, **Defra noise**, is a live `GetFeatureInfo` WMS point-query — no
+Nations, reusing the broadband ETL). (**Census 2021 demographics** and **CQC health/care ratings** shipped
+this round. CQC was *not* built on the key-gated CQC Syndication API — that API has no radius search and
+exposes ratings only in its per-location *detail* endpoint (hundreds of calls per report), so a runtime
+radius query isn't viable. Instead `etl:cqc` ships CQC's free, no-key, OGL bulk "care directory with
+filters" as committed JSON: the `HSCA_Active_Locations` sheet already carries the overall rating, rating
+date, postcode **and** coordinates in one file, so it mirrors the schools/stations committed-dataset
+pattern. The last Tier-1 item, **Defra noise**, is a live `GetFeatureInfo` WMS point-query — no
 ETL/committed data, like crime/prices/amenities.)
 
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,

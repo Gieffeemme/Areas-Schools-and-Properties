@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import {
   CouncilTaxSummary,
+  CqcSummary,
   EpcSummary,
   FloodSummary,
   LatLng,
+  OfstedRating,
   PlanningSummary,
   PriceSummary,
 } from "@/lib/types";
@@ -31,6 +33,7 @@ export default function PropertyChecks({
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
   const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
   const [planning, setPlanning] = useState<PlanningSummary | null | "loading">("loading");
+  const [cqc, setCqc] = useState<CqcSummary | null | "loading">("loading");
 
   useEffect(() => {
     let on = true;
@@ -51,6 +54,18 @@ export default function PropertyChecks({
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => on && setPlanning(d as PlanningSummary | null))
       .catch(() => on && setPlanning(null));
+    return () => {
+      on = false;
+    };
+  }, [centre.lat, centre.lng]);
+
+  useEffect(() => {
+    let on = true;
+    setCqc("loading");
+    fetch(`/api/cqc?lat=${centre.lat}&lng=${centre.lng}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => on && setCqc(d as CqcSummary | null))
+      .catch(() => on && setCqc(null));
     return () => {
       on = false;
     };
@@ -79,12 +94,13 @@ export default function PropertyChecks({
     epcCheck(epc),
     councilTaxCheck(councilTax),
     planningCheck(planning),
+    cqcCheck(cqc),
   ];
 
   return (
     <Card
       title="Property checks"
-      subtitle="Flood, energy, council tax, tenure, prices & planning for this area"
+      subtitle="Flood, energy, council tax, tenure, prices, planning & health/care for this area"
     >
       <ul className="space-y-3">
         {checks.map((c) => (
@@ -108,8 +124,9 @@ export default function PropertyChecks({
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Flood, sold prices, tenure, EPC and council tax draw on live or official open data
         (Environment Agency, HM Land Registry, MHCLG, VOA); planning applications come via PlanIt,
-        which aggregates council registers. Council-tax bands are the neighbourhood mix (the
-        surrounding LSOA), not a single address. “Soon” checks arrive with their data pipelines.
+        which aggregates council registers; health &amp; care ratings come from the CQC care directory
+        (Open Government Licence). Council-tax bands are the neighbourhood mix (the surrounding LSOA),
+        not a single address. “Soon” checks arrive with their data pipelines.
       </p>
     </Card>
   );
@@ -292,6 +309,36 @@ function planningCheck(p: PlanningSummary | null | "loading"): Check {
     status: "live",
     value: `${p.total.toLocaleString("en-GB")} on record · latest: ${latest}`,
     source: `PlanIt · ${top.status}${top.date ? ` · ${fmtShort(top.date)}` : ""}`,
+  };
+}
+
+// Compact rating tags for the one-line source string ("RI" for the long one).
+const CQC_RATING_SHORT: Partial<Record<OfstedRating, string>> = {
+  Outstanding: "Outstanding",
+  Good: "Good",
+  "Requires improvement": "RI",
+  Inadequate: "Inadequate",
+};
+const CQC_ORDER: OfstedRating[] = ["Outstanding", "Good", "Requires improvement", "Inadequate"];
+
+function cqcCheck(cqc: CqcSummary | null | "loading"): Check {
+  const label = "Health & care (CQC)";
+  const source = "CQC care directory";
+  if (cqc === "loading") return { label, status: "soon", value: "Checking…", source };
+  if (!cqc) return { label, status: "soon", value: "Temporarily unavailable", source };
+  if (!cqc.total)
+    return { label, status: "live", value: `No services within ~${cqc.radiusMiles} miles`, source };
+  const lead = cqc.nearest.find((l) => l.category === "GP practice") ?? cqc.nearest[0];
+  const mix = CQC_ORDER.filter((r) => cqc.byRating[r])
+    .map((r) => `${cqc.byRating[r]} ${CQC_RATING_SHORT[r]}`)
+    .join(" · ");
+  return {
+    label,
+    status: "live",
+    value: lead
+      ? `Nearest ${lead.category}: ${truncate(lead.name)} · ${lead.rating}`
+      : `${cqc.rated} rated within ~${cqc.radiusMiles} miles`,
+    source: `${source} · ${cqc.rated} rated within ~${cqc.radiusMiles} mi${mix ? ` · ${mix}` : ""}`,
   };
 }
 

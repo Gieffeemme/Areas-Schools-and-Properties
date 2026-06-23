@@ -41,6 +41,11 @@ export const epcPostcodeUrl = (postcode: string) =>
 // (the record's `url`); this is the PlanIt search start page for the area attribution.
 export const planningSourceUrl = () => "https://www.planit.org.uk/";
 
+// CQC: a specific location's profile page (deterministic from its Location ID), or the open-data page
+// for the area attribution. Ratings come from the committed "care directory with filters" (OGL).
+export const cqcLocationUrl = (id: string) => `https://www.cqc.org.uk/location/${enc(id)}`;
+export const cqcSourceUrl = () => "https://www.cqc.org.uk/about-us/transparency/using-cqc-data";
+
 // OpenStreetMap: a specific feature ("node/123") or a map centred on a point.
 export const osmFeatureUrl = (osm: string) => `https://www.openstreetmap.org/${osm}`;
 export const osmMapUrl = (lat: number, lng: number, zoom = 16) =>

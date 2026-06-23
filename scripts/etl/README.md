@@ -22,6 +22,7 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 | `npm run etl:workforce` | `workforce-by-urn.json` | pupil:teacher ratio, teacher FTE (EES) |
 | `npm run etl:finance` | `finance-by-urn.json` | spend/pupil, revenue reserve, in-year balance (FBIT) |
 | `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) |
+| `npm run etl:cqc` | `cqc-locations.json` | **CQC health/care ratings** (GP/dentist/care home/hospital/home-care) + coords — runtime radius lookup like amenities/stations |
 | `npm run etl:benchmarks` | `benchmarks.json` | sampled national crime & price distributions |
 
 ## Conventions & gotchas
@@ -31,6 +32,14 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 - Most performance scripts accept a **year** or a **local file** argument, e.g.
   `node scripts/etl/build-ks4.mjs 2021-2022` or `node scripts/etl/build-ks4.mjs ./england_ks4final.csv`.
 - **`etl:schools` builds Ofsted ratings, `etl:gias` builds the register.** Don't confuse them.
+- **`etl:cqc` uses the no-key bulk download, not the CQC API.** The CQC Syndication API is
+  subscription-key-gated *and* has no radius search (ratings live only in its per-location *detail*
+  endpoint — hundreds of calls per report). The free, no-key, OGL "care directory with filters"
+  (`HSCA_Active_Locations` ODS) already carries the overall rating, rating date, postcode **and**
+  coordinates in one sheet, so we ship it as committed JSON. Parsed like the council-tax ODS (`unzip
+  content.xml` + regex; our `xlsx` can't read these reliably). CQC ratings share Ofsted's scale, so
+  `normaliseRating`/`RatingBadge` are reused. The CQC profile link is deterministic:
+  `cqc.org.uk/location/{id}`.
 - **`etl:report-cards` is scraped, not bulk.** From Nov 2025 Ofsted grades early years on a new
   5-band "report card" (Exceptional → Urgent improvement) that the childcare MI CSV does **not** yet
   carry, so a re-inspected setting otherwise shows a stale old grade (e.g. URN 2821756 reads
