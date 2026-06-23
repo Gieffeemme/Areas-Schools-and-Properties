@@ -356,8 +356,9 @@ These cost real time to discover — don't re-learn them:
   dedupes multi-platform nodes) — a *connectivity* signal distinct from the amenities walkable density
   count (stations within 1 mile). Door-to-door commute *times* would need a paid routing/journey-planner
   API, so they're deliberately out of scope. On the area report transport is supplementary — kept out of
-  `errors` so a transient Overpass miss doesn't block the 6 h cache or raise the partial-data banner
-  (amenities stays the Overpass cache-gate).
+  `errors` (no partial-data banner for a nice-to-have), but a null transport still suppresses the 6 h
+  cache, so a transient Overpass miss self-heals on the next request instead of freezing "unavailable"
+  (an empty-but-non-null result — a genuinely station-less area — caches normally).
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
