@@ -23,6 +23,9 @@ export const broadbandSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/broa
 export const noiseSourceUrl = () =>
   "https://www.gov.uk/government/publications/strategic-noise-mapping-2019";
 
+// Defra modelled background pollution maps (PCM) — the 1 km NO2/PM2.5 background-concentration data.
+export const airQualitySourceUrl = () => "https://uk-air.defra.gov.uk/data/pcm-data";
+
 // Stateful Play form, no GET deep-link by location → its start page.
 export const floodSourceUrl = () => "https://check-long-term-flood-risk.service.gov.uk/postcode";
 

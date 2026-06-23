@@ -8,6 +8,7 @@ import { nearestStations } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
 import { fetchCensus } from "@/lib/census";
 import { broadbandForLaua } from "@/lib/broadband";
+import { airQualityForPoint } from "@/lib/airQuality";
 import { cacheGet, cacheSet } from "@/lib/cache";
 import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benchmark";
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
@@ -93,6 +94,13 @@ export async function GET(req: NextRequest) {
   const amenities = nearbyAmenities(centre);
 
   const broadband = broadbandForLaua(facts.lauaCode);
+  // Modelled background NO2/PM2.5 at the point — a committed-dataset lookup (Defra PCM 1 km grid), keyed
+  // by the postcode's OSGB easting/northing. GB only: the PCM grid is OSGB, and postcodes.io returns the
+  // IRISH GRID easting/northing for NI — which would otherwise alias onto an unrelated GB cell — so gate
+  // on the three GB countries, not just on having coordinates.
+  const inGB =
+    facts.country === "England" || facts.country === "Scotland" || facts.country === "Wales";
+  const airQuality = inGB ? airQualityForPoint(facts.easting, facts.northing) : null;
 
   const benchmarks: AreaBenchmarks = {
     crime: crimeBenchmark(crime?.total),
@@ -112,6 +120,7 @@ export async function GET(req: NextRequest) {
     transport,
     broadband,
     noise,
+    airQuality,
     census,
     benchmarks,
     ofstedLoaded: ofstedLoaded(),

@@ -12,6 +12,7 @@ import TransportPanel from "./TransportPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
+import AirQualityPanel from "./AirQualityPanel";
 import DemographicsPanel from "./DemographicsPanel";
 import PropertyChecks from "./PropertyChecks";
 import PropertyExplorer from "./PropertyExplorer";
@@ -298,6 +299,8 @@ function SidePanels({
   // lookup was skipped, so within England a null unambiguously means the service failed).
   const noise =
     report.facts.country === "England" ? <NoisePanel noise={report.noise} /> : null;
+  // Defra PCM air quality covers GB; report.airQuality is null outside the grid (e.g. NI) → hide.
+  const airQuality = report.airQuality ? <AirQualityPanel airQuality={report.airQuality} /> : null;
   const demographics = <DemographicsPanel census={report.census} />;
   const propertyChecks = (
     <PropertyChecks
@@ -316,6 +319,7 @@ function SidePanels({
       {transport}
       {broadband}
       {noise}
+      {airQuality}
       {demographics}
       {deprivation}
       {price}

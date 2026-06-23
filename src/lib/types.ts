@@ -259,6 +259,8 @@ export interface AreaFacts {
   lsoaCode?: string; // LSOA 2011 code (join key for IMD domains)
   lsoa21Code?: string; // LSOA 2021 code (join key for Census 2021)
   lauaCode?: string; // local authority (LAUA) ONS code (join key for broadband)
+  easting?: number; // OSGB easting (postcodes.io) — join key for the air-quality 1 km grid
+  northing?: number; // OSGB northing (postcodes.io)
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
   imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA
@@ -356,6 +358,15 @@ export interface NoiseSummary {
   year: string; // snapshot year of the Round 4 maps ("2021")
 }
 
+// Modelled annual-mean background air pollution at the searched point, from Defra's Pollution Climate
+// Mapping (PCM) 1 km background maps. Concentrations in µg/m³; null = the point is outside the GB grid
+// (e.g. Northern Ireland, which uses the Irish grid). From the committed dataset (build-air-quality.mjs).
+export interface AirQualitySummary {
+  no2: number | null; // annual-mean nitrogen dioxide (µg/m³); UK legal limit 40, WHO 2021 guideline 10
+  pm25: number | null; // annual-mean fine particulates (µg/m³); WHO 2021 guideline 5, England 2040 target 10
+  year: number; // PCM model year of the maps
+}
+
 // One 5-year age band as a share of residents (for the age sparkline).
 export interface AgeBand {
   label: string; // e.g. "30-34" or "85+"
@@ -439,6 +450,7 @@ export interface AreaReport {
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); supplementary, non-blocking
   broadband: BroadbandSummary | null;
   noise: NoiseSummary | null;
+  airQuality: AirQualitySummary | null; // modelled background NO2/PM2.5 at the point (Defra PCM); GB only
   census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present

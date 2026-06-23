@@ -57,6 +57,8 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           lsoaCode,
           lsoa21Code: r.codes?.lsoa21,
           lauaCode: r.codes?.admin_district,
+          easting: typeof r.eastings === "number" ? r.eastings : undefined,
+          northing: typeof r.northings === "number" ? r.northings : undefined,
           imdRank,
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
@@ -172,6 +174,8 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
         parliamentary_constituency?: string;
         lsoa?: string;
         codes?: { lsoa?: string; lsoa21?: string; admin_district?: string };
+        eastings?: number;
+        northings?: number;
         index_of_multiple_deprivation?: number;
       }
     | null = null;
@@ -209,6 +213,8 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       lsoaCode,
       lsoa21Code: r.codes?.lsoa21,
       lauaCode: r.codes?.admin_district,
+      easting: typeof r.eastings === "number" ? r.eastings : undefined,
+      northing: typeof r.northings === "number" ? r.northings : undefined,
       imdRank,
       imdDecile,
       imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,

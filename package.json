@@ -26,7 +26,8 @@
     "etl:council-tax-cost": "node scripts/etl/build-council-tax-cost.mjs",
     "etl:stations": "node scripts/etl/build-stations.mjs",
     "etl:amenities": "node scripts/etl/build-amenities.mjs",
-    "etl:cqc": "node scripts/etl/build-cqc.mjs"
+    "etl:cqc": "node scripts/etl/build-cqc.mjs",
+    "etl:air-quality": "node scripts/etl/build-air-quality.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

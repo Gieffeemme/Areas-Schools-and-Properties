@@ -23,6 +23,7 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 | `npm run etl:finance` | `finance-by-urn.json` | spend/pupil, revenue reserve, in-year balance (FBIT) |
 | `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) |
 | `npm run etl:cqc` | `cqc-locations.json` | **CQC health/care ratings** (GP/dentist/care home/hospital/home-care) + coords — runtime radius lookup like amenities/stations |
+| `npm run etl:air-quality` | `air-quality-by-grid.json` | **Defra PCM** modelled background **NO₂ + PM2.5** per 1 km cell (GB) — keyed by OS grid cell for the air-quality panel |
 | `npm run etl:benchmarks` | `benchmarks.json` | sampled national crime & price distributions |
 
 ## Conventions & gotchas
@@ -40,6 +41,13 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
   content.xml` + regex; our `xlsx` can't read these reliably). CQC ratings share Ofsted's scale, so
   `normaliseRating`/`RatingBadge` are reused. The CQC profile link is deterministic:
   `cqc.org.uk/location/{id}`.
+- **`etl:air-quality` is no-key OGL, but the join is GB-only.** Defra PCM background maps are one
+  national CSV per pollutant (`uk-air.defra.gov.uk/datastore/pcm/mapno2<yr>.csv`,
+  `mappm25<yr>g.csv` — note the trailing `g` on PM2.5). x/y are OSGB easting/northing of the 1 km cell
+  **centre**; the data is keyed by `"floor(x/1000)_floor(y/1000)"`. The point's easting/northing comes
+  from postcodes.io (now surfaced by `geocode.ts`). **Gotcha:** postcodes.io returns **Irish-grid**
+  coords for NI, which alias onto a GB cell, so `/api/area` only does the lookup for England/Scotland/
+  Wales (PCM is OSGB-only). Pairs with the noise panel.
 - **`etl:report-cards` is scraped, not bulk.** From Nov 2025 Ofsted grades early years on a new
   5-band "report card" (Exceptional → Urgent improvement) that the childcare MI CSV does **not** yet
   carry, so a re-inspected setting otherwise shows a stale old grade (e.g. URN 2821756 reads
