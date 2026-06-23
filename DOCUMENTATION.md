@@ -413,8 +413,11 @@ These cost real time to discover — don't re-learn them:
   "TS" tables on the **Nomis API** (`nomisweb.co.uk/api/v01/dataset/{id}.data.json?geography={gss}&measures=20100,20301`,
   no key; 20100 = count, 20301 = percent). The vintage trap is handled for free: **postcodes.io returns
   `codes.lsoa21` natively** (alongside the 2011 `codes.lsoa` used for IMD), so a postcode maps straight onto
-  the 2021 census LSOA — no 2011→2021 lookup. Gotcha that cost a debug cycle: `obs[].measures.value` is a
-  **number**, not a string — compare numerically (`=== 20301`, not `"20301"`). `fetchCensus()`
+  the 2021 census LSOA — no 2011→2021 lookup. Two type gotchas, each cost a debug cycle: (1)
+  `obs[].measures.value` is a **number**, not a string — compare numerically (`=== 20301`, not `"20301"`);
+  (2) `obs[].obs_value.value` is a **mix of strings and numbers** (Nomis serialises some smaller values as
+  strings), so coerce with `Number()` — a strict `typeof === "number"` silently drops those bands and
+  wrecks the median (Manchester centre read 15 instead of 29). `fetchCensus()`
   (`src/lib/census.ts`) is a runtime fetch (cached 30 d; Census 2021 is static), partial-tolerant
   (`Promise.allSettled` per table), **England & Wales only** (E01/W01 LSOAs; Scotland = NRS, NI = NISRA are
   separate). Could move to a committed ETL later (the amenities/stations trajectory) if per-report Nomis
