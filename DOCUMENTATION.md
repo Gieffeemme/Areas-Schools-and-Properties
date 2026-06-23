@@ -69,6 +69,7 @@ PostcodeSearch / school-name search (client)
        │    ├─ fetchCrime()         police.uk     → totals, categories, vs-benchmark
        │    ├─ fetchPrices()        HM Land Registry → sales, averages, by-year
        │    ├─ fetchAmenities()     OSM / Overpass → counts + nearest by category (~1 mi)
+       │    ├─ fetchTransport()     OSM / Overpass → nearest rail/metro/tram stations (named, 5 mi)
        │    └─ fetchNoise()         Defra WMS GetFeatureInfo → road+rail Lden/Lnight dB at the point
        └─ broadbandForLaua()        broadband-by-laua.json (sync fs read) → Ofcom LA coverage
   └─ AreaReport JSON → <Dashboard/> renders map + panels + detail drawer
@@ -90,7 +91,7 @@ PostcodeSearch / school-name search (client)
   `GET /api/address-search?postcode=` lists the specific addresses (EPC register merged with VOA
   council-tax dwellings, so homes with no EPC still appear);
   picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` + `fetchAddressSales`
-  (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus
+  (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood` + `fetchTransport` (OSM nearest stations), plus
   geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated). The search box accepts
   a **postcode or a full address** — a postcode is extracted from anywhere in the input (and the leading
   street pre-filters the address list); input with no postcode shows guidance, since the free address
@@ -173,7 +174,7 @@ src/
     map/page.tsx          → <MapExplorer/>          (Mapbox explorer with overlay layers)
     layout.tsx, globals.css
     api/
-      area/route.ts            geocode + schools + crime + prices + amenities + broadband → AreaReport (cached 6h)
+      area/route.ts            geocode + schools + crime + prices + amenities + transport + broadband → AreaReport (cached 6h)
       schools/route.ts         fetchSchoolsByIds() — full School objects by id (school compare)
       school-search/route.ts   searchSchools() autocomplete
       place-search/route.ts    searchPlaces() autocomplete (town/city/borough, postcodes.io Places)
@@ -182,14 +183,14 @@ src/
       flood/route.ts           EA flood-risk lookup
       epc/route.ts             fetchEpc() — domestic EPC bands for a postcode (MHCLG; server-side token)
       address-search/route.ts  addresses at a postcode — EPC register (fetchAddresses) MERGED with VOA council-tax dwellings (fetchVoaAddresses), so homes with no EPC still appear (best-effort)
-      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood)
+      property/route.ts        per-property report for ONE address (EPC band + VOA band + LR sale history + flood + nearest stations)
   lib/   (one concern each)
     geocode.ts      postcode → centre + AreaFacts (IMD overall + domains); searchPlaces() (place suggestions) + geocodePoint() (place → facts via reverse-geocode)
     schools.ts      fetchSchools() / fetchSchoolsByIds() (GIAS+nurseries, URN-enriched; runtime fs reads), searchSchools()
     reportCard.ts   new-framework EY report-card model + gradeDisplay()/gradeRank() (prefer report card over legacy grade)
     imd.ts  imdDomainsForLsoa()   ·  amenities.ts  fetchAmenities() (Overpass)   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
-    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()
+    crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  transport.ts  fetchTransport() (OSM nearest rail/metro/tram stations)
     epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (property picker)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
@@ -205,7 +206,7 @@ src/
     SchoolCard.tsx       list card (pills: Ofsted, P8, GCSE%, Parent View; pupils in meta)
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
-    DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · BroadbandPanel · RankingsPanel  (area panels)
+    DeprivationPanel · CrimePanel · PricePanel · AmenitiesPanel · TransportPanel · BroadbandPanel · RankingsPanel  (area panels)
     PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
     PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars; in the area route's Area panels) · RouteSelector · PostcodeSearch
@@ -237,13 +238,14 @@ map remounts and re-fits when any of those change.
   **Parent View**. Nurseries deep-link to the live Ofsted page.
 - **Area panels:** **Area rankings** (national-percentile summary), **Deprivation (IMD 2019)**
   7-domain breakdown, Crime (vs national percentile), **Amenities** (OSM/Overpass — shops, transport,
-  GPs, parks…), **Broadband** (Ofcom coverage), **Noise** (Defra road & rail, England — Lden/Lnight
+  GPs, parks…), **Transport** (the nearest rail/metro/tram station, named — OSM), **Broadband** (Ofcom
+  coverage), **Noise** (Defra road & rail, England — Lden/Lnight
   at the point), Property prices, Property checks (EA flood + tenure + EPC energy ratings + **council-tax
   band** — the VOA band mix for the surrounding neighbourhood/LSOA, not a single address).
 - **Check a property (per-address report):** the "Check a property" route asks for a **postcode**, lists the
   **specific addresses** at it (EPC register), and on pick returns **that property's** report - EPC band,
   **council-tax band + the actual £/yr** (VOA band + MHCLG all-in cost, with the neighbourhood mix bar), its **sold-price history + tenure** (HM
-  Land Registry), and **flood** - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
+  Land Registry), **flood**, and the **nearest train/tram/metro stations** (OpenStreetMap, named + distance) - via `PropertyExplorer` + `/api/property`. An opt-in **"See the
   neighbourhood"** toggle (collapsed by default) fetches the area report for the postcode and shows the
   area panels (schools, crime, deprivation, amenities, broadband, noise, prices) inline.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
@@ -349,7 +351,13 @@ These cost real time to discover — don't re-learn them:
   LSOA-typical fallback; sold-price history filters the postcode's LR sales by PAON (numbered houses match
   cleanly, flats are approximate); flood uses the postcode centroid (no exact per-building point without OS
   Places). `/api/property` reads the committed LSOA JSON via geocode, so it's listed in
-  `outputFileTracingIncludes`.
+  `outputFileTracingIncludes`. **Transport** (on both the property and area reports) is the nearest
+  rail/metro/tram station from OSM/Overpass (`fetchTransport`: straight-line, named, 5-mile look-out,
+  dedupes multi-platform nodes) — a *connectivity* signal distinct from the amenities walkable density
+  count (stations within 1 mile). Door-to-door commute *times* would need a paid routing/journey-planner
+  API, so they're deliberately out of scope. On the area report transport is supplementary — kept out of
+  `errors` so a transient Overpass miss doesn't block the 6 h cache or raise the partial-data banner
+  (amenities stays the Overpass cache-gate).
 
 For agents working in this repo: the Bash cwd can drift back to a sibling project, so run ETLs /
 `tsc` from the repo root (prefix `cd`) or by absolute path; verify deploys with `curl` (the
@@ -395,7 +403,7 @@ layers, crime vs benchmark, sold-price trends, EA flood, Map/List, search-by-nam
 **runtime-load build cleanup** (datasets read at runtime; in-build type-check re-enabled),
 **compare areas *or* schools**, and Tier-1 area layers: **amenities/POIs** (Overpass), **broadband**
 (Ofcom), **area rankings**, **crime-category filter** on the map, and **environmental noise** (Defra
-strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), and a **complete school register** — special, alternative/PRU &
+strategic noise mapping, Round 4), a **council-tax band mix** (VOA stock-of-properties, by LSOA), **nearest-station transport** (OSM nearest rail/metro/tram, named — on the property *and* area reports), and a **complete school register** — special, alternative/PRU &
 independent schools (filed by GIAS under phase "Not applicable") are now admitted instead of silently
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).
@@ -408,7 +416,8 @@ ETL and no committed data, like crime/prices/amenities.)
 **Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
 **feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
 **per-school subjects** (DfE subject data is national-only, not bulk-published per school);
-**11+ oversubscription** (published LA-by-LA, messy).
+**11+ oversubscription** (published LA-by-LA, messy); **door-to-door commute times** (the nearest
+*station* is shipped free via OSM, but routed journey times need a paid routing/journey-planner API).
 
 **Follow-up — non-England nations.** Each needs its **own register, inspectorate and
 performance/deprivation data**, and there is **no Ofsted-style single grade** outside England, so none

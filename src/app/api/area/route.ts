@@ -4,6 +4,7 @@ import { fetchSchools, ofstedLoaded } from "@/lib/schools";
 import { fetchCrime } from "@/lib/crime";
 import { fetchPrices } from "@/lib/prices";
 import { fetchAmenities } from "@/lib/amenities";
+import { fetchTransport } from "@/lib/transport";
 import { fetchNoise } from "@/lib/noise";
 import { broadbandForLaua } from "@/lib/broadband";
 import { cacheGet, cacheSet } from "@/lib/cache";
@@ -53,12 +54,13 @@ export async function GET(req: NextRequest) {
   // Defra strategic noise is England-only; skip the lookup elsewhere (geocoding is UK-wide) so we
   // neither show a false "quiet" nor a spurious error for Scotland/Wales/NI.
   const wantNoise = facts.country === "England";
-  const [schoolsR, crimeR, pricesR, amenitiesR, noiseR] = await Promise.allSettled([
+  const [schoolsR, crimeR, pricesR, amenitiesR, noiseR, transportR] = await Promise.allSettled([
     fetchSchools(centre, radiusMiles),
     fetchCrime(centre),
     fetchPrices(facts.postcode),
     fetchAmenities(centre),
     wantNoise ? fetchNoise(centre) : Promise.resolve(null),
+    fetchTransport(centre),
   ]);
 
   const errors: SourceError[] = [];
@@ -83,6 +85,11 @@ export async function GET(req: NextRequest) {
   if (wantNoise && noiseR.status === "rejected")
     errors.push({ source: "noise", message: reason(noiseR) });
 
+  // Transport (OSM nearest stations) is supplementary and hits the same flaky Overpass as amenities;
+  // keep it OUT of `errors` so a transient miss neither raises the partial banner nor blocks caching
+  // (amenities stays the Overpass cache-gate — if Overpass is truly down, that already blocks caching).
+  const transport = transportR.status === "fulfilled" ? transportR.value : null;
+
   const broadband = broadbandForLaua(facts.lauaCode);
 
   const benchmarks: AreaBenchmarks = {
@@ -100,6 +107,7 @@ export async function GET(req: NextRequest) {
     crime,
     prices,
     amenities,
+    transport,
     broadband,
     noise,
     benchmarks,

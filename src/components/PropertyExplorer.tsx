@@ -13,7 +13,15 @@ import AmenitiesPanel from "./AmenitiesPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
 import RankingsPanel from "./RankingsPanel";
-import { AddressMatch, AreaReport, PriceSale, PropertyReport, School } from "@/lib/types";
+import {
+  AddressMatch,
+  AreaReport,
+  PriceSale,
+  PropertyReport,
+  School,
+  TransportStation,
+  TransportSummary,
+} from "@/lib/types";
 import { Route, routeDef } from "@/lib/routes";
 import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
 
@@ -332,6 +340,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         </Stat>
       </div>
 
+      <TransportCard transport={report.transport} />
+
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
         {report.sales.length ? (
           <>
@@ -355,7 +365,7 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <p className="text-[11px] leading-relaxed text-[var(--muted)]">
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
-        Environment Agency at the postcode location.
+        Environment Agency at the postcode location; nearest stations from OpenStreetMap.
       </p>
     </div>
   );
@@ -435,6 +445,60 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
     </div>
   );
 }
+
+// Nearest rail/metro/tram stations (OpenStreetMap). A connectivity signal — the named nearest
+// station(s), not the walkable amenity count in "See the neighbourhood". Distances are straight-line.
+function TransportCard({ transport }: { transport: TransportSummary | null }) {
+  if (!transport) {
+    return (
+      <Card title="Transport" subtitle="Nearest stations · OpenStreetMap">
+        <p className="text-sm text-[var(--muted)]">
+          Transport data (OpenStreetMap) is temporarily unavailable.
+        </p>
+      </Card>
+    );
+  }
+  if (!transport.stations.length) {
+    return (
+      <Card title="Transport" subtitle="Nearest stations · OpenStreetMap">
+        <p className="text-sm text-[var(--muted)]">
+          No train, tram or metro station within {transport.searchRadiusMiles} miles.
+        </p>
+      </Card>
+    );
+  }
+  return (
+    <Card title="Transport" subtitle="Nearest stations · OpenStreetMap">
+      <ul className="divide-y divide-[var(--border)]">
+        {transport.stations.map((s) => (
+          <li key={`${s.kind}-${s.name}`} className="flex items-center justify-between gap-3 py-2">
+            <span className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-sm font-medium">{s.name}</span>
+              <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
+                {STATION_KIND[s.kind]}
+              </span>
+            </span>
+            <span className="shrink-0 text-sm font-semibold tabular-nums">
+              {fmtMiles(s.distanceMiles)} mi
+            </span>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+        Straight-line distance from the postcode to the nearest stations (OpenStreetMap) — not walking
+        time.
+      </p>
+    </Card>
+  );
+}
+
+const STATION_KIND: Record<TransportStation["kind"], string> = {
+  rail: "Train",
+  metro: "Underground / Metro",
+  light_rail: "Light rail",
+  tram: "Tram",
+};
+const fmtMiles = (m: number) => (m < 0.1 ? "<0.1" : m.toFixed(1));
 
 function SaleRow({ sale }: { sale: PriceSale }) {
   return (

@@ -268,6 +268,23 @@ export interface AmenitySummary {
   categories: AmenityCategory[];
 }
 
+// Nearest public-transport station to a point, from OpenStreetMap (Overpass). A *connectivity* signal
+// — the named nearest rail/metro/tram station however far — distinct from the amenities walkable
+// density count (stations within 1 mile). Distances are straight-line, not routed (no commute times:
+// that needs a paid routing API).
+export interface TransportStation {
+  name: string;
+  kind: "rail" | "metro" | "light_rail" | "tram"; // classified from OSM tags
+  distanceMiles: number; // straight-line from the point
+  lat: number;
+  lng: number;
+}
+
+export interface TransportSummary {
+  stations: TransportStation[]; // nearest first, up to a few
+  searchRadiusMiles: number; // how far we looked (a station may simply be beyond it)
+}
+
 export interface BroadbandSummary {
   laName: string;
   superfast: number | null; // % premises with superfast (30+ Mbit/s)
@@ -310,6 +327,7 @@ export interface PropertyReport {
   sales: PriceSale[]; // this address's sale history, newest first
   tenure: "freehold" | "leasehold" | null; // from the most recent sale that records it
   flood: FloodSummary | null;
+  transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); null = lookup failed
   generatedAt: string;
 }
 
@@ -322,6 +340,7 @@ export interface AreaReport {
   crime: CrimeSummary | null;
   prices: PriceSummary | null;
   amenities: AmenitySummary | null;
+  transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); supplementary, non-blocking
   broadband: BroadbandSummary | null;
   noise: NoiseSummary | null;
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)

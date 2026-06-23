@@ -8,6 +8,7 @@ import CrimePanel from "./CrimePanel";
 import PricePanel from "./PricePanel";
 import DeprivationPanel from "./DeprivationPanel";
 import AmenitiesPanel from "./AmenitiesPanel";
+import TransportPanel from "./TransportPanel";
 import RankingsPanel from "./RankingsPanel";
 import BroadbandPanel from "./BroadbandPanel";
 import NoisePanel from "./NoisePanel";
@@ -290,6 +291,7 @@ function SidePanels({
   const price = <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />;
   const deprivation = <DeprivationPanel facts={report.facts} />;
   const amenities = <AmenitiesPanel amenities={report.amenities} />;
+  const transport = <TransportPanel transport={report.transport} />;
   const rankings = <RankingsPanel report={report} />;
   const broadband = <BroadbandPanel broadband={report.broadband} />;
   // Defra noise is England-only; hide the panel elsewhere (report.noise is null there because the
@@ -310,6 +312,7 @@ function SidePanels({
       {rankings}
       {crime}
       {amenities}
+      {transport}
       {broadband}
       {noise}
       {deprivation}
