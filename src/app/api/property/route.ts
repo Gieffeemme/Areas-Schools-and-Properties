@@ -4,6 +4,7 @@ import { fetchEpcByUprn, fetchFullCertificate } from "@/lib/epc";
 import { fetchAddressSales } from "@/lib/prices";
 import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
+import { fetchPlanning } from "@/lib/planning";
 import { nearestStations } from "@/lib/transport";
 import { councilTaxCostForLaua } from "@/lib/councilTax";
 import { PropertyReport } from "@/lib/types";
@@ -34,17 +35,19 @@ export async function GET(req: NextRequest) {
   }
   const { centre, facts } = geo;
 
-  const [epcR, salesR, voaR, floodR] = await Promise.allSettled([
+  const [epcR, salesR, voaR, floodR, planningR] = await Promise.allSettled([
     fetchEpcByUprn(uprn),
     fetchAddressSales(postcode, line1),
     fetchCouncilTaxBand(postcode, line1),
     fetchFlood(centre),
+    fetchPlanning(centre),
   ]);
 
   const epc = epcR.status === "fulfilled" ? epcR.value : null;
   const sales = salesR.status === "fulfilled" ? salesR.value : [];
   const voa = voaR.status === "fulfilled" ? voaR.value : null;
   const flood = floodR.status === "fulfilled" ? floodR.value : null;
+  const planning = planningR.status === "fulfilled" ? planningR.value : null;
   // Nearest stations: a committed-dataset lookup (no network) - see src/lib/transport.ts.
   const transport = nearestStations(centre);
 
@@ -76,6 +79,7 @@ export async function GET(req: NextRequest) {
     sales,
     tenure,
     flood,
+    planning,
     transport,
     generatedAt: new Date().toISOString(),
   };

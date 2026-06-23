@@ -21,6 +21,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },
   { name: "Flood risk & warnings", provider: "Environment Agency", licence: "OGL v3.0" },
   { name: "Energy performance certificates (EPC)", provider: "MHCLG - Get energy performance of buildings data", licence: "EPB reuse terms" },
+  { name: "Planning applications", provider: "PlanIt (aggregates UK local-authority planning registers)", licence: "Third-party - see note" },
   { name: "Amenities, stations & base map data", provider: "OpenStreetMap contributors", licence: "ODbL (data) · tiles © CARTO / © Mapbox" },
   { name: "Postcode & place geocoding", provider: "postcodes.io (ONS / OS Open Names / Royal Mail)", licence: "OGL v3.0" },
 ];
@@ -55,6 +56,13 @@ export default function SourcesPage() {
             </tbody>
           </table>
         </div>
+        <p className="mt-3 text-xs leading-relaxed text-[var(--muted)]">
+          Planning application data is provided by{" "}
+          <ExtLink href="https://www.planit.org.uk/">PlanIt</ExtLink>, a third-party service that
+          aggregates UK local-authority planning registers (there is no official national planning-
+          application API). Each application links to the council&rsquo;s own record, which is the
+          authoritative source for its status and detail.
+        </p>
       </Section>
 
       <Section title="Attribution">

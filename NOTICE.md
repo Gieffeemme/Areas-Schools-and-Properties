@@ -22,6 +22,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Environmental noise (strategic noise mapping) | Defra | OGL v3.0 |
 | Flood risk & warnings | Environment Agency | OGL v3.0 |
 | Energy performance certificates (EPC) | MHCLG (Get energy performance of buildings data) | EPB reuse terms |
+| Planning applications | PlanIt (aggregates UK local-authority planning registers) | Third-party aggregator (see note) |
 | Amenities, stations & base maps | OpenStreetMap contributors | **ODbL** (data); tiles © CARTO / © Mapbox |
 | Postcode & place geocoding | postcodes.io (ONS / OS Open Names / Royal Mail) | OGL v3.0 |
 
@@ -36,6 +37,14 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 - Contains OS data © Crown copyright and database right 2026; Royal Mail data © Royal Mail copyright and
   database right 2026; National Statistics data © Crown copyright and database right 2026 (via postcodes.io).
 - Energy performance certificate data is used under the Energy Performance of Buildings reuse terms.
+
+## Planning data (PlanIt)
+
+Planning application data is provided by **PlanIt** (<https://www.planit.org.uk>), a third-party service
+that aggregates UK local-authority planning registers. There is no official national planning-application
+API, so this data is **not** Crown-copyright open data licensed under the OGL; it is sourced from PlanIt's
+aggregation of the underlying public council registers. Each application in the app links to the council's
+own record, which is the authoritative source for its status and detail.
 
 ## ODbL note for committed datasets
 

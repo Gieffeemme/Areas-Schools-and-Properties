@@ -1,7 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { CouncilTaxSummary, EpcSummary, FloodSummary, LatLng, PriceSummary } from "@/lib/types";
+import {
+  CouncilTaxSummary,
+  EpcSummary,
+  FloodSummary,
+  LatLng,
+  PlanningSummary,
+  PriceSummary,
+} from "@/lib/types";
 import Card from "./Card";
 
 // A row: `value` is the actual finding (shown prominently); `source` is the attribution (fine print).
@@ -23,6 +30,7 @@ export default function PropertyChecks({
 }) {
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
   const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
+  const [planning, setPlanning] = useState<PlanningSummary | null | "loading">("loading");
 
   useEffect(() => {
     let on = true;
@@ -31,6 +39,18 @@ export default function PropertyChecks({
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => on && setFlood(d as FloodSummary | null))
       .catch(() => on && setFlood(null));
+    return () => {
+      on = false;
+    };
+  }, [centre.lat, centre.lng]);
+
+  useEffect(() => {
+    let on = true;
+    setPlanning("loading");
+    fetch(`/api/planning?lat=${centre.lat}&lng=${centre.lng}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => on && setPlanning(d as PlanningSummary | null))
+      .catch(() => on && setPlanning(null));
     return () => {
       on = false;
     };
@@ -58,11 +78,14 @@ export default function PropertyChecks({
     tenureCheck(prices),
     epcCheck(epc),
     councilTaxCheck(councilTax),
-    { label: "Planning applications nearby", status: "soon", source: "Local authority" },
+    planningCheck(planning),
   ];
 
   return (
-    <Card title="Property checks" subtitle="Flood, energy, council tax, tenure & prices for this area">
+    <Card
+      title="Property checks"
+      subtitle="Flood, energy, council tax, tenure, prices & planning for this area"
+    >
       <ul className="space-y-3">
         {checks.map((c) => (
           <li key={c.label} className="flex items-start justify-between gap-3">
@@ -88,9 +111,9 @@ export default function PropertyChecks({
       </ul>
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
         Flood, sold prices, tenure, EPC and council tax draw on live or official open data
-        (Environment Agency, HM Land Registry, MHCLG, VOA). Council-tax bands are the neighbourhood
-        mix (the surrounding LSOA), not a single address. “Soon” checks arrive with their data
-        pipelines.
+        (Environment Agency, HM Land Registry, MHCLG, VOA); planning applications come via PlanIt,
+        which aggregates council registers. Council-tax bands are the neighbourhood mix (the
+        surrounding LSOA), not a single address. “Soon” checks arrive with their data pipelines.
       </p>
     </Card>
   );
@@ -249,6 +272,40 @@ function floodCheck(flood: FloodSummary | null | "loading"): Check {
   return { label: "Flood risk", status: "live", value: `${where}${name}${active}`, source: "Environment Agency" };
 }
 
+function planningCheck(p: PlanningSummary | null | "loading"): Check {
+  if (p === "loading")
+    return { label: "Planning applications nearby", status: "soon", value: "Checking…", source: "PlanIt" };
+  if (!p)
+    return {
+      label: "Planning applications nearby",
+      status: "soon",
+      value: "Temporarily unavailable",
+      source: "PlanIt",
+    };
+  if (!p.recent.length)
+    return {
+      label: "Planning applications nearby",
+      status: "live",
+      value: `None on record within ~${p.radiusKm} km`,
+      source: "PlanIt · council planning registers",
+    };
+  const top = p.recent[0];
+  const latest = truncate(top.description || top.address || top.reference);
+  return {
+    label: "Planning applications nearby",
+    status: "live",
+    value: `${p.total.toLocaleString("en-GB")} on record · latest: ${latest}`,
+    source: `PlanIt · ${top.status}${top.date ? ` · ${fmtShort(top.date)}` : ""}`,
+  };
+}
+
 function truncate(s: string): string {
   return s.length > 52 ? `${s.slice(0, 51)}…` : s;
+}
+
+function fmtShort(iso: string): string {
+  const d = new Date(iso);
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }

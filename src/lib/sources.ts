@@ -33,6 +33,11 @@ export const epcCertificateUrl = (lmk: string) =>
 export const epcPostcodeUrl = (postcode: string) =>
   `https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode=${enc(postcode)}`;
 
+// PlanIt - a third-party aggregator of UK local-authority planning registers (no official national
+// planning-application API exists). Per-application records deep-link to the council's own register
+// (the record's `url`); this is the PlanIt search start page for the area attribution.
+export const planningSourceUrl = () => "https://www.planit.org.uk/";
+
 // OpenStreetMap: a specific feature ("node/123") or a map centred on a point.
 export const osmFeatureUrl = (osm: string) => `https://www.openstreetmap.org/${osm}`;
 export const osmMapUrl = (lat: number, lng: number, zoom = 16) =>

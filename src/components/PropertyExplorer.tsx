@@ -17,6 +17,7 @@ import {
   AddressMatch,
   AreaReport,
   EpcCertificate,
+  PlanningSummary,
   PriceSale,
   PropertyReport,
   School,
@@ -32,6 +33,7 @@ import {
   epcPostcodeUrl,
   floodSourceUrl,
   osmFeatureUrl,
+  planningSourceUrl,
   priceSourceUrl,
 } from "@/lib/sources";
 
@@ -371,6 +373,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
 
       <TransportCard transport={report.transport} />
 
+      <PlanningCard planning={report.planning} />
+
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
         {report.sales.length ? (
           <>
@@ -407,7 +411,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <p className="text-[11px] leading-relaxed text-[var(--muted)]">
         EPC band from the MHCLG register; council-tax band from the VOA (exact where matched, otherwise
         the neighbourhood’s typical band); sold prices and tenure from HM Land Registry; flood from the
-        Environment Agency at the postcode location; nearest stations from OpenStreetMap.
+        Environment Agency at the postcode location; nearest stations from OpenStreetMap; planning
+        applications from PlanIt, which aggregates council registers.
       </p>
     </div>
   );
@@ -552,6 +557,79 @@ const STATION_KIND: Record<TransportStation["kind"], string> = {
   tram: "Tram",
 };
 const fmtMiles = (m: number) => (m < 0.1 ? "<0.1" : m.toFixed(1));
+
+// Planning applications near the property, via PlanIt (an aggregator of UK council planning registers).
+// The most-recently-submitted few within ~0.5 km; each links to the council's own record, which is
+// authoritative for status and detail.
+function PlanningCard({ planning }: { planning: PlanningSummary | null }) {
+  if (!planning) {
+    return (
+      <Card title="Planning applications nearby" subtitle="Within ~0.5 km · PlanIt">
+        <p className="text-sm text-[var(--muted)]">Planning data (PlanIt) is temporarily unavailable.</p>
+      </Card>
+    );
+  }
+  if (!planning.recent.length) {
+    return (
+      <Card title="Planning applications nearby" subtitle="Within ~0.5 km · PlanIt">
+        <p className="text-sm text-[var(--muted)]">
+          No planning applications on record within ~{planning.radiusKm} km of this postcode.
+        </p>
+        <p className="mt-3 text-[11px]">
+          <SourceLink href={planningSourceUrl()}>Search planning records (PlanIt)</SourceLink>
+        </p>
+      </Card>
+    );
+  }
+  return (
+    <Card
+      title="Planning applications nearby"
+      subtitle={`${planning.total.toLocaleString("en-GB")} on record within ~${planning.radiusKm} km · PlanIt`}
+    >
+      <ul className="divide-y divide-[var(--border)]">
+        {planning.recent.map((a, i) => (
+          <li key={`${a.reference}-${i}`} className="py-2.5">
+            <div className="flex items-start justify-between gap-3">
+              <p className="min-w-0 text-sm font-medium leading-snug">{a.address || a.reference}</p>
+              <span
+                className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${planningStatusClass(a.status)}`}
+              >
+                {a.status}
+              </span>
+            </div>
+            {a.description && (
+              <p className="mt-0.5 text-xs leading-snug text-[var(--muted)]">{clip(a.description, 150)}</p>
+            )}
+            <p className="mt-1 text-[11px] text-[var(--muted)]">
+              {[a.date ? fmtDate(a.date) : null, a.type || null, `${a.distanceKm.toFixed(2)} km`]
+                .filter(Boolean)
+                .join(" · ")}
+              {" · "}
+              {a.url ? <SourceLink href={a.url}>Council record</SourceLink> : <span>{a.authority}</span>}
+            </p>
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+        Most-recently-submitted applications within ~{planning.radiusKm} km, via{" "}
+        <SourceLink href={planningSourceUrl()}>PlanIt</SourceLink> (it aggregates council registers).
+        Status and dates are as last scraped - the council record is authoritative.
+      </p>
+    </Card>
+  );
+}
+
+// Colour the status chip by outcome: granted = green, refused = red, withdrawn = grey, otherwise
+// (undecided / pending / conditions / unknown) amber.
+function planningStatusClass(status: string): string {
+  const s = status.toLowerCase();
+  if (/(permit|approv|grant)/.test(s)) return "bg-emerald-100 text-emerald-700";
+  if (/(refus|reject|dismiss)/.test(s)) return "bg-red-100 text-red-700";
+  if (/withdraw/.test(s)) return "bg-slate-100 text-slate-600";
+  return "bg-amber-100 text-amber-800";
+}
+
+const clip = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1).trimEnd() + "…" : s);
 
 // The full EPC certificate (floor area, heating, fabric, current/potential rating) - shown when the
 // property has a certificate. Reuses the EPC band colours + Band chip from the EPC stat above.

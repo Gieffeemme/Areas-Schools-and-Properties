@@ -155,6 +155,29 @@ export interface FloodSummary {
   topSeverity?: string; // most severe active warning, e.g. "Flood alert"
 }
 
+// One planning application near a point, from PlanIt (a third-party aggregator of UK local-authority
+// planning registers - no official national API exists). Status/dates are as PlanIt last scraped them.
+export interface PlanningApplication {
+  reference: string; // council application reference, e.g. "26/03919/FULL"
+  address: string; // site address
+  description: string; // what's proposed
+  status: string; // PlanIt app_state: Permitted / Undecided / Refused / Withdrawn / Conditions / ...
+  type: string; // PlanIt app_type: Full / Outline / Advertising / ...
+  date: string; // application/validated date (ISO), used to sort most-recent-first
+  decidedDate?: string; // decision date, when decided
+  authority: string; // the local planning authority (PlanIt area_name)
+  distanceKm: number; // straight-line from the query point
+  url: string; // deep link to the official council record (falls back to the PlanIt page)
+}
+
+// Planning applications near a point, from PlanIt. `total` is the all-time count PlanIt holds for the
+// area around the point; `recent` is the most-recently-submitted few.
+export interface PlanningSummary {
+  total: number;
+  radiusKm: number;
+  recent: PlanningApplication[];
+}
+
 // Domestic EPC summary for a postcode (MHCLG "Get energy performance of buildings data").
 export interface EpcSummary {
   postcode: string;
@@ -351,6 +374,7 @@ export interface PropertyReport {
   sales: PriceSale[]; // this address's sale history, newest first
   tenure: "freehold" | "leasehold" | null; // from the most recent sale that records it
   flood: FloodSummary | null;
+  planning: PlanningSummary | null; // planning applications near the point (PlanIt); null = lookup failed
   transport: TransportSummary | null; // nearest rail/metro/tram stations (OSM); null = lookup failed
   generatedAt: string;
 }
