@@ -83,6 +83,7 @@ async function main() {
     byKey.set(key, {
       name,
       kind,
+      osm: `${e.type}/${e.id}`, // OpenStreetMap feature ref, for a "view source" link
       lat: Math.round(lat * 1e5) / 1e5,
       lng: Math.round(lon * 1e5) / 1e5,
     });

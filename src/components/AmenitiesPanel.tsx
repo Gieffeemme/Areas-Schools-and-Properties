@@ -1,6 +1,14 @@
-import { AmenitySummary } from "@/lib/types";
+import { AmenitySummary, LatLng } from "@/lib/types";
+import { osmMapUrl } from "@/lib/sources";
+import SourceLink from "./SourceLink";
 
-export default function AmenitiesPanel({ amenities }: { amenities: AmenitySummary | null }) {
+export default function AmenitiesPanel({
+  amenities,
+  centre,
+}: {
+  amenities: AmenitySummary | null;
+  centre?: LatLng;
+}) {
   if (!amenities) {
     return (
       <section className="rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
@@ -36,8 +44,14 @@ export default function AmenitiesPanel({ amenities }: { amenities: AmenitySummar
         </dl>
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Source: OpenStreetMap (Overpass). Count of each amenity within ~{amenities.radiusMiles} mile;
-        “mi” is the distance to the nearest one.
+        Source:{" "}
+        {centre ? (
+          <SourceLink href={osmMapUrl(centre.lat, centre.lng)}>OpenStreetMap</SourceLink>
+        ) : (
+          "OpenStreetMap"
+        )}
+        . Count of each amenity within ~{amenities.radiusMiles} mile; “mi” is the distance to the
+        nearest one.
       </p>
     </section>
   );

@@ -117,7 +117,9 @@ export async function fetchAddresses(postcode: string): Promise<AddressMatch[]> 
 
 // The current EPC band + lodgement date for one dwelling, by UPRN. Keeps the latest certificate.
 // Returns null with no key, no match, or on failure.
-export async function fetchEpcByUprn(uprn: string): Promise<{ band: string | null; date?: string } | null> {
+export async function fetchEpcByUprn(
+  uprn: string,
+): Promise<{ band: string | null; date?: string; lmk?: string } | null> {
   const token = process.env.EPC_API_KEY;
   if (!token || !uprn.trim()) return null;
   const ctrl = new AbortController();
@@ -135,7 +137,11 @@ export async function fetchEpcByUprn(uprn: string): Promise<{ band: string | nul
     if (!rows.length) return null;
     const latest = rows.reduce((a, b) => ((b.registrationDate ?? "") > (a.registrationDate ?? "") ? b : a));
     const b = (latest.currentEnergyEfficiencyBand ?? "").toUpperCase();
-    return { band: /^[A-G]$/.test(b) ? b : null, date: latest.registrationDate };
+    return {
+      band: /^[A-G]$/.test(b) ? b : null,
+      date: latest.registrationDate,
+      lmk: latest.certificateNumber,
+    };
   } finally {
     clearTimeout(timer);
   }

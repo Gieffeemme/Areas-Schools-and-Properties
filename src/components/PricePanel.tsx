@@ -1,6 +1,8 @@
 import { MetricBenchmark, PriceSummary } from "@/lib/types";
 import { gbp } from "@/lib/format";
+import { priceSourceUrl } from "@/lib/sources";
 import Card from "./Card";
+import SourceLink from "./SourceLink";
 
 export default function PricePanel({
   prices,
@@ -21,7 +23,7 @@ export default function PricePanel({
     return (
       <Card title="Property prices" subtitle={prices.area}>
         <p className="text-sm text-[var(--muted)]">No recorded Land Registry sales near this postcode yet.</p>
-        <Source />
+        <Source postcode={prices.postcode} />
       </Card>
     );
   }
@@ -80,7 +82,7 @@ export default function PricePanel({
         ))}
       </ul>
 
-      <Source benchmark={benchmark} scope={prices.scope} />
+      <Source benchmark={benchmark} scope={prices.scope} postcode={prices.postcode} />
     </Card>
   );
 }
@@ -88,13 +90,15 @@ export default function PricePanel({
 function Source({
   benchmark,
   scope = "postcode",
+  postcode,
 }: {
   benchmark?: MetricBenchmark | null;
   scope?: "postcode" | "sector";
+  postcode?: string;
 }) {
   return (
     <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-      Source: HM Land Registry Price Paid - recorded sales for{" "}
+      Source: <SourceLink href={priceSourceUrl(postcode)}>HM Land Registry Price Paid</SourceLink> - recorded sales for{" "}
       {scope === "sector" ? "the surrounding postcode sector" : "this exact postcode"}.
       {benchmark
         ? ` Percentile is local-authority average vs a sample of ${benchmark.sampleSize} English authorities.`

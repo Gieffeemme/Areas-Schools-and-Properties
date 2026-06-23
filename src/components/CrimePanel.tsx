@@ -1,5 +1,7 @@
 import { CrimeSummary, MetricBenchmark } from "@/lib/types";
 import { monthLabel, num } from "@/lib/format";
+import { crimeSourceUrl } from "@/lib/sources";
+import SourceLink from "./SourceLink";
 
 const WRAP = "rounded-2xl bg-[var(--crime)] p-4 text-white shadow-sm";
 
@@ -80,7 +82,7 @@ export default function CrimePanel({
       </div>
 
       <p className="mt-3 text-[11px] leading-relaxed text-white/40">
-        Source: police.uk street-level crime (latest month).{" "}
+        Source: <SourceLink href={crimeSourceUrl()} dark>police.uk</SourceLink> street-level crime (latest month).{" "}
         {benchmark
           ? `Percentile vs a sample of ${benchmark.sampleSize} English areas.`
           : "“Avg” ≈ a typical UK populated area (~120/mo)."}

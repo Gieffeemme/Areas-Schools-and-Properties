@@ -279,6 +279,7 @@ export interface TransportStation {
   distanceMiles: number; // straight-line from the point
   lat: number;
   lng: number;
+  osm?: string; // OpenStreetMap feature ref ("node/123") for a "view source" link
 }
 
 export interface TransportSummary {
@@ -318,7 +319,7 @@ export interface PropertyReport {
   uprn: string;
   centre: LatLng; // postcode-centroid coordinates (no exact per-building point without OS Places)
   facts: AreaFacts; // the LSOA/area context around it
-  epc: { band: string | null; date?: string } | null; // current energy band (EPC register)
+  epc: { band: string | null; date?: string; lmk?: string } | null; // current energy band + certificate (EPC register)
   councilTax: {
     band: string | null;
     source: "voa" | "lsoa-typical"; // exact band (VOA) vs the neighbourhood's typical band (LSOA)

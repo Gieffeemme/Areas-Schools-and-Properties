@@ -1,4 +1,6 @@
 import { BroadbandSummary } from "@/lib/types";
+import { broadbandSourceUrl } from "@/lib/sources";
+import SourceLink from "./SourceLink";
 
 export default function BroadbandPanel({ broadband }: { broadband: BroadbandSummary | null }) {
   if (!broadband) return null; // no LA match (e.g. an outcode-only search) - hide the panel
@@ -40,7 +42,8 @@ export default function BroadbandPanel({ broadband }: { broadband: BroadbandSumm
         </p>
       )}
       <p className="mt-2 text-[11px] leading-relaxed text-[var(--muted)]">
-        Source: Ofcom Connected Nations 2024 - % of premises across {titleCase(broadband.laName)}.
+        Source: Ofcom Connected Nations 2024 - % of premises across {titleCase(broadband.laName)}.{" "}
+        <SourceLink href={broadbandSourceUrl()}>Check a postcode</SourceLink>
       </p>
     </section>
   );

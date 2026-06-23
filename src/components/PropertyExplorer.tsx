@@ -24,6 +24,15 @@ import {
 } from "@/lib/types";
 import { Route, routeDef } from "@/lib/routes";
 import { DEFAULT_FILTERS, SchoolFilters } from "@/lib/schoolFilters";
+import SourceLink from "./SourceLink";
+import {
+  councilTaxSourceUrl,
+  epcCertificateUrl,
+  epcPostcodeUrl,
+  floodSourceUrl,
+  osmFeatureUrl,
+  priceSourceUrl,
+} from "@/lib/sources";
 
 type AddrState = AddressMatch[] | "loading" | "no-postcode" | null;
 type ReportState = PropertyReport | "loading" | null;
@@ -286,7 +295,18 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
       <div className="grid gap-3 sm:grid-cols-2">
         <Stat label="EPC / energy rating">
           {report.epc?.band ? (
-            <EpcScale band={report.epc.band} date={report.epc.date} />
+            <>
+              <EpcScale band={report.epc.band} date={report.epc.date} />
+              <p className="mt-1.5 text-[11px]">
+                <SourceLink
+                  href={
+                    report.epc.lmk ? epcCertificateUrl(report.epc.lmk) : epcPostcodeUrl(report.postcode)
+                  }
+                >
+                  {report.epc.lmk ? "View full certificate" : "Find on the EPC register"}
+                </SourceLink>
+              </p>
+            </>
           ) : (
             <p className="text-sm text-[var(--muted)]">No EPC lodged for this property.</p>
           )}
@@ -310,6 +330,9 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
               {ct.neighbourhood?.total ? (
                 <CtaxBar bands={ct.neighbourhood.bands} total={ct.neighbourhood.total} />
               ) : null}
+              <p className="mt-1.5 text-[11px]">
+                <SourceLink href={councilTaxSourceUrl()}>Check the band (VOA)</SourceLink>
+              </p>
             </>
           ) : (
             <p className="text-sm text-[var(--muted)]">Band unavailable.</p>
@@ -337,6 +360,9 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
               </span>
             )}
           </p>
+          <p className="mt-1.5 text-[11px]">
+            <SourceLink href={floodSourceUrl()}>Check flood risk (EA)</SourceLink>
+          </p>
         </Stat>
       </div>
 
@@ -358,6 +384,9 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
             sold before records began).
           </p>
         )}
+        <p className="mt-3 text-[11px] text-[var(--muted)]">
+          Source: <SourceLink href={priceSourceUrl(report.postcode)}>HM Land Registry Price Paid</SourceLink>
+        </p>
       </Card>
 
       <NeighbourhoodToggle postcode={report.postcode} />
@@ -473,7 +502,18 @@ function TransportCard({ transport }: { transport: TransportSummary | null }) {
         {transport.stations.map((s) => (
           <li key={`${s.kind}-${s.name}`} className="flex items-center justify-between gap-3 py-2">
             <span className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-sm font-medium">{s.name}</span>
+              {s.osm ? (
+                <a
+                  href={osmFeatureUrl(s.osm)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="truncate text-sm font-medium text-[var(--primary)] underline underline-offset-2 hover:no-underline"
+                >
+                  {s.name}
+                </a>
+              ) : (
+                <span className="truncate text-sm font-medium">{s.name}</span>
+              )}
               <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-medium text-slate-600">
                 {STATION_KIND[s.kind]}
               </span>

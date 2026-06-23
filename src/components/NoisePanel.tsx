@@ -1,4 +1,6 @@
 import { NoiseSource, NoiseSummary } from "@/lib/types";
+import { noiseSourceUrl } from "@/lib/sources";
+import SourceLink from "./SourceLink";
 
 // Display bands for the modelled dB level. Breakpoints follow the standard END noise-map legend
 // (55/65/75 for Lden, 50/60/70 for Lnight). A null metric is below the mapping threshold (40 dB Lden
@@ -55,7 +57,7 @@ export default function NoisePanel({ noise }: { noise: NoiseSummary | null }) {
         </div>
       )}
       <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
-        Source: Defra strategic noise mapping (Round 4, {noise.year}). Modelled level at the searched
+        Source: <SourceLink href={noiseSourceUrl()}>Defra strategic noise mapping</SourceLink> (Round 4, {noise.year}). Modelled level at the searched
         point - Lden is the day–evening–night average, Lnight the night-time level. Areas quieter than
         40 dB (35 dB at night) aren’t mapped.
       </p>

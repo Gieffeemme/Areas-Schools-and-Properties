@@ -17,6 +17,7 @@ interface Station {
   kind: TransportStation["kind"];
   lat: number;
   lng: number;
+  osm?: string;
 }
 
 let cached: Station[] | null | undefined;
@@ -49,6 +50,7 @@ export function nearestStations(centre: LatLng): TransportSummary | null {
         distanceMiles: Math.round(d * 100) / 100,
         lat: s.lat,
         lng: s.lng,
+        osm: s.osm,
       });
     }
   }

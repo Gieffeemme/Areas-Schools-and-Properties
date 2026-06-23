@@ -1,4 +1,6 @@
 import { AreaFacts, ImdDomains } from "@/lib/types";
+import { imdSourceUrl } from "@/lib/sources";
+import SourceLink from "./SourceLink";
 
 const DOMAINS: { key: keyof ImdDomains; label: string }[] = [
   { key: "income", label: "Income" },
@@ -56,6 +58,9 @@ export default function DeprivationPanel({ facts }: { facts: AreaFacts }) {
           );
         })}
       </ul>
+      <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+        Source: <SourceLink href={imdSourceUrl()}>MHCLG English Indices of Deprivation 2019</SourceLink>.
+      </p>
     </section>
   );
 }
