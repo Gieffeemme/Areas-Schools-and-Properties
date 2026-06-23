@@ -312,6 +312,27 @@ export interface NoiseSummary {
 
 // A report for ONE specific property (the property route): per-address facts from EPC, VOA and
 // HM Land Registry + the Environment Agency, plus the LSOA/area context it sits in.
+// Full domestic EPC certificate details (MHCLG /api/certificate?certificate_number=), beyond the band.
+export interface EpcCertificate {
+  currentBand: string | null;
+  currentScore: number | null; // SAP energy rating 0-100 (current)
+  potentialBand: string | null;
+  potentialScore: number | null; // SAP rating with recommended improvements
+  floorAreaSqm: number | null;
+  dwellingType: string | null; // e.g. "End-terrace house"
+  habitableRooms: number | null;
+  mainHeating: string | null;
+  secondaryHeating: string | null;
+  hotWater: string | null;
+  walls: string | null;
+  roof: string | null;
+  floor: string | null;
+  windows: string | null;
+  lowEnergyLightingPct: number | null;
+  co2Current: number | null; // tonnes CO2 per year (current)
+  inspectionDate: string | null;
+}
+
 export interface PropertyReport {
   address: string; // full single-line address
   line1: string; // leading line, e.g. "42 Oxney Road"
@@ -320,6 +341,7 @@ export interface PropertyReport {
   centre: LatLng; // postcode-centroid coordinates (no exact per-building point without OS Places)
   facts: AreaFacts; // the LSOA/area context around it
   epc: { band: string | null; date?: string; lmk?: string } | null; // current energy band + certificate (EPC register)
+  epcDetails: EpcCertificate | null; // full certificate: floor area, heating, fabric, current/potential rating
   councilTax: {
     band: string | null;
     source: "voa" | "lsoa-typical"; // exact band (VOA) vs the neighbourhood's typical band (LSOA)

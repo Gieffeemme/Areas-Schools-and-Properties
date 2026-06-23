@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { geocodePostcode } from "@/lib/geocode";
-import { fetchEpcByUprn } from "@/lib/epc";
+import { fetchEpcByUprn, fetchFullCertificate } from "@/lib/epc";
 import { fetchAddressSales } from "@/lib/prices";
 import { fetchCouncilTaxBand } from "@/lib/voa";
 import { fetchFlood } from "@/lib/flood";
@@ -48,6 +48,10 @@ export async function GET(req: NextRequest) {
   // Nearest stations: a committed-dataset lookup (no network) - see src/lib/transport.ts.
   const transport = nearestStations(centre);
 
+  // Full EPC certificate (floor area, heating, fabric, current/potential rating) by the LMK from the
+  // band lookup above. Same token as the search; fails gracefully to null.
+  const epcDetails = epc?.lmk ? await fetchFullCertificate(epc.lmk).catch(() => null) : null;
+
   const ctBand = voa ? voa.band : (facts.councilTax?.typicalBand ?? null);
   const ctCosts = councilTaxCostForLaua(facts.lauaCode);
   const councilTax: PropertyReport["councilTax"] = {
@@ -67,6 +71,7 @@ export async function GET(req: NextRequest) {
     centre,
     facts,
     epc,
+    epcDetails,
     councilTax,
     sales,
     tenure,

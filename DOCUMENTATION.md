@@ -91,7 +91,7 @@ PostcodeSearch / school-name search (client)
 - **Property route (address-led):** the "Check a property" route is its own flow (`PropertyExplorer`):
   `GET /api/address-search?postcode=` lists the specific addresses (EPC register merged with VOA
   council-tax dwellings, so homes with no EPC still appear);
-  picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` + `fetchAddressSales`
+  picking one calls `GET /api/property?postcode=&uprn=&line1=` → `fetchEpcByUprn` (band) + `fetchFullCertificate` (full cert by LMK) + `fetchAddressSales`
   (HM Land Registry, this address) + `fetchCouncilTaxBand` (VOA exact, best-effort) + `fetchFlood`, plus `nearestStations` (committed dataset) and
   geocode facts → a `PropertyReport`. Not cached (single-address, user-initiated). The search box accepts
   a **postcode or a full address** — a postcode is extracted from anywhere in the input (and the leading
@@ -197,7 +197,7 @@ src/
     imd.ts  imdDomainsForLsoa()   ·  broadband.ts  broadbandForLaua()
     councilTax.ts councilTaxForLsoa()  (VOA band mix for the LSOA; runtime fs read like imd.ts)
     crime.ts        fetchCrime()  ·  prices.ts  fetchPrices()/fetchAddressSales()  ·  flood.ts  fetchFlood()  ·  transport.ts  nearestStations() (nearest rail/metro/tram from committed stations.json) + stationsData()  ·  amenities.ts  nearbyAmenities() (counts from committed amenities.json + stations.json)
-    epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (property picker)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
+    epc.ts  fetchEpc() (postcode summary) + fetchAddresses() / fetchEpcByUprn() (band) + fetchFullCertificate() (full cert by LMK)  ·  voa.ts  fetchCouncilTaxBand() (exact band, one address) + fetchVoaAddresses() (postcode dwelling list for the picker) — both best-effort scrapes sharing voaResultsHtml()
     benchmark.ts    crime/price national-percentile helpers   ·  cache.ts  optional Upstash
     phase.ts        phase filter (PhaseFilter, matchesPhase, phaseTabs)
     schoolFilters.ts SchoolFilters model + applyFilters() (phase/gender/faith/grammar/Ofsted)
@@ -365,9 +365,12 @@ These cost real time to discover — don't re-learn them:
 - **Per-property report: what's free vs not.** A true type-the-address autocomplete needs PAF/AddressBase,
   which is **paid** (OS Places is *excluded* from OS Data Hub's free credits — 60-day/2,000-call trial only),
   so the property route is **postcode → pick the exact address**, sourced free from the **EPC register**
-  (`fetchAddresses`; covers only certificated dwellings). EPC's **full certificate** (floor area, heating,
-  potential rating) is a **separate "Domestic Certificates API"** the Search-API key doesn't carry (its
-  `/certificate/{lmk}` routes 404), so per-property EPC is **band + lodgement date** only for now. The exact
+  (`fetchAddresses`; covers only certificated dwellings). EPC's **full certificate** (floor area, rooms,
+  heating, fabric, current/potential rating) **IS available with the same Search-API bearer token** - the
+  endpoint is a **query param** `GET /api/certificate?certificate_number={LMK}`, NOT the old path-style
+  `/api/domestic/certificate/{lmk}` (which 404s; that wrong path made us wrongly conclude a separate
+  API/token was needed). `fetchFullCertificate(lmk)` returns it and `/api/property` renders an **Energy
+  certificate** block. (Improvement *recommendations* sit at a separate endpoint, still TBC.) The exact
   council-tax band is the **VOA scrape matched by building number** (best-effort, 429-prone) with an
   LSOA-typical fallback; sold-price history filters the postcode's LR sales by PAON (numbered houses match
   cleanly, flats are approximate); flood uses the postcode centroid (no exact per-building point without OS

@@ -16,6 +16,7 @@ import RankingsPanel from "./RankingsPanel";
 import {
   AddressMatch,
   AreaReport,
+  EpcCertificate,
   PriceSale,
   PropertyReport,
   School,
@@ -366,6 +367,8 @@ function PropertyReportView({ report }: { report: PropertyReport }) {
         </Stat>
       </div>
 
+      {report.epcDetails && <EnergyCertificateCard d={report.epcDetails} />}
+
       <TransportCard transport={report.transport} />
 
       <Card title="Sold price history" subtitle="HM Land Registry · this address">
@@ -549,6 +552,65 @@ const STATION_KIND: Record<TransportStation["kind"], string> = {
   tram: "Tram",
 };
 const fmtMiles = (m: number) => (m < 0.1 ? "<0.1" : m.toFixed(1));
+
+// The full EPC certificate (floor area, heating, fabric, current/potential rating) - shown when the
+// property has a certificate. Reuses the EPC band colours + Band chip from the EPC stat above.
+function EnergyCertificateCard({ d }: { d: EpcCertificate }) {
+  const rows = (
+    [
+      ["Floor area", d.floorAreaSqm != null ? `${d.floorAreaSqm} m²` : null],
+      ["Property type", d.dwellingType ? titleCase(d.dwellingType) : null],
+      ["Habitable rooms", d.habitableRooms != null ? String(d.habitableRooms) : null],
+      ["Main heating", d.mainHeating],
+      ["Hot water", d.hotWater],
+      ["Windows", d.windows],
+      ["Walls", d.walls],
+      ["Roof", d.roof],
+      ["Floor", d.floor],
+      ["Low-energy lighting", d.lowEnergyLightingPct != null ? `${d.lowEnergyLightingPct}%` : null],
+      ["CO₂ emissions", d.co2Current != null ? `${d.co2Current} t/yr` : null],
+    ] as [string, string | null][]
+  ).filter((r): r is [string, string] => r[1] != null);
+
+  const hasRating = !!(d.currentBand || d.potentialBand);
+  if (!rows.length && !hasRating) return null;
+
+  return (
+    <Card title="Energy certificate" subtitle="MHCLG EPC · full certificate">
+      {hasRating && (
+        <div className="mb-3 flex items-center gap-2">
+          {d.currentBand && (
+            <Band
+              letter={d.currentBand}
+              bg={EPC_BG[d.currentBand] ?? "#94a3b8"}
+              fg={EPC_FG[d.currentBand] ?? "#fff"}
+            />
+          )}
+          <div className="min-w-0 text-sm">
+            <p className="font-semibold leading-tight">
+              Current {d.currentBand ?? "-"}
+              {d.currentScore != null ? ` (${d.currentScore})` : ""}
+              {d.potentialBand
+                ? ` · potential ${d.potentialBand}${d.potentialScore != null ? ` (${d.potentialScore})` : ""}`
+                : ""}
+            </p>
+            <p className="text-[11px] leading-tight text-[var(--muted)]">
+              Score 0-100; potential = with recommended improvements
+            </p>
+          </div>
+        </div>
+      )}
+      <dl className="grid gap-x-4 gap-y-2 sm:grid-cols-2">
+        {rows.map(([k, v]) => (
+          <div key={k} className="flex flex-col">
+            <dt className="text-[11px] text-[var(--muted)]">{k}</dt>
+            <dd className="text-sm font-medium leading-snug">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Card>
+  );
+}
 
 function SaleRow({ sale }: { sale: PriceSale }) {
   return (
