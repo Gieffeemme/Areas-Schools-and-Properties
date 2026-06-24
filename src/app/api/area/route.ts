@@ -18,6 +18,10 @@ import { crimeBenchmark, priceBenchmark, benchmarkGeneratedAt } from "@/lib/benc
 import { AreaBenchmarks, AreaReport, SourceError } from "@/lib/types";
 
 const CACHE_TTL_SECONDS = 6 * 60 * 60;
+// Namespace the cache by deploy so a new release never serves an AreaReport frozen by an older build
+// (which would be missing newly-added panels until its 6h TTL expired). Vercel exposes the commit SHA
+// at runtime; "dev" locally. Old entries are simply never read again and expire on their own.
+const BUILD = (process.env.VERCEL_GIT_COMMIT_SHA ?? "dev").slice(0, 8);
 
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
@@ -38,8 +42,8 @@ export async function GET(req: NextRequest) {
   }
 
   const cacheKey = isPlace
-    ? `area:@${Number(lat).toFixed(4)},${Number(lng).toFixed(4)}|${radiusMiles}`
-    : `area:${postcode!.trim().toLowerCase()}|${radiusMiles}`;
+    ? `area:${BUILD}:@${Number(lat).toFixed(4)},${Number(lng).toFixed(4)}|${radiusMiles}`
+    : `area:${BUILD}:${postcode!.trim().toLowerCase()}|${radiusMiles}`;
   const cached = await cacheGet<AreaReport>(cacheKey);
   if (cached) return NextResponse.json(cached);
 
