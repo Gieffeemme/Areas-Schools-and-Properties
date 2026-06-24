@@ -292,7 +292,13 @@ function SidePanels({
     />
   );
   const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;
-  const price = <PricePanel prices={report.prices} benchmark={report.benchmarks.price} />;
+  const price = (
+    <PricePanel
+      prices={report.prices}
+      benchmark={report.benchmarks.price}
+      affordability={report.affordability}
+    />
+  );
   const deprivation = <DeprivationPanel facts={report.facts} />;
   const amenities = <AmenitiesPanel amenities={report.amenities} centre={report.centre} />;
   const transport = <TransportPanel transport={report.transport} />;

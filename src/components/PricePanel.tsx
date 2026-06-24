@@ -1,15 +1,17 @@
-import { MetricBenchmark, PriceSummary } from "@/lib/types";
+import { AffordabilitySummary, MetricBenchmark, PriceSummary } from "@/lib/types";
 import { gbp } from "@/lib/format";
-import { priceSourceUrl } from "@/lib/sources";
+import { affordabilitySourceUrl, priceSourceUrl } from "@/lib/sources";
 import Card from "./Card";
 import SourceLink from "./SourceLink";
 
 export default function PricePanel({
   prices,
   benchmark,
+  affordability,
 }: {
   prices: PriceSummary | null;
   benchmark?: MetricBenchmark | null;
+  affordability?: AffordabilitySummary | null;
 }) {
   if (!prices) {
     return (
@@ -48,6 +50,16 @@ export default function PricePanel({
       {benchmark && (
         <p className="mt-2 text-xs">
           This local authority is pricier than <strong>{benchmark.percentile}%</strong> of England.
+        </p>
+      )}
+
+      {affordability && (
+        <p className="mt-2 text-xs">
+          Median home ≈ <strong>{affordability.ratio}× local earnings</strong>{" "}
+          <span className="text-[var(--muted)]">
+            (vs {affordability.median}× England &amp; Wales median ·{" "}
+            <SourceLink href={affordabilitySourceUrl()}>ONS {affordability.year}</SourceLink>)
+          </span>
         </p>
       )}
 

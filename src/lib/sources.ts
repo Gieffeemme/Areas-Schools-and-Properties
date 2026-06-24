@@ -22,6 +22,10 @@ export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 export const incomeSourceUrl = () =>
   "https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/earningsandworkinghours/datasets/smallareaincomeestimatesformiddlelayersuperoutputareasenglandandwales";
 
+// ONS "Ratio of house price to workplace-based earnings" (housing affordability by local authority).
+export const affordabilitySourceUrl = () =>
+  "https://www.ons.gov.uk/peoplepopulationandcommunity/housing/datasets/ratioofhousepricetoworkplacebasedearningslowerquartileandmedian";
+
 export const broadbandSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/broadband-coverage";
 
 export const mobileSourceUrl = () => "https://checker.ofcom.org.uk/en-gb/mobile-coverage";

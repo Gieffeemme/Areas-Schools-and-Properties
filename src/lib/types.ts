@@ -233,6 +233,14 @@ export interface IncomeSummary {
   year: string; // financial-year-ending of the estimate
 }
 
+// House-price-to-earnings affordability ratio for the local authority (ONS): median house price ÷
+// median gross annual workplace-based earnings. Higher = less affordable. With the E&W median for context.
+export interface AffordabilitySummary {
+  ratio: number; // the LA's median affordability ratio
+  median: number; // England & Wales median ratio
+  year: string; // year of the estimate
+}
+
 export interface CrimeCategoryCount {
   category: string;
   count: number;
@@ -531,6 +539,7 @@ export interface AreaReport {
   bathingWater: BathingWaterSummary | null; // nearest designated bathing water (EA); null unless within ~10 mi
   census: CensusSummary | null; // Census 2021 demographics for the LSOA (ONS/Nomis); England & Wales only
   income: IncomeSummary | null; // model-based net household income for the MSOA (ONS); England & Wales
+  affordability: AffordabilitySummary | null; // house-price-to-earnings ratio for the LA (ONS); England & Wales
   benchmarks: AreaBenchmarks; // national percentile context (from etl:benchmarks)
   ofstedLoaded: boolean; // whether the Ofsted enrichment dataset is present
   errors: SourceError[]; // per-source failures (honest partial results)

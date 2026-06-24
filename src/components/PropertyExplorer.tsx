@@ -502,7 +502,11 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
               <BathingWaterPanel water={area.bathingWater} />
               <DemographicsPanel census={area.census} income={area.income} />
               <DeprivationPanel facts={area.facts} />
-              <PricePanel prices={area.prices} benchmark={area.benchmarks.price} />
+              <PricePanel
+                prices={area.prices}
+                benchmark={area.benchmarks.price}
+                affordability={area.affordability}
+              />
             </>
           )}
         </div>

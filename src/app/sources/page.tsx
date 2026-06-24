@@ -18,6 +18,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Deprivation (Indices of Deprivation 2019)", provider: "MHCLG", licence: "OGL v3.0" },
   { name: "Census 2021 demographics", provider: "Office for National Statistics (via Nomis)", licence: "OGL v3.0" },
   { name: "Small-area household income estimates", provider: "Office for National Statistics", licence: "OGL v3.0" },
+  { name: "Housing affordability (price-to-earnings ratio)", provider: "Office for National Statistics", licence: "OGL v3.0" },
   { name: "Council-tax bands (stock of properties) & levels", provider: "Valuation Office Agency / MHCLG", licence: "OGL v3.0" },
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Mobile coverage (Connected Nations, 4G / 5G)", provider: "Ofcom", licence: "OGL v3.0" },
