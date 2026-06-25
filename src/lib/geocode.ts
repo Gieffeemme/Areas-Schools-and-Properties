@@ -1,5 +1,6 @@
 import { AreaFacts, CouncilTaxSummary, LatLng, PlaceMatch } from "./types";
 import { imdDomainsForLsoa } from "./imd";
+import { wimdForLsoa } from "./wimd";
 import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
 
 // The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) - so the area
@@ -64,6 +65,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           imdRank,
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
+          wimd: wimdForLsoa(lsoaCode) ?? null,
           councilTax: councilTaxFacts(lsoaCode, r.codes?.admin_district),
         },
       };
@@ -222,6 +224,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       imdRank,
       imdDecile,
       imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
+      wimd: wimdForLsoa(lsoaCode) ?? null,
       councilTax: councilTaxForLsoa(lsoaCode) ?? null,
     },
   };

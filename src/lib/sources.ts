@@ -15,6 +15,9 @@ export const crimeSourceUrl = () => "https://www.police.uk/";
 export const imdSourceUrl = () =>
   "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019";
 
+// Welsh Government — Welsh Index of Multiple Deprivation (WIMD) 2025, the Wales equivalent of the IMD.
+export const wimdSourceUrl = () => "https://www.gov.wales/welsh-index-multiple-deprivation-2025";
+
 // ONS Census 2021 - the interactive area maps where the same neighbourhood figures can be explored.
 export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 

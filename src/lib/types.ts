@@ -294,6 +294,26 @@ export interface ImdDomains {
   living: number | null; // Living Environment
 }
 
+// Welsh Index of Multiple Deprivation 2025 — eight domains, per-LSOA deciles (1 = most deprived 10%
+// of Wales' 1,917 LSOAs, 10 = least). Wales' domain set differs from England's IMD.
+export interface WimdDomains {
+  income: number | null;
+  employment: number | null;
+  health: number | null;
+  education: number | null;
+  access: number | null; // Access to Services
+  housing: number | null;
+  community: number | null; // Community Safety
+  physical: number | null; // Physical Environment
+}
+
+export interface WimdSummary {
+  rank: number; // overall WIMD 2025 rank, 1 = most deprived
+  decile: number; // overall decile within Wales, 1 = most deprived 10%
+  count: number; // total Welsh LSOAs ranked (1,917) — denominator for the rank
+  domains: WimdDomains;
+}
+
 export interface AreaFacts {
   postcode: string;
   label?: string; // human place name for a town/city/area search (shown instead of the postcode)
@@ -311,7 +331,8 @@ export interface AreaFacts {
   northing?: number; // OSGB northing (postcodes.io)
   imdRank?: number | null; // England rank; 1 = most deprived
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
-  imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA
+  imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA (England)
+  wimd?: WimdSummary | null; // Welsh Index of Multiple Deprivation 2025 (Wales) — overall + 8 domains
   councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 
