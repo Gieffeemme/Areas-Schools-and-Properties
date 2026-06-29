@@ -28,11 +28,15 @@ export default function SchoolCard({
   onToggleShortlist?: () => void;
 }) {
   const grade = gradeDisplay(s.reportCard, s.ofsted);
+  // Welsh schools have no Ofsted grade (Estyn inspects, with no single judgement) - show a neutral
+  // "Wales" tag, never "Not rated", and surface Welsh-medium teaching.
+  const welsh = s.nation === "Wales";
+  const langTag = s.language === "Welsh medium" || s.language === "Dual language" ? s.language : null;
   // Independent schools are ISI-inspected (not Ofsted), so we hold no Ofsted grade - show
   // "Independent" rather than a misleading "Not rated". Special/alternative get a neutral type tag.
-  const indie = s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
+  const indie = !welsh && s.kind === "independent" && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   // Inspected since Sept 2024 with sub-judgements but no single overall grade - don't show "Not rated".
-  const noOverall = !s.reportCard && !indie && !!s.ofstedNoOverall;
+  const noOverall = !welsh && !s.reportCard && !indie && !!s.ofstedNoOverall;
   const kindTag = s.kind && s.kind !== "independent" ? KIND_LABEL[s.kind] : null;
   const year = s.reportCard?.inspectionDate
     ? Number(s.reportCard.inspectionDate.slice(0, 4))
@@ -40,9 +44,10 @@ export default function SchoolCard({
       ? Number(s.ofstedDate.slice(0, 4))
       : null;
   const stale = !s.reportCard && year != null && new Date().getFullYear() - year > 4;
-  // Schools link to DfE compare-school-performance; nurseries (no DfE URN) to their Ofsted report.
+  // Schools link to DfE compare-school-performance; nurseries (no DfE URN) to their Ofsted report;
+  // Welsh schools to My Local School.
   const nameHref = s.urn ? dfePerformanceUrl(s.urn) : s.ofstedReport;
-  const nameTitle = s.urn ? "DfE - compare school performance" : "Ofsted report";
+  const nameTitle = s.urn ? "DfE - compare school performance" : welsh ? "My Local School (Wales)" : "Ofsted report";
 
   return (
     <div
@@ -113,23 +118,32 @@ export default function SchoolCard({
 
       <div className="mt-2 flex flex-wrap items-center gap-1.5">
         <Pill
-          color={indie || noOverall ? KIND_NEUTRAL : grade.colour}
+          color={welsh || indie || noOverall ? KIND_NEUTRAL : grade.colour}
           title={
-            indie
-              ? "Independent - inspected by ISI, not Ofsted"
-              : noOverall
-                ? "Inspected since Sept 2024 - Ofsted no longer gives a single overall grade; see the detail"
-                : `Ofsted: ${grade.label}`
+            welsh
+              ? "Welsh school - inspected by Estyn (no single grade); see My Local School"
+              : indie
+                ? "Independent - inspected by ISI, not Ofsted"
+                : noOverall
+                  ? "Inspected since Sept 2024 - Ofsted no longer gives a single overall grade; see the detail"
+                  : `Ofsted: ${grade.label}`
           }
         >
-          {indie
-            ? "Independent"
-            : noOverall
-              ? "No overall"
-              : grade.isReportCard
-                ? grade.label
-                : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
+          {welsh
+            ? "Wales"
+            : indie
+              ? "Independent"
+              : noOverall
+                ? "No overall"
+                : grade.isReportCard
+                  ? grade.label
+                  : OFSTED_SHORT[s.ofsted] ?? s.ofsted}
         </Pill>
+        {langTag && (
+          <Pill color="#0d9488" title={`${langTag} school`}>
+            {langTag}
+          </Pill>
+        )}
         {kindTag && (
           <Pill
             color={KIND_NEUTRAL}

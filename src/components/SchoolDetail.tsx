@@ -74,8 +74,11 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
   const rc = s.reportCard ?? null;
   const grade = gradeDisplay(rc, s.ofsted);
+  // Welsh schools aren't in the Ofsted/DfE data (Estyn inspects, with no single grade) - replace the
+  // Ofsted section with a Wales one linking to My Local School.
+  const welsh = s.nation === "Wales";
   // Independent schools are ISI-inspected, not Ofsted - show that honestly instead of "Not rated".
-  const indie = s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
+  const indie = !welsh && s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   // Inspected since Sept 2024 with sub-judgements but no single overall grade.
   const noOverall = !rc && !indie && !!s.ofstedNoOverall;
   const year = rc?.inspectionDate
@@ -105,7 +108,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
   const pvList = pv ? pvRows(pv) : [];
   const recommend = pv?.["14"]?.pos;
   const ageRange = s.ageLow != null && s.ageHigh != null ? `${s.ageLow}-${s.ageHigh}` : null;
-  const hasDetails = !!(s.type || s.pupils != null || s.gender || s.religion || ageRange || s.selective);
+  const hasDetails = !!(s.type || s.pupils != null || s.gender || s.religion || ageRange || s.selective || s.language);
 
   return (
     <div className="fixed inset-0 z-[2000] flex justify-end" role="dialog" aria-modal="true">
@@ -120,7 +123,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--primary)] hover:underline"
-                  title={dfeHref ? "DfE - compare school performance" : "Ofsted report"}
+                  title={dfeHref ? "DfE - compare school performance" : welsh ? "My Local School (Wales)" : "Ofsted report"}
                 >
                   {s.name}
                 </a>
@@ -152,11 +155,34 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                 {s.pupils != null && <Fact label="Pupils" value={s.pupils.toLocaleString()} />}
                 {s.gender && <Fact label="Gender" value={s.gender} />}
                 {s.religion && <Fact label="Faith" value={s.religion} />}
+                {s.language && <Fact label="Language" value={s.language} />}
                 {s.selective && <Fact label="Admissions" value="Selective (11+)" />}
               </dl>
             </Section>
           )}
 
+          {welsh ? (
+            <Section title="Inspection & performance">
+              <span className="inline-block rounded-md bg-[#64748b] px-2.5 py-1 text-sm font-semibold text-white">
+                Wales
+              </span>
+              <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
+                Welsh schools are inspected by <strong>Estyn</strong>, which doesn’t give a single
+                overall grade, and aren’t in the Ofsted or DfE performance data. My Local School has this
+                school’s performance, attendance and latest Estyn report.
+              </p>
+              {s.ofstedReport && (
+                <a
+                  href={s.ofstedReport}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
+                >
+                  View on My Local School →
+                </a>
+              )}
+            </Section>
+          ) : (
           <Section title="Ofsted">
             <div className="flex flex-wrap items-center gap-2">
               <span
@@ -245,6 +271,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
               </a>
             )}
           </Section>
+          )}
 
           {hasKs4 && (
             <Section title={`GCSE results${s.ks4Year ? ` · ${s.ks4Year}` : ""}`} href={dfeHref}>

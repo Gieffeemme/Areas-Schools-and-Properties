@@ -33,7 +33,8 @@
     "etl:bathing-water": "node scripts/etl/build-bathing-water.mjs",
     "etl:income": "node scripts/etl/build-income.mjs",
     "etl:affordability": "node scripts/etl/build-affordability.mjs",
-    "etl:wimd": "node scripts/etl/build-wimd.mjs"
+    "etl:wimd": "node scripts/etl/build-wimd.mjs",
+    "etl:welsh-schools": "node scripts/etl/build-welsh-schools.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

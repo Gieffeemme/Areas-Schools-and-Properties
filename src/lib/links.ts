@@ -18,3 +18,8 @@ export const ofstedEarlyYearsUrl = (urn: string) =>
 
 export const parentViewUrl = (urn: string) =>
   `https://parentview.ofsted.gov.uk/parent-view-results?urn=${urn}`;
+
+// Welsh Government "My Local School" — the per-school page (performance, attendance, pupils + an Estyn
+// link), keyed by the Welsh school number. The Welsh equivalent of the Ofsted/DfE school pages.
+export const myLocalSchoolUrl = (number: string) =>
+  `https://mylocalschool.gov.wales/School/${number}?lang=en`;

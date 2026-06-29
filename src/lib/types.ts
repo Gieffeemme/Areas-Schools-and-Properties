@@ -34,6 +34,8 @@ export interface School {
   urn?: string; // from OSM tag ref:edubase, when present
   phase?: string; // Nursery / Primary / Secondary / Sixth form / College / All-through
   kind?: "special" | "alternative" | "independent"; // non-mainstream GIAS category; undefined = mainstream state school
+  nation?: "Wales"; // set for schools from the Welsh register (no Ofsted/results — links to My Local School / Estyn); undefined = England
+  language?: string; // Welsh schools only: medium of instruction ("Welsh medium" | "Dual language" | "English medium")
   places?: number; // registered capacity (Ofsted Early Years nurseries)
   // GIAS register metadata (state/independent schools; nurseries carry `places` instead)
   pupils?: number; // number on roll

@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
-import { ofstedReportUrl, ofstedEarlyYearsUrl } from "./links";
+import { ofstedReportUrl, ofstedEarlyYearsUrl, myLocalSchoolUrl } from "./links";
 import { REPORT_CARD_BANDS, REPORT_CARD_LABEL, type ReportCard, type ReportCardBand } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
@@ -212,6 +212,31 @@ const giasNurseryPostcodes = memo(
   () => new Set(gias().filter((g) => g.phase === "Nursery").map((g) => g.postcode)),
 );
 
+// Welsh schools — from the Welsh Government register (build-welsh-schools.mjs). They're in GIAS but
+// carry no phase/age there, so GIAS excludes them; this is the Welsh analog (sector→phase, pupils,
+// Welsh-medium, postcode). No Ofsted/results enrichment exists for Wales — these link to My Local
+// School (and Estyn from there). A few independent/special schools are in GIAS too (English-style
+// register), so dedupe Welsh entries whose postcode is already a GIAS pin (GIAS wins: precise coords).
+interface WelshSchoolRecord {
+  number: string;
+  name: string;
+  postcode: string;
+  lat: number;
+  lng: number;
+  phase?: string;
+  kind?: "special" | "alternative" | "independent";
+  pupils?: number;
+  religion?: string;
+  language?: string;
+  la?: string;
+  ageLow?: number;
+  ageHigh?: number;
+}
+const welsh = memo(() => loadData<WelshSchoolRecord[]>("welsh-schools.json"));
+const welshByNumber = memo(() => new Map(welsh().map((w) => [w.number, w])));
+const giasPostcodes = memo(() => new Set(gias().map((g) => g.postcode)));
+const welshSchools = memo(() => welsh().filter((w) => !giasPostcodes().has(w.postcode)));
+
 // URN → record indexes, so one setting can be resolved by id without scanning the arrays
 // (used by fetchSchoolsByIds for the compare feature).
 const giasByUrn = memo(() => new Map(gias().map((g) => [g.urn, g])));
@@ -245,6 +270,13 @@ export async function fetchSchools(
     schools.push(buildNurserySchool(n, round1(d)));
   }
 
+  // Welsh schools (Welsh Government register; already deduped against GIAS by postcode).
+  for (const w of welshSchools()) {
+    const d = distanceMiles(centre.lat, centre.lng, w.lat, w.lng);
+    if (d > radiusMiles) continue;
+    schools.push(buildWelshSchool(w, round1(d)));
+  }
+
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
 }
@@ -275,6 +307,11 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
     const score = rank(nrec.name);
     if (score < 0) continue;
     scored.push({ score, m: { id: `ey/${nrec.urn}`, name: nrec.name, phase: "Nursery", postcode: nrec.postcode, lat: nrec.lat, lng: nrec.lng } });
+  }
+  for (const w of welshSchools()) {
+    const score = rank(w.name);
+    if (score < 0) continue;
+    scored.push({ score, m: { id: `welsh/${w.number}`, name: w.name, phase: w.phase, postcode: w.postcode, lat: w.lat, lng: w.lng } });
   }
   scored.sort((a, b) => a.score - b.score || a.m.name.length - b.m.name.length);
   return scored.slice(0, limit).map((s) => s.m);
@@ -363,6 +400,29 @@ function buildNurserySchool(n: NurseryRecord, dist: number): School {
   };
 }
 
+/** Build a School from a Welsh-register record. No Ofsted/results enrichment exists for Wales, so the
+ *  rating is "Not rated" and `nation: "Wales"` drives the UI to show a My Local School / Estyn link
+ *  instead of an Ofsted grade. */
+function buildWelshSchool(w: WelshSchoolRecord, dist: number): School {
+  return {
+    id: `welsh/${w.number}`,
+    name: w.name,
+    lat: w.lat,
+    lng: w.lng,
+    distanceMiles: dist,
+    nation: "Wales",
+    phase: w.phase,
+    kind: w.kind,
+    pupils: w.pupils,
+    religion: w.religion,
+    language: w.language,
+    ageLow: w.ageLow,
+    ageHigh: w.ageHigh,
+    ofsted: "Not rated",
+    ofstedReport: myLocalSchoolUrl(w.number),
+  };
+}
+
 /** Full School objects for specific ids ("gias/{urn}" | "ey/{urn}"), for the compare feature.
  *  Distance is 0 (no search centre); unresolvable ids are skipped; order follows `ids`. */
 export function fetchSchoolsByIds(ids: string[]): School[] {
@@ -378,6 +438,9 @@ export function fetchSchoolsByIds(ids: string[]): School[] {
     } else if (kind === "ey") {
       const n = nurseriesByUrn().get(urn);
       if (n) out.push(buildNurserySchool(n, 0));
+    } else if (kind === "welsh") {
+      const w = welshByNumber().get(urn);
+      if (w) out.push(buildWelshSchool(w, 0));
     }
   }
   return out;

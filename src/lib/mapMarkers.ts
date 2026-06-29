@@ -53,6 +53,9 @@ export function markerSvg(shape: ShapeKey, color: string, size = 18, shadow = tr
 // post-Sept-2024 graded inspection with no single grade → "No overall grade" (NOT a misleading "Not
 // rated"); otherwise the legacy grade.
 export function pinGrade(s: School): { label: string; colour: string } {
+  // Welsh schools have no Ofsted grade (Estyn inspects, no single judgement) - a neutral slate pin and
+  // an honest label, never a misleading "Not rated".
+  if (s.nation === "Wales") return { label: "Wales (Estyn)", colour: "#64748b" };
   if (!s.reportCard && s.ofstedNoOverall) {
     return { label: "No overall grade", colour: RATING_COLORS["Not rated"] };
   }
