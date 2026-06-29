@@ -235,11 +235,14 @@ function councilTaxCheck(ct: CouncilTaxSummary | null | undefined): Check {
   }
   const dist = topBands(ct.bands, (b, n) => `${Math.round((n / ct.total) * 100)}% ${b}`);
   const cost = ct.typicalCost ? ` · ≈ ${gbp(ct.typicalCost)}/yr` : "";
+  const scot = ct.scope === "council"; // Scotland: council-area mix + SG £/band, not the VOA LSOA mix
   return {
     label: "Council tax band",
     status: "live",
     value: `Typical band ${ct.typicalBand}${cost} · ${dist}`,
-    source: `VOA 2025 · ~${ct.total} homes in this LSOA${ct.typicalCost ? " · £ all-in (MHCLG)" : ""}`,
+    source: scot
+      ? `Scottish Government · band mix across the council (${ct.total.toLocaleString()} homes)${ct.typicalCost ? " · £ 2026-27" : ""}`
+      : `VOA 2025 · ~${ct.total} homes in this LSOA${ct.typicalCost ? " · £ all-in (MHCLG)" : ""}`,
     bars: bandSegs(ct.bands, ctaxColor),
   };
 }

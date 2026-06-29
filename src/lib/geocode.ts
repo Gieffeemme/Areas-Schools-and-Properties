@@ -4,11 +4,13 @@ import { wimdForLsoa } from "./wimd";
 import { simdForDatazone } from "./simd";
 import { nimdmForSoa } from "./nimdm";
 import { scotlandCrimeForLaua } from "./scotlandCrime";
-import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
+import { councilTaxForLsoa, councilTaxCostForLaua, scotlandCouncilTaxForLaua } from "./councilTax";
 
-// The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) - so the area
-// report's Property-checks panel can show the cost, like the per-property report does.
+// The council-tax band mix + the typical band's actual £/yr, for the area report's Property-checks panel
+// and the per-property report. England/Wales: VOA band mix by LSOA + MHCLG £/band by LA. Scotland: a
+// council-area band mix + SG £/band, keyed by the S12 council code (no neighbourhood band mix is published).
 function councilTaxFacts(lsoaCode?: string, lauaCode?: string): CouncilTaxSummary | null {
+  if (lauaCode?.startsWith("S12")) return scotlandCouncilTaxForLaua(lauaCode) ?? null;
   const ct = councilTaxForLsoa(lsoaCode);
   if (!ct) return null;
   if (ct.typicalBand) ct.typicalCost = councilTaxCostForLaua(lauaCode)?.[ct.typicalBand] ?? null;
@@ -234,7 +236,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       simd: simdForDatazone(r.codes?.lsoa11) ?? null, // SIMD 2020 = 2011 data zone (codes.lsoa11)
       nimdm: nimdmForSoa(r.codes?.lsoa11) ?? null, // NIMDM 2017 = NI SOA (codes.lsoa11, e.g. 95GG20S1)
       scotlandCrime: scotlandCrimeForLaua(r.codes?.admin_district) ?? null, // council-area crime (Scotland)
-      councilTax: councilTaxForLsoa(lsoaCode) ?? null,
+      councilTax: councilTaxFacts(lsoaCode, r.codes?.admin_district),
     },
   };
 }

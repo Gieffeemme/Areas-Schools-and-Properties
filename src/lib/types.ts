@@ -224,7 +224,8 @@ export interface CouncilTaxSummary {
   total: number; // dwellings on the valuation list in the LSOA
   bands: Record<string, number>; // band A-I → count
   typicalBand: string | null; // most common band
-  typicalCost?: number | null; // actual £/yr for the typical band, all precepts in (MHCLG, England)
+  typicalCost?: number | null; // actual £/yr for the typical band, all precepts in (MHCLG England / SG Scotland)
+  scope?: "council"; // band mix is council-area, not neighbourhood (Scotland only); undefined = LSOA/neighbourhood
 }
 
 // Model-based net (disposable) annual household income for the neighbourhood (MSOA), from ONS small-area

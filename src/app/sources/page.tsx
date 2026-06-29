@@ -27,6 +27,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Small-area household income estimates", provider: "Office for National Statistics", licence: "OGL v3.0" },
   { name: "Housing affordability (price-to-earnings ratio)", provider: "Office for National Statistics", licence: "OGL v3.0" },
   { name: "Council-tax bands (stock of properties) & levels", provider: "Valuation Office Agency / MHCLG", licence: "OGL v3.0" },
+  { name: "Council tax bands & amounts (Scotland)", provider: "Scottish Government", licence: "OGL v3.0" },
   { name: "Broadband coverage (Connected Nations)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Mobile coverage (Connected Nations, 4G / 5G)", provider: "Ofcom", licence: "OGL v3.0" },
   { name: "Environmental noise (strategic noise mapping)", provider: "Defra", licence: "OGL v3.0" },

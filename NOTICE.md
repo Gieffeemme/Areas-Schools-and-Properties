@@ -26,6 +26,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Deprivation, Northern Ireland (NIMDM 2017) | NISRA (via Open Data NI) | OGL v3.0 |
 | Census 2021 demographics | Office for National Statistics (via Nomis) | OGL v3.0 |
 | Council-tax bands (stock) & levels | Valuation Office Agency / MHCLG | OGL v3.0 |
+| Council tax bands & amounts (Scotland) | Scottish Government | OGL v3.0 |
 | Broadband (Connected Nations) | Ofcom | OGL v3.0 |
 | Environmental noise (strategic noise mapping) | Defra | OGL v3.0 |
 | Flood risk & warnings | Environment Agency | OGL v3.0 |
