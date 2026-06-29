@@ -9,9 +9,11 @@ This is the reference for the whole system. If you're new here, read §3 (the co
 
 A map-first web app: enter a **UK postcode** (or a **school name**) and get a dashboard of the
 **schools, crime, property prices and deprivation** around it, plus a deep per-school detail view.
-A Locrating-style "area & school intelligence" tool. No login. Coverage is **deepest in England**
-(school registers + DfE performance data are England-only) and thins toward the other nations — see
-the matrix below.
+A Locrating-style "area & school intelligence" tool. No login. The three core layers — **schools,
+deprivation and crime** — now span **all four UK nations**, each at the granularity its government
+publishes (e.g. Scotland crime is council-area, not street-level). Coverage is still **deepest in
+England**, where school Ofsted/results enrichment, nurseries, and several property-level layers
+(EPC, flood, bathing water, CQC) are England-only. See the matrix below.
 
 - **Live:** https://areas-schools-and-properties.vercel.app
 - **Repo:** `Gieffeemme/Areas-Schools-and-Properties` — **push to `main` → Vercel auto-deploys.**
@@ -676,6 +678,16 @@ independent schools (filed by GIAS under phase "Not applicable") are now admitte
 dropped (+~4,100 schools), tagged by `kind`, filterable by type, and shown honestly (independent =
 ISI-inspected, no Ofsted grade).
 
+**Shipped — all four UK nations.** The three core layers now span England, Wales, Scotland and NI (see
+the §1 coverage matrix): **deprivation** (IMD 2019 / WIMD 2025 / SIMD 2020v2 / NIMDM 2017, per-domain,
+each via its own committed ETL joined on that nation's small-area code), **school listings** (GIAS +
+the Welsh / Scottish / NI registers, since the devolved schools aren't in GIAS — phase, pupils and
+nation-specific extras like Welsh-/Irish-medium and NI grammars; the per-nation UI is config-driven via
+`lib/nations.ts`), and **crime** (police.uk street-level for England/Wales/NI; SG council-area recorded
+crime for Scotland, which police.uk doesn't cover). Each is shown at the granularity that nation
+publishes and labelled honestly (no street-level where only council-area exists; no Ofsted-style grade
+where the devolved inspectorates give none).
+
 **Remaining (free data): the original Tier-1 queue is cleared; a fresh sweep found more England layers.**
 Every originally-queued free dataset has shipped; a "what other England free data exists" sweep then
 added **EV charging**, a **Census expansion** (car/van availability + self-reported health), **EA
@@ -712,9 +724,11 @@ otherwise alias onto a GB cell (see §9). The last Tier-1 item, **Defra noise**,
 **11+ oversubscription** (published LA-by-LA, messy); **door-to-door commute times** (the nearest
 *station* is shipped free via OSM, but routed journey times need a paid routing/journey-planner API).
 
-**Follow-up — non-England nations.** Each needs its **own register, inspectorate and
-performance/deprivation data**, and there is **no Ofsted-style single grade** outside England, so none
-slot into the existing GIAS/Ofsted/DfE pipeline:
+**Non-England nations — deprivation, school listings and crime now shipped for all four** (per-nation
+detail below). Each needed its **own register, inspectorate and deprivation data** joined on that
+nation's own small-area geography, and there is **no Ofsted-style single grade** outside England, so
+none slot into the GIAS/Ofsted/DfE pipeline — they're parallel committed datasets surfaced by nation.
+What remains per nation is **school *quality*** (grades/results), which isn't achievable on free data:
 
 - **Wales** — **effectively complete** for free data. Deprivation (WIMD 2025) and the **schools
   register** are **shipped** (see §5/6/9): Welsh schools appear on the map/list/search with phase,
