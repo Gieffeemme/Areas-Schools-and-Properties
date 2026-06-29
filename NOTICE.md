@@ -11,12 +11,14 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Data | Provider | Licence |
 |------|----------|---------|
 | Schools register & metadata (GIAS) | Department for Education | OGL v3.0 |
+| Welsh schools register (address list of schools) | Welsh Government | OGL v3.0 |
 | Ofsted ratings & Early Years report cards | Ofsted | OGL v3.0 |
 | Exam & performance (KS2/4/5, destinations, census, workforce, finance) | Department for Education | OGL v3.0 |
 | Parent View | Ofsted | OGL v3.0 |
 | Street-level crime | police.uk / data.police.uk | OGL v3.0 |
 | Sold prices (Price Paid Data) | HM Land Registry | OGL v3.0 |
-| Deprivation (IoD 2019) | MHCLG | OGL v3.0 |
+| Deprivation, England (IoD 2019) | MHCLG | OGL v3.0 |
+| Deprivation, Wales (WIMD 2025) | Welsh Government | OGL v3.0 |
 | Census 2021 demographics | Office for National Statistics (via Nomis) | OGL v3.0 |
 | Council-tax bands (stock) & levels | Valuation Office Agency / MHCLG | OGL v3.0 |
 | Broadband (Connected Nations) | Ofcom | OGL v3.0 |

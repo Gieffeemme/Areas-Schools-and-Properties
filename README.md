@@ -16,19 +16,19 @@ npm run dev          # http://localhost:3000
 ```
 
 No API keys required for the dashboard (the `/map` explorer page needs `NEXT_PUBLIC_MAPBOX_TOKEN`).
-Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, or a school name.
+Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, `CF10 1EP` (Wales), or a school name.
 
 ## What's live (all real data, no fabrication)
 
 | Layer | Source | Notes |
 |-------|--------|-------|
 | Postcode → point | postcodes.io | + IMD overall decile **and 7-domain breakdown**, district, region |
-| **Schools** | **GIAS register** (England) | ~20.8k open schools, precise grid-ref pins, + pupils/gender/type/faith/age/grammar |
+| **Schools** | **GIAS register** (England) + **Welsh Gov register** (Wales) | ~24.9k England + ~1.5k Wales open schools, pins + pupils/gender/type/faith/age/grammar; Welsh schools tag Welsh-medium |
 | **Nurseries** | **Ofsted Early Years register** | ~23k, postcode-geocoded, each Ofsted-rated |
-| **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View |
+| **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View (England); Wales links to My Local School |
 | Crime | police.uk | ~1-mile radius, latest month, vs national percentile |
 | Property prices | HM Land Registry Price Paid | recorded sales, averages, by-year trend |
-| Deprivation | MHCLG IMD 2019 | overall + income/employment/education/health/crime/housing/living-environment deciles |
+| Deprivation | MHCLG **IMD 2019** (England) · Welsh Gov **WIMD 2025** (Wales) | overall + per-domain deciles for the LSOA |
 
 **How the data works:** schools are pins from official **registers**; every school's **DfE URN** is
 the join key to all the enrichment datasets (and **LSOA code** joins the IMD domains). There is

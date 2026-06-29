@@ -9,7 +9,8 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 
 | Command | Output | What |
 |---------|--------|------|
-| `npm run etl:gias` | `gias.json` | school **register/pins** + metadata (pupils, gender, type, faith, age, admissions) |
+| `npm run etl:gias` | `gias.json` | school **register/pins** + metadata (pupils, gender, type, faith, age, admissions) — England |
+| `npm run etl:welsh-schools` | `welsh-schools.json` | **Welsh** school register/pins (sector→phase, pupils, Welsh-medium) from the Welsh-Gov address list — GIAS can't place Welsh schools |
 | `npm run etl:nurseries` | `nurseries.json` | nursery pins from the Ofsted Early Years register |
 | `npm run etl:schools` | `ofsted-by-urn.json` | **Ofsted ratings** + sub-grades (⚠️ *not* the register — that's `etl:gias`) |
 | `npm run etl:report-cards -- --discover` | `report-cards-by-urn.json` | new Ofsted **EY report cards** (Nov 2025+ 5-band scale) — *scraped from live pages*, absent from bulk MI; wired into the app (overrides the stale nursery grade) |
@@ -21,7 +22,8 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 | `npm run etl:parentview` | `parentview-by-urn.json` | full Ofsted Parent View survey |
 | `npm run etl:workforce` | `workforce-by-urn.json` | pupil:teacher ratio, teacher FTE (EES) |
 | `npm run etl:finance` | `finance-by-urn.json` | spend/pupil, revenue reserve, in-year balance (FBIT) |
-| `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) |
+| `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) — England |
+| `npm run etl:wimd` | `wimd-by-lsoa.json` | **WIMD 2025** overall + 8-domain deciles, by LSOA-2021 (Welsh Gov) — Wales |
 | `npm run etl:cqc` | `cqc-locations.json` | **CQC health/care ratings** (GP/dentist/care home/hospital/home-care) + coords — runtime radius lookup like amenities/stations |
 | `npm run etl:air-quality` | `air-quality-by-grid.json` | **Defra PCM** modelled background **NO₂ + PM2.5** per 1 km cell (GB) — keyed by OS grid cell for the air-quality panel |
 | `npm run etl:mobile` | `mobile-by-laua.json` | **Ofcom** Connected Nations **mobile** coverage (4G/5G % premises) per local authority (UK) — same release/join as broadband |
