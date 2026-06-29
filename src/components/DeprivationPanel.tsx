@@ -1,5 +1,5 @@
-import { AreaFacts, ImdDomains, WimdDomains, SimdDomains } from "@/lib/types";
-import { imdSourceUrl, wimdSourceUrl, simdSourceUrl } from "@/lib/sources";
+import { AreaFacts, ImdDomains, WimdDomains, SimdDomains, NimdmDomains } from "@/lib/types";
+import { imdSourceUrl, wimdSourceUrl, simdSourceUrl, nimdmSourceUrl } from "@/lib/sources";
 import SourceLink from "./SourceLink";
 
 const IMD_DOMAINS: { key: keyof ImdDomains; label: string }[] = [
@@ -30,6 +30,16 @@ const SIMD_DOMAINS: { key: keyof SimdDomains; label: string }[] = [
   { key: "health", label: "Health" },
   { key: "crime", label: "Crime" },
   { key: "housing", label: "Housing" },
+  { key: "access", label: "Access to services" },
+];
+
+const NIMDM_DOMAINS: { key: keyof NimdmDomains; label: string }[] = [
+  { key: "income", label: "Income" },
+  { key: "employment", label: "Employment" },
+  { key: "education", label: "Education & skills" },
+  { key: "health", label: "Health" },
+  { key: "crime", label: "Crime & disorder" },
+  { key: "living", label: "Living environment" },
   { key: "access", label: "Access to services" },
 ];
 
@@ -69,6 +79,33 @@ function DomainBars<T>({ domains, rows }: { domains: T; rows: { key: keyof T; la
 }
 
 export default function DeprivationPanel({ facts }: { facts: AreaFacts }) {
+  // Northern Ireland: NI Multiple Deprivation Measure 2017 (seven domains, ranked within NI).
+  if (facts.nimdm) {
+    const { rank, decile, count, domains } = facts.nimdm;
+    return (
+      <section className="rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
+        <header className="mb-1 flex items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-tight">Deprivation (NIMDM 2017)</h2>
+          <span className="text-xs text-[var(--muted)]">
+            rank {rank.toLocaleString("en-GB")}/{count.toLocaleString("en-GB")} · decile {decile}/10
+          </span>
+        </header>
+        <p className="mb-3 text-[11px] leading-snug text-[var(--muted)]">
+          Decile within Northern Ireland - <strong>1</strong> = most deprived 10%, <strong>10</strong> ={" "}
+          least, for this Super Output Area.
+        </p>
+        <DomainBars domains={domains} rows={NIMDM_DOMAINS} />
+        <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+          Source:{" "}
+          <SourceLink href={nimdmSourceUrl()}>
+            NISRA - NI Multiple Deprivation Measure 2017
+          </SourceLink>
+          .
+        </p>
+      </section>
+    );
+  }
+
   // Scotland: Scottish Index of Multiple Deprivation 2020v2 (seven domains, ranked within Scotland).
   if (facts.simd) {
     const { rank, decile, count, domains } = facts.simd;

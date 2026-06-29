@@ -19,6 +19,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Deprivation, England (Indices of Deprivation 2019)", provider: "MHCLG", licence: "OGL v3.0" },
   { name: "Deprivation, Wales (Welsh Index of Multiple Deprivation 2025)", provider: "Welsh Government", licence: "OGL v3.0" },
   { name: "Deprivation, Scotland (Scottish Index of Multiple Deprivation 2020v2)", provider: "Scottish Government", licence: "OGL v3.0" },
+  { name: "Deprivation, Northern Ireland (NI Multiple Deprivation Measure 2017)", provider: "NISRA (via Open Data NI)", licence: "OGL v3.0" },
   { name: "Census 2021 demographics", provider: "Office for National Statistics (via Nomis)", licence: "OGL v3.0" },
   { name: "Small-area household income estimates", provider: "Office for National Statistics", licence: "OGL v3.0" },
   { name: "Housing affordability (price-to-earnings ratio)", provider: "Office for National Statistics", licence: "OGL v3.0" },

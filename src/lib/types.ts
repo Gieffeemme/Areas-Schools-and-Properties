@@ -336,6 +336,25 @@ export interface SimdSummary {
   domains: SimdDomains;
 }
 
+// Northern Ireland Multiple Deprivation Measure 2017 — seven domains, per-SOA deciles (1 = most
+// deprived 10% of NI's 890 Super Output Areas, 10 = least).
+export interface NimdmDomains {
+  income: number | null;
+  employment: number | null;
+  education: number | null;
+  health: number | null;
+  crime: number | null; // Crime and Disorder
+  living: number | null; // Living Environment
+  access: number | null; // Proximity to Services
+}
+
+export interface NimdmSummary {
+  rank: number; // overall NIMDM 2017 rank, 1 = most deprived
+  decile: number; // overall decile within Northern Ireland, 1 = most deprived 10%
+  count: number; // total NI Super Output Areas ranked (890) — denominator for the rank
+  domains: NimdmDomains;
+}
+
 export interface AreaFacts {
   postcode: string;
   label?: string; // human place name for a town/city/area search (shown instead of the postcode)
@@ -356,6 +375,7 @@ export interface AreaFacts {
   imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA (England)
   wimd?: WimdSummary | null; // Welsh Index of Multiple Deprivation 2025 (Wales) — overall + 8 domains
   simd?: SimdSummary | null; // Scottish Index of Multiple Deprivation 2020v2 (Scotland) — overall + 7 domains
+  nimdm?: NimdmSummary | null; // NI Multiple Deprivation Measure 2017 (Northern Ireland) — overall + 7 domains
   councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 

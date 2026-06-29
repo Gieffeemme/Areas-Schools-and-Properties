@@ -22,6 +22,10 @@ export const wimdSourceUrl = () => "https://www.gov.wales/welsh-index-multiple-d
 export const simdSourceUrl = () =>
   "https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/";
 
+// NISRA — Northern Ireland Multiple Deprivation Measure (NIMDM) 2017, the NI equivalent.
+export const nimdmSourceUrl = () =>
+  "https://www.nisra.gov.uk/statistics/deprivation/northern-ireland-multiple-deprivation-measure-2017-nimdm2017";
+
 // ONS Census 2021 - the interactive area maps where the same neighbourhood figures can be explored.
 export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 

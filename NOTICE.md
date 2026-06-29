@@ -20,6 +20,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Deprivation, England (IoD 2019) | MHCLG | OGL v3.0 |
 | Deprivation, Wales (WIMD 2025) | Welsh Government | OGL v3.0 |
 | Deprivation, Scotland (SIMD 2020v2) | Scottish Government | OGL v3.0 |
+| Deprivation, Northern Ireland (NIMDM 2017) | NISRA (via Open Data NI) | OGL v3.0 |
 | Census 2021 demographics | Office for National Statistics (via Nomis) | OGL v3.0 |
 | Council-tax bands (stock) & levels | Valuation Office Agency / MHCLG | OGL v3.0 |
 | Broadband (Connected Nations) | Ofcom | OGL v3.0 |
