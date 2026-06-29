@@ -12,6 +12,9 @@ export const priceSourceUrl = (postcode?: string) =>
 
 export const crimeSourceUrl = () => "https://www.police.uk/";
 
+// Scottish Government "Recorded Crimes and Offences" (council-area crime; police.uk has no Scotland).
+export const scotlandCrimeSourceUrl = () => "https://statistics.gov.scot/data/recorded-crime";
+
 export const imdSourceUrl = () =>
   "https://www.gov.uk/government/statistics/english-indices-of-deprivation-2019";
 

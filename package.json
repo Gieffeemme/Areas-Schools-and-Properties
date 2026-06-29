@@ -38,7 +38,8 @@
     "etl:simd": "node scripts/etl/build-simd.mjs",
     "etl:nimdm": "node scripts/etl/build-nimdm.mjs",
     "etl:ni-schools": "node scripts/etl/build-ni-schools.mjs",
-    "etl:scotland-schools": "node scripts/etl/build-scotland-schools.mjs"
+    "etl:scotland-schools": "node scripts/etl/build-scotland-schools.mjs",
+    "etl:scotland-crime": "node scripts/etl/build-scotland-crime.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",

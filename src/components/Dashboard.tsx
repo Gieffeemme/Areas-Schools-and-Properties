@@ -5,6 +5,7 @@ import PostcodeSearch from "./PostcodeSearch";
 import AreaMap from "./AreaMap";
 import SchoolsPanel from "./SchoolsPanel";
 import CrimePanel from "./CrimePanel";
+import ScotlandCrimePanel from "./ScotlandCrimePanel";
 import PricePanel from "./PricePanel";
 import DeprivationPanel from "./DeprivationPanel";
 import AmenitiesPanel from "./AmenitiesPanel";
@@ -294,7 +295,12 @@ function SidePanels({
       onChange={onChange}
     />
   );
-  const crime = <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />;
+  // Scotland has no police.uk street-level data → show the council-area recorded-crime panel instead.
+  const crime = report.facts.scotlandCrime ? (
+    <ScotlandCrimePanel facts={report.facts} />
+  ) : (
+    <CrimePanel crime={report.crime} benchmark={report.benchmarks.crime} />
+  );
   const price = (
     <PricePanel
       prices={report.prices}

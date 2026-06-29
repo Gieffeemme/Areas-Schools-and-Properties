@@ -3,6 +3,7 @@ import { imdDomainsForLsoa } from "./imd";
 import { wimdForLsoa } from "./wimd";
 import { simdForDatazone } from "./simd";
 import { nimdmForSoa } from "./nimdm";
+import { scotlandCrimeForLaua } from "./scotlandCrime";
 import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
 
 // The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) - so the area
@@ -70,6 +71,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           wimd: wimdForLsoa(lsoaCode) ?? null,
           simd: simdForDatazone(r.codes?.lsoa11) ?? null, // SIMD 2020 = 2011 data zone (codes.lsoa11)
           nimdm: nimdmForSoa(r.codes?.lsoa11) ?? null, // NIMDM 2017 = NI SOA (codes.lsoa11, e.g. 95GG20S1)
+          scotlandCrime: scotlandCrimeForLaua(r.codes?.admin_district) ?? null, // council-area crime (Scotland)
           councilTax: councilTaxFacts(lsoaCode, r.codes?.admin_district),
         },
       };
@@ -231,6 +233,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       wimd: wimdForLsoa(lsoaCode) ?? null,
       simd: simdForDatazone(r.codes?.lsoa11) ?? null, // SIMD 2020 = 2011 data zone (codes.lsoa11)
       nimdm: nimdmForSoa(r.codes?.lsoa11) ?? null, // NIMDM 2017 = NI SOA (codes.lsoa11, e.g. 95GG20S1)
+      scotlandCrime: scotlandCrimeForLaua(r.codes?.admin_district) ?? null, // council-area crime (Scotland)
       councilTax: councilTaxForLsoa(lsoaCode) ?? null,
     },
   };

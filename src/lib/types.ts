@@ -355,6 +355,23 @@ export interface NimdmSummary {
   domains: NimdmDomains;
 }
 
+// Scotland recorded crime at council-area level (police.uk has no Police Scotland street-level data, so
+// this is the area-level alternative). Rate = crimes per 10,000 population, latest year.
+export interface ScotlandCrimeGroup {
+  key: string;
+  label: string;
+  rate: number | null;
+  count: number | null;
+}
+export interface ScotlandCrimeSummary {
+  year: string; // e.g. "2025/26"
+  laName: string; // council area
+  rate: number; // all crimes per 10,000 population
+  count: number | null;
+  scotlandRate: number; // Scotland average per 10,000, for context
+  groups: ScotlandCrimeGroup[]; // the five crime groups
+}
+
 export interface AreaFacts {
   postcode: string;
   label?: string; // human place name for a town/city/area search (shown instead of the postcode)
@@ -376,6 +393,7 @@ export interface AreaFacts {
   wimd?: WimdSummary | null; // Welsh Index of Multiple Deprivation 2025 (Wales) — overall + 8 domains
   simd?: SimdSummary | null; // Scottish Index of Multiple Deprivation 2020v2 (Scotland) — overall + 7 domains
   nimdm?: NimdmSummary | null; // NI Multiple Deprivation Measure 2017 (Northern Ireland) — overall + 7 domains
+  scotlandCrime?: ScotlandCrimeSummary | null; // council-area recorded crime (Scotland; police.uk has no Police Scotland)
   councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 

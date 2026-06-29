@@ -26,7 +26,7 @@ Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, `CF10 1EP` (Wales), or a s
 | **Schools** | **GIAS** (Eng) + **Welsh Gov** (Wal) + **SG** (Scot) + **DE NI** (NI) registers — all four nations | ~24.9k Eng + ~1.5k Wal + ~2.5k Scot + ~1.1k NI open schools, pins + pupils/type/phase; Welsh-/Irish-medium tagged; NI grammars flagged |
 | **Nurseries** | **Ofsted Early Years register** | ~23k, postcode-geocoded, each Ofsted-rated |
 | **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View (England); Wales links to My Local School |
-| Crime | police.uk | ~1-mile radius, latest month, vs national percentile |
+| Crime | police.uk (Eng/Wal/NI) · Scottish Gov (Scotland) | street-level ~1-mile radius + percentile (Eng/Wal/NI); council-area recorded-crime rate (Scotland — no Police Scotland on police.uk) |
 | Property prices | HM Land Registry Price Paid | recorded sales, averages, by-year trend |
 | Deprivation | **IMD 2019** (England) · **WIMD 2025** (Wales) · **SIMD 2020** (Scotland) · **NIMDM 2017** (NI) — all four UK nations | overall + per-domain deciles for the small area |
 

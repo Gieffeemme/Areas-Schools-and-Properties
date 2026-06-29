@@ -17,7 +17,8 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Ofsted ratings & Early Years report cards | Ofsted | OGL v3.0 |
 | Exam & performance (KS2/4/5, destinations, census, workforce, finance) | Department for Education | OGL v3.0 |
 | Parent View | Ofsted | OGL v3.0 |
-| Street-level crime | police.uk / data.police.uk | OGL v3.0 |
+| Street-level crime (England, Wales, NI) | police.uk / data.police.uk | OGL v3.0 |
+| Recorded crime by council area (Scotland) | Scottish Government | OGL v3.0 |
 | Sold prices (Price Paid Data) | HM Land Registry | OGL v3.0 |
 | Deprivation, England (IoD 2019) | MHCLG | OGL v3.0 |
 | Deprivation, Wales (WIMD 2025) | Welsh Government | OGL v3.0 |

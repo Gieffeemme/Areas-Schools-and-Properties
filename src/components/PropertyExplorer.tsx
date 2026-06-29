@@ -7,6 +7,7 @@ import PropertyMap from "./PropertyMap";
 import SchoolsPanel from "./SchoolsPanel";
 import SchoolDetail from "./SchoolDetail";
 import CrimePanel from "./CrimePanel";
+import ScotlandCrimePanel from "./ScotlandCrimePanel";
 import PricePanel from "./PricePanel";
 import DeprivationPanel from "./DeprivationPanel";
 import AmenitiesPanel from "./AmenitiesPanel";
@@ -492,7 +493,11 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
                 filters={filters}
                 onChange={setFilters}
               />
-              <CrimePanel crime={area.crime} benchmark={area.benchmarks.crime} />
+              {area.facts.scotlandCrime ? (
+                <ScotlandCrimePanel facts={area.facts} />
+              ) : (
+                <CrimePanel crime={area.crime} benchmark={area.benchmarks.crime} />
+              )}
               <AmenitiesPanel amenities={area.amenities} />
               <EvChargingPanel ev={area.evCharging} centre={area.centre} />
               <BroadbandPanel broadband={area.broadband} />
