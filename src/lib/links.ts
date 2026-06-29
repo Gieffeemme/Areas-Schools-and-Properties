@@ -23,3 +23,8 @@ export const parentViewUrl = (urn: string) =>
 // link), keyed by the Welsh school number. The Welsh equivalent of the Ofsted/DfE school pages.
 export const myLocalSchoolUrl = (number: string) =>
   `https://mylocalschool.gov.wales/School/${number}?lang=en`;
+
+// NI "Schools Plus" institution directory (Dept of Education NI). No clean per-school deep link exists,
+// so this is the authoritative NI school directory to look the school up in (+ find its ETI reports).
+export const niSchoolsDirectoryUrl = () =>
+  "https://apps.education-ni.gov.uk/appinstitutes/default.aspx";

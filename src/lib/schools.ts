@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
-import { ofstedReportUrl, ofstedEarlyYearsUrl, myLocalSchoolUrl } from "./links";
+import { ofstedReportUrl, ofstedEarlyYearsUrl, myLocalSchoolUrl, niSchoolsDirectoryUrl } from "./links";
 import { REPORT_CARD_BANDS, REPORT_CARD_LABEL, type ReportCard, type ReportCardBand } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
@@ -237,6 +237,25 @@ const welshByNumber = memo(() => new Map(welsh().map((w) => [w.number, w])));
 const giasPostcodes = memo(() => new Set(gias().map((g) => g.postcode)));
 const welshSchools = memo(() => welsh().filter((w) => !giasPostcodes().has(w.postcode)));
 
+// NI schools — from the Dept of Education NI "school level" register (build-ni-schools.mjs). Also not
+// in GIAS; same model as Welsh (type→phase, Irish-medium, enrolment, postcode). No Ofsted/results
+// (ETI inspects, no single grade) → link to the DE "Schools Plus" directory.
+interface NiSchoolRecord {
+  ref: string;
+  name: string;
+  postcode: string;
+  lat: number;
+  lng: number;
+  phase?: string;
+  kind?: "special" | "alternative" | "independent";
+  pupils?: number;
+  management?: string;
+  language?: string;
+  selective?: boolean;
+}
+const ni = memo(() => loadData<NiSchoolRecord[]>("ni-schools.json"));
+const niByRef = memo(() => new Map(ni().map((n) => [n.ref, n])));
+
 // URN → record indexes, so one setting can be resolved by id without scanning the arrays
 // (used by fetchSchoolsByIds for the compare feature).
 const giasByUrn = memo(() => new Map(gias().map((g) => [g.urn, g])));
@@ -277,6 +296,13 @@ export async function fetchSchools(
     schools.push(buildWelshSchool(w, round1(d)));
   }
 
+  // NI schools (DE register). NI postcodes (BT…) never collide with England GIAS, so no dedupe.
+  for (const n of ni()) {
+    const d = distanceMiles(centre.lat, centre.lng, n.lat, n.lng);
+    if (d > radiusMiles) continue;
+    schools.push(buildNiSchool(n, round1(d)));
+  }
+
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
 }
@@ -312,6 +338,11 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
     const score = rank(w.name);
     if (score < 0) continue;
     scored.push({ score, m: { id: `welsh/${w.number}`, name: w.name, phase: w.phase, postcode: w.postcode, lat: w.lat, lng: w.lng } });
+  }
+  for (const n of ni()) {
+    const score = rank(n.name);
+    if (score < 0) continue;
+    scored.push({ score, m: { id: `ni/${n.ref}`, name: n.name, phase: n.phase, postcode: n.postcode, lat: n.lat, lng: n.lng } });
   }
   scored.sort((a, b) => a.score - b.score || a.m.name.length - b.m.name.length);
   return scored.slice(0, limit).map((s) => s.m);
@@ -423,6 +454,28 @@ function buildWelshSchool(w: WelshSchoolRecord, dist: number): School {
   };
 }
 
+/** Build a School from an NI-register record. Like Wales, no Ofsted/results — `nation: "Northern
+ *  Ireland"` drives the UI; the per-school link is the DE "Schools Plus" directory. NI management type
+ *  (Controlled / Catholic Maintained / Integrated …) is surfaced as the school `type`. */
+function buildNiSchool(n: NiSchoolRecord, dist: number): School {
+  return {
+    id: `ni/${n.ref}`,
+    name: n.name,
+    lat: n.lat,
+    lng: n.lng,
+    distanceMiles: dist,
+    nation: "Northern Ireland",
+    phase: n.phase,
+    kind: n.kind,
+    pupils: n.pupils,
+    type: n.management,
+    language: n.language,
+    selective: n.selective || undefined,
+    ofsted: "Not rated",
+    ofstedReport: niSchoolsDirectoryUrl(),
+  };
+}
+
 /** Full School objects for specific ids ("gias/{urn}" | "ey/{urn}"), for the compare feature.
  *  Distance is 0 (no search centre); unresolvable ids are skipped; order follows `ids`. */
 export function fetchSchoolsByIds(ids: string[]): School[] {
@@ -441,6 +494,9 @@ export function fetchSchoolsByIds(ids: string[]): School[] {
     } else if (kind === "welsh") {
       const w = welshByNumber().get(urn);
       if (w) out.push(buildWelshSchool(w, 0));
+    } else if (kind === "ni") {
+      const n = niByRef().get(urn);
+      if (n) out.push(buildNiSchool(n, 0));
     }
   }
   return out;

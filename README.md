@@ -23,7 +23,7 @@ Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, `CF10 1EP` (Wales), or a s
 | Layer | Source | Notes |
 |-------|--------|-------|
 | Postcode → point | postcodes.io | + IMD overall decile **and 7-domain breakdown**, district, region |
-| **Schools** | **GIAS register** (England) + **Welsh Gov register** (Wales) | ~24.9k England + ~1.5k Wales open schools, pins + pupils/gender/type/faith/age/grammar; Welsh schools tag Welsh-medium |
+| **Schools** | **GIAS** (England) + **Welsh Gov** (Wales) + **DE NI** (Northern Ireland) registers | ~24.9k England + ~1.5k Wales + ~1.1k NI open schools, pins + pupils/type/phase; Welsh-medium / Irish-medium tagged; NI grammars flagged |
 | **Nurseries** | **Ofsted Early Years register** | ~23k, postcode-geocoded, each Ofsted-rated |
 | **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View (England); Wales links to My Local School |
 | Crime | police.uk | ~1-mile radius, latest month, vs national percentile |

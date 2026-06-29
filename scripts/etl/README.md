@@ -11,6 +11,7 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 |---------|--------|------|
 | `npm run etl:gias` | `gias.json` | school **register/pins** + metadata (pupils, gender, type, faith, age, admissions) — England |
 | `npm run etl:welsh-schools` | `welsh-schools.json` | **Welsh** school register/pins (sector→phase, pupils, Welsh-medium) from the Welsh-Gov address list — GIAS can't place Welsh schools |
+| `npm run etl:ni-schools` | `ni-schools.json` | **NI** school register/pins (type→phase, enrolment, mgmt type, Irish-medium, grammar) from the DE NI school-level data — not in GIAS |
 | `npm run etl:nurseries` | `nurseries.json` | nursery pins from the Ofsted Early Years register |
 | `npm run etl:schools` | `ofsted-by-urn.json` | **Ofsted ratings** + sub-grades (⚠️ *not* the register — that's `etl:gias`) |
 | `npm run etl:report-cards -- --discover` | `report-cards-by-urn.json` | new Ofsted **EY report cards** (Nov 2025+ 5-band scale) — *scraped from live pages*, absent from bulk MI; wired into the app (overrides the stale nursery grade) |

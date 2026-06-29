@@ -2,6 +2,7 @@
 
 import { OfstedRating, School } from "@/lib/types";
 import { RATING_COLORS, RATING_LABELS } from "@/lib/ratings";
+import { NATION_SCHOOL_INFO } from "@/lib/nations";
 import { gradeDisplay, REPORT_CARD_BANDS, type ReportCardBand } from "@/lib/reportCard";
 import { gradeColor, happyColor, p8Color, pctColor, progressColor } from "@/lib/scoreColors";
 import { dfePerformanceUrl, ofstedReportUrl, parentViewUrl } from "@/lib/links";
@@ -74,11 +75,11 @@ function pvRows(pv: NonNullable<School["parentView"]>): PvRowData[] {
 export default function SchoolDetail({ school: s, onClose }: { school: School; onClose: () => void }) {
   const rc = s.reportCard ?? null;
   const grade = gradeDisplay(rc, s.ofsted);
-  // Welsh schools aren't in the Ofsted/DfE data (Estyn inspects, with no single grade) - replace the
-  // Ofsted section with a Wales one linking to My Local School.
-  const welsh = s.nation === "Wales";
+  // Non-England schools aren't in the Ofsted/DfE data (devolved inspectorates give no single grade) -
+  // replace the Ofsted section with a nation one linking to that nation's school directory.
+  const nation = s.nation ? NATION_SCHOOL_INFO[s.nation] : null;
   // Independent schools are ISI-inspected, not Ofsted - show that honestly instead of "Not rated".
-  const indie = !welsh && s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
+  const indie = !nation && s.kind === "independent" && !rc && (s.ofsted === "Not rated" || s.ofsted === "Not loaded");
   // Inspected since Sept 2024 with sub-judgements but no single overall grade.
   const noOverall = !rc && !indie && !!s.ofstedNoOverall;
   const year = rc?.inspectionDate
@@ -123,7 +124,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-[var(--primary)] hover:underline"
-                  title={dfeHref ? "DfE - compare school performance" : welsh ? "My Local School (Wales)" : "Ofsted report"}
+                  title={dfeHref ? "DfE - compare school performance" : nation ? `${nation.linkLabel} (${nation.short})` : "Ofsted report"}
                 >
                   {s.name}
                 </a>
@@ -161,15 +162,15 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
             </Section>
           )}
 
-          {welsh ? (
+          {nation ? (
             <Section title="Inspection & performance">
               <span className="inline-block rounded-md bg-[#64748b] px-2.5 py-1 text-sm font-semibold text-white">
-                Wales
+                {nation.short}
               </span>
               <p className="mt-3 text-[11px] leading-snug text-[var(--muted)]">
-                Welsh schools are inspected by <strong>Estyn</strong>, which doesn’t give a single
-                overall grade, and aren’t in the Ofsted or DfE performance data. My Local School has this
-                school’s performance, attendance and latest Estyn report.
+                Schools in {s.nation} are inspected by <strong>{nation.inspectorate}</strong>, which
+                doesn’t give a single overall grade, and aren’t in the Ofsted or DfE performance data.
+                Look this school up on {nation.linkLabel} for its reports and details.
               </p>
               {s.ofstedReport && (
                 <a
@@ -178,7 +179,7 @@ export default function SchoolDetail({ school: s, onClose }: { school: School; o
                   rel="noopener noreferrer"
                   className="mt-3 inline-block text-sm font-medium text-[var(--primary)] hover:underline"
                 >
-                  View on My Local School →
+                  View on {nation.linkLabel} →
                 </a>
               )}
             </Section>
