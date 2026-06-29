@@ -18,6 +18,10 @@ export const imdSourceUrl = () =>
 // Welsh Government — Welsh Index of Multiple Deprivation (WIMD) 2025, the Wales equivalent of the IMD.
 export const wimdSourceUrl = () => "https://www.gov.wales/welsh-index-multiple-deprivation-2025";
 
+// Scottish Government — Scottish Index of Multiple Deprivation (SIMD) 2020, the Scotland equivalent.
+export const simdSourceUrl = () =>
+  "https://www.gov.scot/collections/scottish-index-of-multiple-deprivation-2020/";
+
 // ONS Census 2021 - the interactive area maps where the same neighbourhood figures can be explored.
 export const censusSourceUrl = () => "https://www.ons.gov.uk/census/maps";
 

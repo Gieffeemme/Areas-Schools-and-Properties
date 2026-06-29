@@ -24,6 +24,7 @@ Full catalogue with exact source URLs, column codes, and how the data is used:
 | `npm run etl:finance` | `finance-by-urn.json` | spend/pupil, revenue reserve, in-year balance (FBIT) |
 | `npm run etl:imd` | `imd-domains-by-lsoa.json` | IMD 2019 decile per domain, by LSOA (MHCLG) — England |
 | `npm run etl:wimd` | `wimd-by-lsoa.json` | **WIMD 2025** overall + 8-domain deciles, by LSOA-2021 (Welsh Gov) — Wales |
+| `npm run etl:simd` | `simd-by-datazone.json` | **SIMD 2020v2** overall + 7-domain deciles, by data-zone-2011 (Scottish Gov) — Scotland |
 | `npm run etl:cqc` | `cqc-locations.json` | **CQC health/care ratings** (GP/dentist/care home/hospital/home-care) + coords — runtime radius lookup like amenities/stations |
 | `npm run etl:air-quality` | `air-quality-by-grid.json` | **Defra PCM** modelled background **NO₂ + PM2.5** per 1 km cell (GB) — keyed by OS grid cell for the air-quality panel |
 | `npm run etl:mobile` | `mobile-by-laua.json` | **Ofcom** Connected Nations **mobile** coverage (4G/5G % premises) per local authority (UK) — same release/join as broadband |

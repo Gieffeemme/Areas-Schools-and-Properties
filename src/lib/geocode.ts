@@ -1,6 +1,7 @@
 import { AreaFacts, CouncilTaxSummary, LatLng, PlaceMatch } from "./types";
 import { imdDomainsForLsoa } from "./imd";
 import { wimdForLsoa } from "./wimd";
+import { simdForDatazone } from "./simd";
 import { councilTaxForLsoa, councilTaxCostForLaua } from "./councilTax";
 
 // The LSOA council-tax band mix, plus the typical band's actual £/yr (MHCLG, England) - so the area
@@ -66,6 +67,7 @@ export async function geocodePostcode(raw: string): Promise<GeocodeResult> {
           imdDecile,
           imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
           wimd: wimdForLsoa(lsoaCode) ?? null,
+          simd: simdForDatazone(r.codes?.lsoa11) ?? null, // SIMD 2020 = 2011 data zone (codes.lsoa11)
           councilTax: councilTaxFacts(lsoaCode, r.codes?.admin_district),
         },
       };
@@ -177,7 +179,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
         country?: string;
         parliamentary_constituency?: string;
         lsoa?: string;
-        codes?: { lsoa?: string; lsoa21?: string; admin_district?: string; msoa?: string; msoa21?: string };
+        codes?: { lsoa?: string; lsoa11?: string; lsoa21?: string; admin_district?: string; msoa?: string; msoa21?: string };
         eastings?: number;
         northings?: number;
         index_of_multiple_deprivation?: number;
@@ -225,6 +227,7 @@ export async function geocodePoint(lat: number, lng: number, label?: string): Pr
       imdDecile,
       imdDomains: imdDomainsForLsoa(lsoaCode) ?? null,
       wimd: wimdForLsoa(lsoaCode) ?? null,
+      simd: simdForDatazone(r.codes?.lsoa11) ?? null, // SIMD 2020 = 2011 data zone (codes.lsoa11)
       councilTax: councilTaxForLsoa(lsoaCode) ?? null,
     },
   };

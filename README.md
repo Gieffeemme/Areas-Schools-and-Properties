@@ -28,7 +28,7 @@ Try a postcode like `SW11 6QT`, `M20 2RN`, `LS6 3HN`, `CF10 1EP` (Wales), or a s
 | **Per-school depth** | DfE + Ofsted, joined by **URN** | Ofsted + sub-grades, KS2/GCSE/A-level, destinations, pupil census, **workforce**, **finances**, full Parent View (England); Wales links to My Local School |
 | Crime | police.uk | ~1-mile radius, latest month, vs national percentile |
 | Property prices | HM Land Registry Price Paid | recorded sales, averages, by-year trend |
-| Deprivation | MHCLG **IMD 2019** (England) · Welsh Gov **WIMD 2025** (Wales) | overall + per-domain deciles for the LSOA |
+| Deprivation | MHCLG **IMD 2019** (England) · Welsh Gov **WIMD 2025** (Wales) · Scottish Gov **SIMD 2020** (Scotland) | overall + per-domain deciles for the small area |
 
 **How the data works:** schools are pins from official **registers**; every school's **DfE URN** is
 the join key to all the enrichment datasets (and **LSOA code** joins the IMD domains). There is

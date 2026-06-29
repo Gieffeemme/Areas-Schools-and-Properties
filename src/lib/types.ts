@@ -316,6 +316,26 @@ export interface WimdSummary {
   domains: WimdDomains;
 }
 
+// Scottish Index of Multiple Deprivation 2020v2 — seven domains, per-data-zone deciles (1 = most
+// deprived 10% of Scotland's 6,976 data zones, 10 = least). Domain set matches England's IMD except
+// "access" (geographic access to services) in place of "living environment".
+export interface SimdDomains {
+  income: number | null;
+  employment: number | null;
+  education: number | null;
+  health: number | null;
+  crime: number | null;
+  housing: number | null;
+  access: number | null; // Geographic Access to Services
+}
+
+export interface SimdSummary {
+  rank: number; // overall SIMD 2020v2 rank, 1 = most deprived
+  decile: number; // overall decile within Scotland, 1 = most deprived 10%
+  count: number; // total Scottish data zones ranked (6,976) — denominator for the rank
+  domains: SimdDomains;
+}
+
 export interface AreaFacts {
   postcode: string;
   label?: string; // human place name for a town/city/area search (shown instead of the postcode)
@@ -335,6 +355,7 @@ export interface AreaFacts {
   imdDecile?: number | null; // 1 = most deprived 10%, 10 = least
   imdDomains?: ImdDomains | null; // per-domain deciles for the LSOA (England)
   wimd?: WimdSummary | null; // Welsh Index of Multiple Deprivation 2025 (Wales) — overall + 8 domains
+  simd?: SimdSummary | null; // Scottish Index of Multiple Deprivation 2020v2 (Scotland) — overall + 7 domains
   councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 

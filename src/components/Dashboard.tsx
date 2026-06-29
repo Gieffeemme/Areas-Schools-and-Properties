@@ -182,6 +182,7 @@ function Report({
             )}
             {typeof f.imdDecile === "number" && <Chip>{imdLabel(f.imdDecile)}</Chip>}
             {f.wimd && <Chip>{wimdLabel(f.wimd.decile)}</Chip>}
+            {f.simd && <Chip>{simdLabel(f.simd.decile)}</Chip>}
           </div>
           <a
             href={`/compare?postcodes=${encodeURIComponent(f.postcode)}`}
@@ -522,4 +523,9 @@ function imdLabel(decile: number): string {
 function wimdLabel(decile: number): string {
   const tag = decile <= 3 ? "more deprived" : decile >= 8 ? "less deprived" : "around average";
   return `WIMD decile ${decile}/10 · ${tag}`;
+}
+
+function simdLabel(decile: number): string {
+  const tag = decile <= 3 ? "more deprived" : decile >= 8 ? "less deprived" : "around average";
+  return `SIMD decile ${decile}/10 · ${tag}`;
 }

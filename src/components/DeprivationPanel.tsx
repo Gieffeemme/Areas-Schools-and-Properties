@@ -1,5 +1,5 @@
-import { AreaFacts, ImdDomains, WimdDomains } from "@/lib/types";
-import { imdSourceUrl, wimdSourceUrl } from "@/lib/sources";
+import { AreaFacts, ImdDomains, WimdDomains, SimdDomains } from "@/lib/types";
+import { imdSourceUrl, wimdSourceUrl, simdSourceUrl } from "@/lib/sources";
 import SourceLink from "./SourceLink";
 
 const IMD_DOMAINS: { key: keyof ImdDomains; label: string }[] = [
@@ -21,6 +21,16 @@ const WIMD_DOMAINS: { key: keyof WimdDomains; label: string }[] = [
   { key: "housing", label: "Housing" },
   { key: "community", label: "Community safety" },
   { key: "physical", label: "Physical environment" },
+];
+
+const SIMD_DOMAINS: { key: keyof SimdDomains; label: string }[] = [
+  { key: "income", label: "Income" },
+  { key: "employment", label: "Employment" },
+  { key: "education", label: "Education & skills" },
+  { key: "health", label: "Health" },
+  { key: "crime", label: "Crime" },
+  { key: "housing", label: "Housing" },
+  { key: "access", label: "Access to services" },
 ];
 
 // Decile 1 = most deprived (red) … 10 = least deprived (green).
@@ -59,6 +69,33 @@ function DomainBars<T>({ domains, rows }: { domains: T; rows: { key: keyof T; la
 }
 
 export default function DeprivationPanel({ facts }: { facts: AreaFacts }) {
+  // Scotland: Scottish Index of Multiple Deprivation 2020v2 (seven domains, ranked within Scotland).
+  if (facts.simd) {
+    const { rank, decile, count, domains } = facts.simd;
+    return (
+      <section className="rounded-2xl border border-[var(--border)] bg-white p-4 shadow-sm">
+        <header className="mb-1 flex items-baseline justify-between gap-2">
+          <h2 className="text-sm font-semibold tracking-tight">Deprivation (SIMD 2020)</h2>
+          <span className="text-xs text-[var(--muted)]">
+            rank {rank.toLocaleString("en-GB")}/{count.toLocaleString("en-GB")} · decile {decile}/10
+          </span>
+        </header>
+        <p className="mb-3 text-[11px] leading-snug text-[var(--muted)]">
+          Decile within Scotland - <strong>1</strong> = most deprived 10%, <strong>10</strong> = least,
+          for this data zone.
+        </p>
+        <DomainBars domains={domains} rows={SIMD_DOMAINS} />
+        <p className="mt-3 text-[11px] leading-relaxed text-[var(--muted)]">
+          Source:{" "}
+          <SourceLink href={simdSourceUrl()}>
+            Scottish Government - Scottish Index of Multiple Deprivation 2020
+          </SourceLink>
+          .
+        </p>
+      </section>
+    );
+  }
+
   // Wales: Welsh Index of Multiple Deprivation 2025 (eight domains, ranked within Wales).
   if (facts.wimd) {
     const { rank, decile, count, domains } = facts.wimd;

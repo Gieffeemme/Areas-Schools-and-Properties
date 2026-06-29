@@ -34,7 +34,8 @@
     "etl:income": "node scripts/etl/build-income.mjs",
     "etl:affordability": "node scripts/etl/build-affordability.mjs",
     "etl:wimd": "node scripts/etl/build-wimd.mjs",
-    "etl:welsh-schools": "node scripts/etl/build-welsh-schools.mjs"
+    "etl:welsh-schools": "node scripts/etl/build-welsh-schools.mjs",
+    "etl:simd": "node scripts/etl/build-simd.mjs"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.21",
