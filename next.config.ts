@@ -10,7 +10,7 @@ const nextConfig: NextConfig = {
     "/api/area": ["src/data/*.json"], // fetchSchools reads gias + every URN-keyed enrichment file
     "/api/property": ["src/data/*.json"], // geocodePostcode reads imd + council-tax by LSOA
     "/api/schools": ["src/data/*.json"], // fetchSchoolsByIds builds full schools (compare view)
-    "/api/school-search": ["src/data/gias.json", "src/data/nurseries.json", "src/data/welsh-schools.json", "src/data/ni-schools.json"], // searchSchools only
+    "/api/school-search": ["src/data/gias.json", "src/data/nurseries.json", "src/data/welsh-schools.json", "src/data/ni-schools.json", "src/data/scotland-schools.json"], // searchSchools only
     "/api/deprivation-points": ["src/data/imd-domains-by-lsoa.json"], // imdDomainsForLsoa only
   },
 };

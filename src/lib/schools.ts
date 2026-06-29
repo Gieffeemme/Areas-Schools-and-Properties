@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { distanceMiles } from "./distance";
 import { School, OfstedRating, LatLng, ParentView, SchoolMatch } from "./types";
-import { ofstedReportUrl, ofstedEarlyYearsUrl, myLocalSchoolUrl, niSchoolsDirectoryUrl } from "./links";
+import { ofstedReportUrl, ofstedEarlyYearsUrl, myLocalSchoolUrl, niSchoolsDirectoryUrl, parentzoneScotlandUrl } from "./links";
 import { REPORT_CARD_BANDS, REPORT_CARD_LABEL, type ReportCard, type ReportCardBand } from "./reportCard";
 
 // The committed datasets in src/data are read from disk at runtime instead of being `import`-bundled,
@@ -256,6 +256,24 @@ interface NiSchoolRecord {
 const ni = memo(() => loadData<NiSchoolRecord[]>("ni-schools.json"));
 const niByRef = memo(() => new Map(ni().map((n) => [n.ref, n])));
 
+// Scottish schools — from the SG "School Roll and Locations" register (build-scotland-schools.mjs).
+// Not in GIAS; richest of the registers (geocoded, with roll + denomination). No Ofsted/results
+// (Education Scotland inspects, no single grade) → link to Parentzone.
+interface ScotlandSchoolRecord {
+  seed: string;
+  name: string;
+  postcode: string;
+  lat: number;
+  lng: number;
+  phase?: string;
+  kind?: "special" | "alternative" | "independent";
+  pupils?: number;
+  religion?: string;
+  la?: string;
+}
+const scotland = memo(() => loadData<ScotlandSchoolRecord[]>("scotland-schools.json"));
+const scotlandBySeed = memo(() => new Map(scotland().map((s) => [s.seed, s])));
+
 // URN → record indexes, so one setting can be resolved by id without scanning the arrays
 // (used by fetchSchoolsByIds for the compare feature).
 const giasByUrn = memo(() => new Map(gias().map((g) => [g.urn, g])));
@@ -303,6 +321,13 @@ export async function fetchSchools(
     schools.push(buildNiSchool(n, round1(d)));
   }
 
+  // Scottish schools (SG register; geocoded). No collision with England GIAS.
+  for (const sc of scotland()) {
+    const d = distanceMiles(centre.lat, centre.lng, sc.lat, sc.lng);
+    if (d > radiusMiles) continue;
+    schools.push(buildScotlandSchool(sc, round1(d)));
+  }
+
   schools.sort((a, b) => a.distanceMiles - b.distanceMiles);
   return schools;
 }
@@ -343,6 +368,11 @@ export function searchSchools(query: string, limit = 8): SchoolMatch[] {
     const score = rank(n.name);
     if (score < 0) continue;
     scored.push({ score, m: { id: `ni/${n.ref}`, name: n.name, phase: n.phase, postcode: n.postcode, lat: n.lat, lng: n.lng } });
+  }
+  for (const sc of scotland()) {
+    const score = rank(sc.name);
+    if (score < 0) continue;
+    scored.push({ score, m: { id: `scot/${sc.seed}`, name: sc.name, phase: sc.phase, postcode: sc.postcode, lat: sc.lat, lng: sc.lng } });
   }
   scored.sort((a, b) => a.score - b.score || a.m.name.length - b.m.name.length);
   return scored.slice(0, limit).map((s) => s.m);
@@ -476,6 +506,25 @@ function buildNiSchool(n: NiSchoolRecord, dist: number): School {
   };
 }
 
+/** Build a School from an SG-register record. Like Wales/NI, no Ofsted/results — `nation: "Scotland"`
+ *  drives the UI; the per-school link is the Parentzone school information dashboard. */
+function buildScotlandSchool(sc: ScotlandSchoolRecord, dist: number): School {
+  return {
+    id: `scot/${sc.seed}`,
+    name: sc.name,
+    lat: sc.lat,
+    lng: sc.lng,
+    distanceMiles: dist,
+    nation: "Scotland",
+    phase: sc.phase,
+    kind: sc.kind,
+    pupils: sc.pupils,
+    religion: sc.religion,
+    ofsted: "Not rated",
+    ofstedReport: parentzoneScotlandUrl(),
+  };
+}
+
 /** Full School objects for specific ids ("gias/{urn}" | "ey/{urn}"), for the compare feature.
  *  Distance is 0 (no search centre); unresolvable ids are skipped; order follows `ids`. */
 export function fetchSchoolsByIds(ids: string[]): School[] {
@@ -497,6 +546,9 @@ export function fetchSchoolsByIds(ids: string[]): School[] {
     } else if (kind === "ni") {
       const n = niByRef().get(urn);
       if (n) out.push(buildNiSchool(n, 0));
+    } else if (kind === "scot") {
+      const sc = scotlandBySeed().get(urn);
+      if (sc) out.push(buildScotlandSchool(sc, 0));
     }
   }
   return out;

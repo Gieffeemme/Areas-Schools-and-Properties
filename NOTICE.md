@@ -13,6 +13,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Schools register & metadata (GIAS) | Department for Education | OGL v3.0 |
 | Welsh schools register (address list of schools) | Welsh Government | OGL v3.0 |
 | NI schools register (school level enrolment data) | Department of Education NI | OGL v3.0 |
+| Scottish schools register (School Roll and Locations) | Scottish Government | OGL v3.0 |
 | Ofsted ratings & Early Years report cards | Ofsted | OGL v3.0 |
 | Exam & performance (KS2/4/5, destinations, census, workforce, finance) | Department for Education | OGL v3.0 |
 | Parent View | Ofsted | OGL v3.0 |

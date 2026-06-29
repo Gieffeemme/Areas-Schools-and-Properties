@@ -12,6 +12,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Schools register & metadata (GIAS)", provider: "Department for Education", licence: "OGL v3.0" },
   { name: "Welsh schools register (address list of schools)", provider: "Welsh Government", licence: "OGL v3.0" },
   { name: "NI schools register (school level enrolment data)", provider: "Department of Education NI", licence: "OGL v3.0" },
+  { name: "Scottish schools register (School Roll and Locations)", provider: "Scottish Government", licence: "OGL v3.0" },
   { name: "Ofsted ratings & Early Years report cards", provider: "Ofsted", licence: "OGL v3.0" },
   { name: "Exam & performance data (KS2/4/5, destinations, census, workforce, finance)", provider: "Department for Education", licence: "OGL v3.0" },
   { name: "Parent View survey", provider: "Ofsted", licence: "OGL v3.0" },

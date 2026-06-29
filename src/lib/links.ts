@@ -28,3 +28,8 @@ export const myLocalSchoolUrl = (number: string) =>
 // so this is the authoritative NI school directory to look the school up in (+ find its ETI reports).
 export const niSchoolsDirectoryUrl = () =>
   "https://apps.education-ni.gov.uk/appinstitutes/default.aspx";
+
+// Education Scotland "Parentzone" school information dashboard — the official per-school info source
+// (no clean per-school deep link, so we link the dashboard to look the school up).
+export const parentzoneScotlandUrl = () =>
+  "https://education.gov.scot/parentzone/my-school/school-information-dashboard/";
