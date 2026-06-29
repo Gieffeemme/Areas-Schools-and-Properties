@@ -9,11 +9,32 @@ This is the reference for the whole system. If you're new here, read §3 (the co
 
 A map-first web app: enter a **UK postcode** (or a **school name**) and get a dashboard of the
 **schools, crime, property prices and deprivation** around it, plus a deep per-school detail view.
-A Locrating-style "area & school intelligence" tool. No login. England-focused for school data
-(school registers and DfE performance data are England-only; crime/prices/geocoding are UK-wide).
+A Locrating-style "area & school intelligence" tool. No login. Coverage is **deepest in England**
+(school registers + DfE performance data are England-only) and thins toward the other nations — see
+the matrix below.
 
 - **Live:** https://areas-schools-and-properties.vercel.app
 - **Repo:** `Gieffeemme/Areas-Schools-and-Properties` — **push to `main` → Vercel auto-deploys.**
+
+### Coverage by nation
+
+Free open data is published per-nation by different bodies, so coverage is heterogeneous. What a user gets:
+
+| Layer | England | Wales | Scotland | N. Ireland |
+|-------|:---:|:---:|:---:|:---:|
+| School pins + phase | ✓ GIAS | ✓ Welsh register | ✗ | ✗ |
+| School Ofsted grade + DfE results | ✓ | ✗ (Estyn: no grade → My Local School link) | ✗ | ✗ |
+| Nurseries (Ofsted Early Years) | ✓ | ✗ | ✗ | ✗ |
+| Deprivation (per-domain) | ✓ IMD 2019 | ✓ WIMD 2025 | ✓ SIMD 2020v2 | ✗ (NIMDM = next) |
+| Street crime (police.uk) | ✓ | ✓ | ✗ no Police Scotland | ✓ |
+| Sold prices (Land Registry PPD) | ✓ | ✓ | ✗ (Registers of Scotland) | ✗ |
+| Census demographics + income | ✓ | ✓ | ✗ (NRS) | ✗ (NISRA) |
+| Council-tax bands | ✓ | ✓ | ✗ | ✗ |
+| Broadband + mobile (Ofcom) | ✓ | ✓ | ✓ | ✓ |
+| Air quality (Defra PCM) | ✓ | ✓ | ✓ | ✗ (Irish grid) |
+| Noise · flood · bathing water · CQC · EPC | ✓ | ✗ | ✗ | ✗ |
+| Planning constraints (planning.data.gov.uk) | ✓ | ✗ | ✗ | ✗ |
+| Amenities · stations · EV · planning apps · geocoding | ✓ | ✓ | ✓ | ✓ |
 
 ---
 
@@ -50,8 +71,11 @@ enriches it with all the `*-by-urn.json` datasets — Ofsted grades, KS2/KS4/KS5
 View, pupil census, destinations, workforce, finance. Because URN is native (not fuzzy-matched
 like the old OSM approach), enrichment reaches ~all schools (e.g. 97% of secondaries have Ofsted).
 
-**Area deprivation joins by LSOA code.** `geocodePostcode()` reads `codes.lsoa` from postcodes.io
-and looks the seven IMD-2019 domain deciles up in `imd-domains-by-lsoa.json`.
+**Area deprivation joins by small-area code.** `geocodePostcode()` reads the small-area code from
+postcodes.io and looks up the per-domain deciles for the right nation: England → IMD-2019 by
+`codes.lsoa` (`imd-domains-by-lsoa.json`), Wales → WIMD-2025 by `codes.lsoa` (`wimd-by-lsoa.json`),
+Scotland → SIMD-2020v2 by `codes.lsoa11` (`simd-by-datazone.json`). Each dataset is keyed to a single
+nation's codes, so the lookups self-gate — only one populates per postcode.
 
 State **nursery schools** appear in GIAS too; they're de-duped against the Early Years register by
 postcode (GIAS wins — it has a school-framework Ofsted grade).
@@ -273,7 +297,7 @@ map remounts and re-fits when any of those change.
   demographics — age structure + median, self-reported health, tenure mix, car/van availability, work,
   education, household composition, plus **net household income** (ONS small-area estimates, MSOA, vs the
   E&W median); England &
-  Wales), **Deprivation** (England **IMD 2019** 7-domain breakdown; Wales **WIMD 2025** overall + 8-domain breakdown), Crime (vs national percentile), **Amenities** (committed OSM dataset — supermarkets,
+  Wales), **Deprivation** (England **IMD 2019** 7-domain; Wales **WIMD 2025** overall + 8-domain; Scotland **SIMD 2020v2** overall + 7-domain), Crime (vs national percentile), **Amenities** (committed OSM dataset — supermarkets,
   convenience, GPs, pharmacies, parks, gyms, dining, + the station count), **Transport** (the nearest
   rail/metro/tram station, named — committed OSM dataset), **EV charging** (public chargepoints near the
   point — count + nearest with operator/capacity, committed OSM dataset), **Broadband** (Ofcom coverage), **Mobile
