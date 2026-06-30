@@ -11,6 +11,7 @@ import {
   PlanningConstraintsSummary,
   PlanningSummary,
   PriceSummary,
+  ScotlandFloodSummary,
 } from "@/lib/types";
 import Card from "./Card";
 
@@ -25,13 +26,17 @@ export default function PropertyChecks({
   prices,
   postcode,
   councilTax,
+  country,
 }: {
   centre: LatLng;
   prices: PriceSummary | null;
   postcode?: string;
   councilTax?: CouncilTaxSummary | null;
+  country?: string;
 }) {
+  const isScotland = country === "Scotland";
   const [flood, setFlood] = useState<FloodSummary | null | "loading">("loading");
+  const [scotFlood, setScotFlood] = useState<ScotlandFloodSummary | null | "loading">("loading");
   const [epc, setEpc] = useState<EpcSummary | null | "loading">("loading");
   const [planning, setPlanning] = useState<PlanningSummary | null | "loading">("loading");
   const [constraints, setConstraints] = useState<PlanningConstraintsSummary | null | "loading">(
@@ -41,15 +46,24 @@ export default function PropertyChecks({
 
   useEffect(() => {
     let on = true;
-    setFlood("loading");
-    fetch(`/api/flood?lat=${centre.lat}&lng=${centre.lng}`)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((d) => on && setFlood(d as FloodSummary | null))
-      .catch(() => on && setFlood(null));
+    // Scotland: SEPA flood-hazard (no EA flood-area data there). Elsewhere: the EA flood route.
+    if (isScotland) {
+      setScotFlood("loading");
+      fetch(`/api/scotland-flood?lat=${centre.lat}&lng=${centre.lng}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => on && setScotFlood(d as ScotlandFloodSummary | null))
+        .catch(() => on && setScotFlood(null));
+    } else {
+      setFlood("loading");
+      fetch(`/api/flood?lat=${centre.lat}&lng=${centre.lng}`)
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => on && setFlood(d as FloodSummary | null))
+        .catch(() => on && setFlood(null));
+    }
     return () => {
       on = false;
     };
-  }, [centre.lat, centre.lng]);
+  }, [centre.lat, centre.lng, isScotland]);
 
   useEffect(() => {
     let on = true;
@@ -104,7 +118,7 @@ export default function PropertyChecks({
   }, [postcode]);
 
   const checks: Check[] = [
-    floodCheck(flood),
+    isScotland ? scotlandFloodCheck(scotFlood) : floodCheck(flood),
     soldPriceCheck(prices),
     tenureCheck(prices),
     epcCheck(epc),
@@ -304,6 +318,20 @@ function floodCheck(flood: FloodSummary | null | "loading"): Check {
       ? ` · ${flood.activeWarnings} active ${(flood.topSeverity ?? "warning").toLowerCase()} now`
       : "";
   return { label: "Flood risk", status: "live", value: `${where}${name}${active}`, source: "Environment Agency" };
+}
+
+// Scotland: SEPA flood-hazard likelihood per source (no EA flood-area data). Surface-water risk is
+// widespread, so we lead with the river/coastal sources and qualify surface water.
+function scotlandFloodCheck(sf: ScotlandFloodSummary | null | "loading"): Check {
+  if (sf === "loading") return { label: "Flood risk", status: "soon", value: "Checking…", source: "SEPA flood maps" };
+  if (!sf) return { label: "Flood risk", status: "soon", value: "Temporarily unavailable", source: "SEPA flood maps" };
+  const LIK: Record<string, string> = { high: "high", medium: "medium", low: "low" };
+  const parts: string[] = [];
+  if (sf.river) parts.push(`Rivers: ${LIK[sf.river]}`);
+  if (sf.coastal) parts.push(`Coastal: ${LIK[sf.coastal]}`);
+  if (sf.surfaceWater) parts.push(`Surface water: ${LIK[sf.surfaceWater]}`);
+  const value = parts.length ? `${parts.join(" · ")} likelihood` : "No modelled flood risk at this point";
+  return { label: "Flood risk", status: "live", value, source: "SEPA flood maps (river/coastal/surface water)" };
 }
 
 function planningCheck(p: PlanningSummary | null | "loading"): Check {

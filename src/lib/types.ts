@@ -149,6 +149,15 @@ export interface PlaceMatch {
   lng: number;
 }
 
+// SEPA flood-hazard likelihood at a point (Scotland) — the highest band the point falls in, per source.
+// high ≈ 1-in-10-year, medium ≈ 1-in-200, low ≈ 1-in-1000 annual chance. null = not in any modelled extent.
+export type FloodLikelihood = "high" | "medium" | "low";
+export interface ScotlandFloodSummary {
+  river: FloodLikelihood | null;
+  surfaceWater: FloodLikelihood | null;
+  coastal: FloodLikelihood | null;
+}
+
 export interface FloodSummary {
   status: "warning-area" | "alert-area" | "clear"; // does an EA flood area contain the point
   areaName?: string; // description of the containing flood area

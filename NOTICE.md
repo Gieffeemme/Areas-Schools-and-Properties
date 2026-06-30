@@ -29,7 +29,8 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Council tax bands & amounts (Scotland) | Scottish Government | OGL v3.0 |
 | Broadband (Connected Nations) | Ofcom | OGL v3.0 |
 | Environmental noise (strategic noise mapping) | Defra | OGL v3.0 |
-| Flood risk & warnings | Environment Agency | OGL v3.0 |
+| Flood risk & warnings (England) | Environment Agency | OGL v3.0 |
+| Flood hazard maps (Scotland) | Scottish Environment Protection Agency (SEPA) | OGL v3.0 |
 | Energy performance certificates (EPC) | MHCLG (Get energy performance of buildings data) | EPB reuse terms |
 | Planning applications | PlanIt (aggregates UK local-authority planning registers) | Third-party aggregator (see note) |
 | Amenities, stations, EV charging & base maps | OpenStreetMap contributors | **ODbL** (data); tiles © CARTO / © Mapbox |

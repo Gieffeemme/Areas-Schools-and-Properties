@@ -330,6 +330,7 @@ function SidePanels({
       prices={report.prices}
       postcode={report.facts.postcode}
       councilTax={report.facts.councilTax}
+      country={report.facts.country}
     />
   );
 
