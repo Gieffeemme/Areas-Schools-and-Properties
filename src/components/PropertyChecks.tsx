@@ -6,6 +6,7 @@ import {
   CqcSummary,
   EpcSummary,
   FloodSummary,
+  GreenSpaceSummary,
   LatLng,
   OfstedRating,
   PlanningConstraintsSummary,
@@ -26,12 +27,14 @@ export default function PropertyChecks({
   prices,
   postcode,
   councilTax,
+  greenSpace,
   country,
 }: {
   centre: LatLng;
   prices: PriceSummary | null;
   postcode?: string;
   councilTax?: CouncilTaxSummary | null;
+  greenSpace?: GreenSpaceSummary | null;
   country?: string;
 }) {
   // Scotland (SEPA) + Wales (NRW) use the devolved flood-RISK query; England uses the EA flood route.
@@ -125,6 +128,7 @@ export default function PropertyChecks({
     tenureCheck(prices),
     epcCheck(epc),
     councilTaxCheck(councilTax),
+    greenSpaceCheck(greenSpace),
     planningCheck(planning),
     planningConstraintsCheck(constraints),
     cqcCheck(cqc),
@@ -242,6 +246,21 @@ function epcCheck(epc: EpcSummary | null | "loading"): Check {
     value: `Typical band ${epc.typicalBand} · ${topBands(epc.bands, (b, n) => `${n} ${b}`)}`,
     source: `MHCLG EPC register · ${epc.count} certificate${epc.count === 1 ? "" : "s"}`,
     bars: bandSegs(epc.bands, epcColor),
+  };
+}
+
+function greenSpaceCheck(gs: GreenSpaceSummary | null | undefined): Check {
+  if (!gs) {
+    return { label: "Green space & gardens", status: "soon", source: "ONS / OS · Great Britain only" };
+  }
+  const km = gs.nearestParkM >= 1000 ? `${(gs.nearestParkM / 1000).toFixed(1)} km` : `${gs.nearestParkM} m`;
+  const within = gs.parksWithin1km != null ? ` · ${gs.parksWithin1km} within 1 km` : "";
+  const garden = gs.gardenPct != null ? ` · ${gs.gardenPct}% of homes have a garden` : "";
+  return {
+    label: "Green space & gardens",
+    status: "live",
+    value: `Nearest green space ≈ ${km}${within}${garden}`,
+    source: "ONS · access to gardens & public green space (OS data)",
   };
 }
 

@@ -230,6 +230,14 @@ export interface EpcSummary {
 
 // Council Tax band mix for an LSOA (neighbourhood), from the VOA "stock of properties" stats
 // (table CTSOP4.1). Counts are VOA-rounded to 10; England has bands A-H, Wales A-I.
+// ONS "Access to gardens and public green space" (OS data, 2020), Great Britain. Public green space is
+// LSOA-level (join codes.lsoa11); the private-garden share is MSOA-level (join codes.msoa).
+export interface GreenSpaceSummary {
+  nearestParkM: number; // avg distance to the nearest park / public garden / playing field (m)
+  parksWithin1km: number | null; // avg number of green spaces within 1 km
+  gardenPct: number | null; // % of addresses with private outdoor space (MSOA; null if unmatched)
+}
+
 export interface CouncilTaxSummary {
   total: number; // dwellings on the valuation list in the LSOA
   bands: Record<string, number>; // band A-I → count
@@ -405,6 +413,7 @@ export interface AreaFacts {
   simd?: SimdSummary | null; // Scottish Index of Multiple Deprivation 2020v2 (Scotland) — overall + 7 domains
   nimdm?: NimdmSummary | null; // NI Multiple Deprivation Measure 2017 (Northern Ireland) — overall + 7 domains
   scotlandCrime?: ScotlandCrimeSummary | null; // council-area recorded crime (Scotland; police.uk has no Police Scotland)
+  greenSpace?: GreenSpaceSummary | null; // ONS green-space access + private-garden share (GB; not NI)
   councilTax?: CouncilTaxSummary | null; // VOA band mix for the LSOA (England & Wales)
 }
 
