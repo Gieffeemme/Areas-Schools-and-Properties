@@ -11,7 +11,12 @@ const nextConfig: NextConfig = {
     "/api/property": ["src/data/*.json"], // geocodePostcode reads imd + council-tax by LSOA
     "/api/schools": ["src/data/*.json"], // fetchSchoolsByIds builds full schools (compare view)
     "/api/school-search": ["src/data/gias.json", "src/data/nurseries.json", "src/data/welsh-schools.json", "src/data/ni-schools.json", "src/data/scotland-schools.json"], // searchSchools only
-    "/api/deprivation-points": ["src/data/imd-domains-by-lsoa.json"], // imdDomainsForLsoa only
+    "/api/deprivation-points": [
+      "src/data/imd-domains-by-lsoa.json",
+      "src/data/wimd-by-lsoa.json",
+      "src/data/simd-by-datazone.json",
+      "src/data/nimdm-by-soa.json",
+    ], // imd/wimd/simd/nimdm domain lookups (UK-wide deprivation surface)
   },
 };
 

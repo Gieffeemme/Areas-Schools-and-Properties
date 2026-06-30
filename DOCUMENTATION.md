@@ -246,7 +246,7 @@ src/
       school-search/route.ts   searchSchools() autocomplete
       place-search/route.ts    searchPlaces() autocomplete (town/city/borough, postcodes.io Places)
       crime-points/route.ts    point-grid crime layer (police.uk)
-      deprivation-points/route.ts  point-grid IMD layer (postcodes.io)
+      deprivation-points/route.ts  point-grid deprivation layer, UK-wide (IMD/WIMD/SIMD/NIMDM by nation; postcodes.io)
       flood/route.ts           EA flood-risk lookup
       planning/route.ts        fetchPlanning() — nearby planning applications for a point (PlanIt aggregator; for the area Property-checks row)
       cqc/route.ts             nearbyCqc() — nearest rated health/care services for a point (committed CQC directory; for the property report + area Property-checks row)
@@ -333,7 +333,9 @@ map remounts and re-fits when any of those change.
   neighbourhood"** toggle (collapsed by default) fetches the area report for the postcode and shows the
   area panels (schools, crime, deprivation, amenities, broadband, noise, prices) inline.
 - **Compare areas *or* schools** side by side (`/compare`, name typeahead; "Compare shortlisted" from
-  the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain IMD recolour.
+  the list). **`/map`** explorer: overlay layers + a **crime-category filter** and per-domain deprivation
+  recolour (the deprivation heatmap is **UK-wide** — IMD/WIMD/SIMD/NIMDM by nation, each within-nation;
+  devolved domains map onto the seven keys with an overall-decile fallback where a nation lacks one).
 - **Every panel links to its source** (a clickable "↗" in the footer): Ofsted/DfE (schools), HM Land
   Registry (prices), VOA (council tax), Environment Agency (flood), Ofcom (broadband), police.uk
   (crime), MHCLG (IMD), Defra (noise), OpenStreetMap (amenities/stations), PlanIt (planning applications), planning.data.gov.uk (planning constraints), CQC (health & care) — built by `lib/sources.ts`,

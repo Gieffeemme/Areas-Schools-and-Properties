@@ -1,19 +1,33 @@
 import { NextRequest, NextResponse } from "next/server";
 import { imdDomainsForLsoa } from "@/lib/imd";
+import { wimdForLsoa } from "@/lib/wimd";
+import { simdForDatazone } from "@/lib/simd";
+import { nimdmForSoa } from "@/lib/nimdm";
 
-// Returns a deprivation (IMD) surface as a GeoJSON FeatureCollection for the area around a point.
-// We sample a grid of locations inside the search radius and reverse-geocode them in ONE bulk call
-// to postcodes.io, tagging each with its LSOA's English IMD 2019 decile (1 = most deprived).
-// No bundled dataset or LSOA boundaries needed - the same live source the area lookup already uses.
+// Returns a deprivation surface as a GeoJSON FeatureCollection for the area around a point. We sample a
+// grid of locations inside the search radius and reverse-geocode them in ONE bulk call to postcodes.io,
+// tagging each with its small area's deprivation decile (1 = most deprived) for the right nation:
+// England IMD 2019, Wales WIMD 2025, Scotland SIMD 2020v2, NI NIMDM 2017 — so the map's deprivation
+// layer works UK-wide. The overall decile is within-nation (each index ranks within its own country).
+//
+// Domains differ by nation, so we map each onto the seven map keys where there's a clean equivalent and
+// fall back to the overall decile otherwise (Wales: community→crime, physical→living; Scotland: no
+// living; NI: no housing). The per-domain dropdown therefore stays meaningful UK-wide without holes.
 
 const ENGLAND_LSOA_COUNT = 32844; // matches the decile derivation in lib/geocode.ts
 
+interface RevGeoResult {
+  country?: string;
+  index_of_multiple_deprivation?: number;
+  codes?: { lsoa?: string; lsoa11?: string };
+}
 interface RevGeo {
   query: { longitude: number; latitude: number };
-  result:
-    | { country?: string; index_of_multiple_deprivation?: number; codes?: { lsoa?: string } }[]
-    | null;
+  result: RevGeoResult[] | null;
 }
+
+type Dom7 = "income" | "employment" | "education" | "health" | "crime" | "housing" | "living";
+type DomMap = Partial<Record<Dom7, number | null>>;
 
 // A square grid clipped to the search circle. 11×11 ≈ 95 points inside the circle, just under
 // postcodes.io's 100-geolocation bulk cap, so the whole area is one request.
@@ -37,6 +51,39 @@ function sampleGrid(lat: number, lng: number, radiusMiles: number) {
 const decileFromRank = (rank: number): number =>
   Math.min(10, Math.max(1, Math.ceil((rank / ENGLAND_LSOA_COUNT) * 10)));
 
+// The deprivation decile + per-domain deciles for a reverse-geocoded point, by nation. null = no data.
+function deprivationAt(r: RevGeoResult): { decile: number; dom: DomMap } | null {
+  const c = r.codes;
+  if (r.country === "England") {
+    if (typeof r.index_of_multiple_deprivation !== "number") return null;
+    const decile = decileFromRank(r.index_of_multiple_deprivation);
+    const d = imdDomainsForLsoa(c?.lsoa);
+    return {
+      decile,
+      dom: d ? { income: d.income, employment: d.employment, education: d.education, health: d.health, crime: d.crime, housing: d.housing, living: d.living } : {},
+    };
+  }
+  if (r.country === "Wales") {
+    const w = wimdForLsoa(c?.lsoa);
+    if (!w) return null;
+    const x = w.domains;
+    return { decile: w.decile, dom: { income: x.income, employment: x.employment, education: x.education, health: x.health, crime: x.community, housing: x.housing, living: x.physical } };
+  }
+  if (r.country === "Scotland") {
+    const s = simdForDatazone(c?.lsoa11);
+    if (!s) return null;
+    const x = s.domains;
+    return { decile: s.decile, dom: { income: x.income, employment: x.employment, education: x.education, health: x.health, crime: x.crime, housing: x.housing } };
+  }
+  if (r.country === "Northern Ireland") {
+    const n = nimdmForSoa(c?.lsoa11);
+    if (!n) return null;
+    const x = n.domains;
+    return { decile: n.decile, dom: { income: x.income, employment: x.employment, education: x.education, health: x.health, crime: x.crime, living: x.living } };
+  }
+  return null;
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = req.nextUrl;
   const lat = Number(searchParams.get("lat"));
@@ -59,26 +106,23 @@ export async function GET(req: NextRequest) {
     const features = (json.result ?? [])
       .map((g) => {
         const r = g.result?.[0];
-        const rank = r?.index_of_multiple_deprivation;
-        // English IMD only - postcodes.io exposes no comparable rank for the other nations.
-        if (!r || r.country !== "England" || typeof rank !== "number") return null;
-        const overall = decileFromRank(rank);
-        // Per-domain deciles for this point's LSOA drive the per-domain heatmap; fall back to the
-        // overall decile if the LSOA is somehow unmatched, so the surface never has holes.
-        const dom = imdDomainsForLsoa(r.codes?.lsoa);
+        if (!r) return null;
+        const dep = deprivationAt(r);
+        if (!dep) return null;
+        const o = dep.decile; // overall decile; the per-domain fallback when a nation lacks that domain
+        const d = dep.dom;
         return {
           type: "Feature" as const,
           geometry: { type: "Point" as const, coordinates: [g.query.longitude, g.query.latitude] },
           properties: {
-            decile: overall,
-            rank,
-            income: dom?.income ?? overall,
-            employment: dom?.employment ?? overall,
-            education: dom?.education ?? overall,
-            health: dom?.health ?? overall,
-            crime: dom?.crime ?? overall,
-            housing: dom?.housing ?? overall,
-            living: dom?.living ?? overall,
+            decile: o,
+            income: d.income ?? o,
+            employment: d.employment ?? o,
+            education: d.education ?? o,
+            health: d.health ?? o,
+            crime: d.crime ?? o,
+            housing: d.housing ?? o,
+            living: d.living ?? o,
           },
         };
       })

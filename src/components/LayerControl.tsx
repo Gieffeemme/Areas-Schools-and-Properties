@@ -3,14 +3,17 @@
 const LAYERS: { id: string; label: string; available: boolean }[] = [
   { id: "schools", label: "Schools (Ofsted)", available: true },
   { id: "crime", label: "Crime (heatmap)", available: true },
-  { id: "deprivation", label: "Deprivation (IMD)", available: true },
+  { id: "deprivation", label: "Deprivation", available: true },
   { id: "prices", label: "Property prices", available: false },
   { id: "flood", label: "Flood risk", available: false },
   { id: "amenities", label: "Amenities", available: false },
 ];
 
+// Deprivation domains. The seven map keys are England's IMD domains; the devolved indices (WIMD/SIMD/
+// NIMDM) map their nearest domain onto these in /api/deprivation-points, falling back to the overall
+// decile where a nation has no equivalent (so the dropdown stays meaningful UK-wide).
 const IMD_DOMAINS: { value: string; label: string }[] = [
-  { value: "overall", label: "Overall IMD" },
+  { value: "overall", label: "Overall deprivation" },
   { value: "income", label: "Income" },
   { value: "employment", label: "Employment" },
   { value: "education", label: "Education & skills" },
