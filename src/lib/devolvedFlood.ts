@@ -14,6 +14,8 @@ const likelihood = (v?: string): FloodLikelihood | null => {
   return s.includes("high") ? "high" : s.includes("medium") ? "medium" : s.includes("low") ? "low" : null;
 };
 
+// NI is intentionally absent: DfI's Flood Maps NI aren't published as an open queryable service (the
+// open-data route is a manual data *request*, and the ArcGIS layers are secured) — unlike SEPA/NRW.
 export async function fetchDevolvedFlood(nation: string, centre: LatLng): Promise<DevolvedFloodSummary | null> {
   if (nation === "Scotland") return fetchScotlandFlood(centre);
   if (nation === "Wales") return fetchWalesFlood(centre);

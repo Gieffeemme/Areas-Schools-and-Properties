@@ -34,7 +34,7 @@ Free open data is published per-nation by different bodies, so coverage is heter
 | Council tax / rates | ✓ bands (VOA) | ✓ bands (VOA) | ✓ bands, council-area (SG) | ✗ (domestic rates, different system) |
 | Broadband + mobile (Ofcom) | ✓ | ✓ | ✓ | ✓ |
 | Air quality (Defra PCM) | ✓ | ✓ | ✓ | ✗ (Irish grid) |
-| Flood risk | ✓ EA (warning/alert areas) | ✓ NRW (hazard maps, live) | ✓ SEPA (hazard maps, live) | ✗ (DfI — pending) |
+| Flood risk | ✓ EA (warning/alert areas) | ✓ NRW (hazard maps, live) | ✓ SEPA (hazard maps, live) | ✗ (DfI not openly queryable) |
 | Noise · bathing water · CQC · EPC | ✓ | ✗ | ✗ | ✗ |
 | Planning constraints (planning.data.gov.uk) | ✓ | ✗ | ✗ | ✗ |
 | Amenities · stations · EV · planning apps · geocoding | ✓ | ✓ | ✓ | ✓ |
