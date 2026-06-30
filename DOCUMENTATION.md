@@ -685,7 +685,8 @@ ISI-inspected, no Ofsted grade).
 
 **Shipped — all four UK nations.** The three core layers now span England, Wales, Scotland and NI (see
 the §1 coverage matrix): **deprivation** (IMD 2019 / WIMD 2025 / SIMD 2020v2 / NIMDM 2017, per-domain,
-each via its own committed ETL joined on that nation's small-area code), **school listings** (GIAS +
+each via its own committed ETL joined on that nation's small-area code — in the area panel *and*, now,
+the `/map` explorer's per-domain heatmap), **school listings** (GIAS +
 the Welsh / Scottish / NI registers, since the devolved schools aren't in GIAS — phase, pupils and
 nation-specific extras like Welsh-/Irish-medium and NI grammars; the per-nation UI is config-driven via
 `lib/nations.ts`), and **crime** (police.uk street-level for England/Wales/NI; SG council-area recorded
