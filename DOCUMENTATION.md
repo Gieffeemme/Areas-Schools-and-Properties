@@ -690,8 +690,9 @@ nation-specific extras like Welsh-/Irish-medium and NI grammars; the per-nation 
 crime for Scotland, which police.uk doesn't cover). Each is shown at the granularity that nation
 publishes and labelled honestly (no street-level where only council-area exists; no Ofsted-style grade
 where the devolved inspectorates give none). A follow-on **devolved property-parity** pass then added
-**Scotland council tax** (`etl:scotland-council-tax`) and **Scotland flood risk** (live SEPA query) —
-where devolved property parity ends on free data (per-property EPC and sold prices are gated, below).
+**Scotland council tax** (`etl:scotland-council-tax`) and **flood risk** for Scotland (SEPA) + Wales
+(NRW) via one live `devolvedFlood.ts` point-query — where devolved property parity ends on free data
+(per-property EPC + sold prices, and NI's flood service, are gated, below).
 
 **Remaining (free data): the original Tier-1 queue is cleared; a fresh sweep found more England layers.**
 Every originally-queued free dataset has shipped; a "what other England free data exists" sweep then
@@ -741,7 +742,9 @@ distinction matters: only the *login-gated* tier is unlockable by just registeri
   commute times** (the nearest *station* is shipped free via OSM, but journey times need a paid API).
 
 Plus a few that are public but awkward, not gated: **per-school subjects** (DfE national-only, not
-per-school), **11+ oversubscription** (published LA-by-LA), **NI domestic rates** (capital-value model).
+per-school), **11+ oversubscription** (published LA-by-LA), **NI domestic rates** (capital-value model),
+and **NI flood maps** (DfI publishes them only via a viewer app + a manual data *request* — not the
+open queryable service SEPA/NRW give, so the live flood point-query covers Scotland + Wales only).
 
 **Non-England nations — deprivation, school listings and crime now shipped for all four** (per-nation
 detail below). Each needed its **own register, inspectorate and deprivation data** joined on that
@@ -763,14 +766,16 @@ What remains per nation is **school *quality*** (grades/results), which isn't ac
   grade and there's no per-school results feed (same shape as Wales/NI). **Crime** is council-area-level
   only (police.uk has no Police Scotland → SG recorded crime by council, `etl:scotland-crime`), not the
   street-level points the other nations get. **Property parity:** council tax (`etl:scotland-council-tax`)
-  + flood risk (`scotlandFlood.ts`, live SEPA query) are shipped; per-property EPC + sold prices are gated
+  + flood risk (`devolvedFlood.ts`, live SEPA query) are shipped; per-property EPC + sold prices are gated
   (see below).
 - **Northern Ireland** — **deprivation (NIMDM 2017) + the schools register now shipped** (see §3/5/6/9).
   NI schools appear on the map/list/search with phase, enrolment, management type, Irish-medium and
   grammar(selective), from the DE "school level" data (`etl:ni-schools`), linking to DE Schools Plus.
   Remaining: ETI gives no single grade and there's no per-school results feed (same shape as Wales), so
   school *quality* parity isn't achievable. (police.uk already covers NI crime.) Domestic **rates** were
-  evaluated out (capital-value × poundage — a different model from council-tax bands, low value).
+  evaluated out (capital-value × poundage — a different model from council-tax bands, low value), and
+  **flood** is gated (DfI's Flood Maps NI aren't an open queryable service — request-only/secured),
+  unlike Scotland/Wales.
 
 ---
 
