@@ -689,7 +689,9 @@ nation-specific extras like Welsh-/Irish-medium and NI grammars; the per-nation 
 `lib/nations.ts`), and **crime** (police.uk street-level for England/Wales/NI; SG council-area recorded
 crime for Scotland, which police.uk doesn't cover). Each is shown at the granularity that nation
 publishes and labelled honestly (no street-level where only council-area exists; no Ofsted-style grade
-where the devolved inspectorates give none).
+where the devolved inspectorates give none). A follow-on **devolved property-parity** pass then added
+**Scotland council tax** (`etl:scotland-council-tax`) and **Scotland flood risk** (live SEPA query) —
+where devolved property parity ends on free data (per-property EPC and sold prices are gated, below).
 
 **Remaining (free data): the original Tier-1 queue is cleared; a fresh sweep found more England layers.**
 Every originally-queued free dataset has shipped; a "what other England free data exists" sweep then
@@ -721,11 +723,25 @@ OSGB easting/northing — GB-only, gated to skip NI, whose postcodes.io coords a
 otherwise alias onto a GB cell (see §9). The last Tier-1 item, **Defra noise**, is a live
 `GetFeatureInfo` WMS point-query — no ETL/committed data, like crime/prices/amenities.)
 
-**Gated / not cleanly free (need restricted or non-bulk data — §9):** **catchment areas**,
-**feeder schools** and **named destination schools** (restricted NPD pupil-flow microdata);
-**per-school subjects** (DfE subject data is national-only, not bulk-published per school);
-**11+ oversubscription** (published LA-by-LA, messy); **door-to-door commute times** (the nearest
-*station* is shipped free via OSM, but routed journey times need a paid routing/journey-planner API).
+**Gated — not usable on free, downloadable open data.** Three distinct walls, often conflated (the
+distinction matters: only the *login-gated* tier is unlockable by just registering):
+
+- **Restricted — free of charge, but accredited-access only.** **Catchment areas**, **feeder schools**,
+  **named destination schools**: the NPD pupil-residence / pupil-flow microdata via the **ONS Secure
+  Research Service / DfE data share**. No fee, but needs accredited-researcher status + an approved
+  project + a secure environment + output clearance, and only disclosure-controlled *aggregates* can
+  leave — so it can't be served in a public app. This is Locrating's flagship; only **approximable**
+  (distance-based estimates, clearly labelled).
+- **Login-gated — free account.** **Per-property EPC for Scotland / NI**: separate national registers
+  whose bulk extracts sit behind a free signup — the *same shape* as the England/Wales EPC the app
+  already uses (registered key, EPB reuse terms). **Unlockable by registering** + confirming the reuse
+  terms permit serving it; assessed but not built (2026-06-30).
+- **Paid — commercial licence.** **Registers of Scotland** per-transaction sold prices (only aggregate
+  medians are free); **OS Places / Royal Mail PAF** type-the-address lookup; **routed door-to-door
+  commute times** (the nearest *station* is shipped free via OSM, but journey times need a paid API).
+
+Plus a few that are public but awkward, not gated: **per-school subjects** (DfE national-only, not
+per-school), **11+ oversubscription** (published LA-by-LA), **NI domestic rates** (capital-value model).
 
 **Non-England nations — deprivation, school listings and crime now shipped for all four** (per-nation
 detail below). Each needed its **own register, inspectorate and deprivation data** joined on that
@@ -745,12 +761,15 @@ What remains per nation is **school *quality*** (grades/results), which isn't ac
   with phase, roll and denomination, linking to Parentzone. Remaining: Education Scotland gives no single
   grade and there's no per-school results feed (same shape as Wales/NI). **Crime** is council-area-level
   only (police.uk has no Police Scotland → SG recorded crime by council, `etl:scotland-crime`), not the
-  street-level points the other nations get.
+  street-level points the other nations get. **Property parity:** council tax (`etl:scotland-council-tax`)
+  + flood risk (`scotlandFlood.ts`, live SEPA query) are shipped; per-property EPC + sold prices are gated
+  (see below).
 - **Northern Ireland** — **deprivation (NIMDM 2017) + the schools register now shipped** (see §3/5/6/9).
   NI schools appear on the map/list/search with phase, enrolment, management type, Irish-medium and
   grammar(selective), from the DE "school level" data (`etl:ni-schools`), linking to DE Schools Plus.
   Remaining: ETI gives no single grade and there's no per-school results feed (same shape as Wales), so
-  school *quality* parity isn't achievable. (police.uk already covers NI crime.)
+  school *quality* parity isn't achievable. (police.uk already covers NI crime.) Domestic **rates** were
+  evaluated out (capital-value × poundage — a different model from council-tax bands, low value).
 
 ---
 
