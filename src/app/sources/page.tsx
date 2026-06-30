@@ -35,6 +35,7 @@ const SOURCES: { name: string; provider: string; licence: string }[] = [
   { name: "Health & care ratings (care directory with filters)", provider: "Care Quality Commission", licence: "OGL v3.0" },
   { name: "Flood risk & warnings (England)", provider: "Environment Agency", licence: "OGL v3.0" },
   { name: "Flood hazard maps (Scotland)", provider: "Scottish Environment Protection Agency (SEPA)", licence: "OGL v3.0" },
+  { name: "Flood risk maps (Wales)", provider: "Natural Resources Wales (via DataMapWales)", licence: "OGL v3.0" },
   { name: "Bathing water quality (classifications)", provider: "Environment Agency", licence: "OGL v3.0" },
   { name: "Energy performance certificates (EPC)", provider: "MHCLG - Get energy performance of buildings data", licence: "EPB reuse terms" },
   { name: "Planning applications", provider: "PlanIt (aggregates UK local-authority planning registers)", licence: "Third-party - see note" },

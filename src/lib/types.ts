@@ -149,10 +149,11 @@ export interface PlaceMatch {
   lng: number;
 }
 
-// SEPA flood-hazard likelihood at a point (Scotland) — the highest band the point falls in, per source.
-// high ≈ 1-in-10-year, medium ≈ 1-in-200, low ≈ 1-in-1000 annual chance. null = not in any modelled extent.
+// Flood-hazard likelihood at a point for the devolved nations (Scotland SEPA / Wales NRW / NI DfI) —
+// the highest band the point falls in, per source. England uses the separate FloodSummary (EA flood
+// AREAS) instead. high/medium/low map to each agency's likelihood bands. null = no modelled extent.
 export type FloodLikelihood = "high" | "medium" | "low";
-export interface ScotlandFloodSummary {
+export interface DevolvedFloodSummary {
   river: FloodLikelihood | null;
   surfaceWater: FloodLikelihood | null;
   coastal: FloodLikelihood | null;

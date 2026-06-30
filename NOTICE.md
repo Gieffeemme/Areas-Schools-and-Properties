@@ -31,6 +31,7 @@ The in-app version of this notice (with disclaimers) is at `/sources`.
 | Environmental noise (strategic noise mapping) | Defra | OGL v3.0 |
 | Flood risk & warnings (England) | Environment Agency | OGL v3.0 |
 | Flood hazard maps (Scotland) | Scottish Environment Protection Agency (SEPA) | OGL v3.0 |
+| Flood risk maps (Wales) | Natural Resources Wales (via DataMapWales) | OGL v3.0 |
 | Energy performance certificates (EPC) | MHCLG (Get energy performance of buildings data) | EPB reuse terms |
 | Planning applications | PlanIt (aggregates UK local-authority planning registers) | Third-party aggregator (see note) |
 | Amenities, stations, EV charging & base maps | OpenStreetMap contributors | **ODbL** (data); tiles © CARTO / © Mapbox |
