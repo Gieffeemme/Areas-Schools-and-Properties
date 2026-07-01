@@ -704,7 +704,10 @@ where the devolved inspectorates give none). A follow-on **devolved property-par
 Every originally-queued free dataset has shipped; a "what other England free data exists" sweep then
 added **EV charging**, a **Census expansion** (car/van availability + self-reported health), **EA
 bathing-water** quality, **ONS small-area income** and the **ONS housing-affordability ratio** (the one
-worthwhile dataset earlier dropped, now in — so the genuinely-worthwhile free set is complete). Remaining
+worthwhile dataset earlier dropped, now in — so the *England* free set is complete; a later
+liveability sweep then also added **green space & garden access** (ONS/OS, GB — `etl:greenspace`) and an
+honest distance-based **catchment estimate** (`CatchmentPanel`), after which free open-data *content* is
+genuinely exhausted — everything remaining is gated (below) or product/UX). Remaining
 candidates, both judged **not worth building**: **bus stops** (NaPTAN/OSM — ~370k, low signal: there's almost always one nearby, and routed
 frequency needs the harder BODS feeds) and **DfT journey-time/connectivity** stats (genuinely useful
 "mins to GP/school/shops" but last published **~2019** — too stale to ship). **OHID Fingertips**
