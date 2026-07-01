@@ -45,3 +45,6 @@ next-env.d.ts
 __pycache__/
 *.pyc
 .venv/
+
+# CI refresh summary (generated; used only as a PR body)
+refresh-summary.md

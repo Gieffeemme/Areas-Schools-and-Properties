@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "node node_modules/next/dist/bin/next dev",
+    "data:manifest": "node scripts/build-data-manifest.mjs",
+    "refresh": "node scripts/refresh.mjs",
     "build": "node node_modules/next/dist/bin/next build",
     "start": "node node_modules/next/dist/bin/next start",
     "lint": "eslint",

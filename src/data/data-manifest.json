@@ -1,0 +1,251 @@
+{
+  "generatedAt": "2026-07-01T01:41:30.664Z",
+  "datasetCount": 35,
+  "datasets": [
+    {
+      "file": "affordability-by-laua.json",
+      "records": 317,
+      "bytes": 5126,
+      "lastCommit": "2026-06-24T01:48:33+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "air-quality-by-grid.json",
+      "records": 254905,
+      "bytes": 4982346,
+      "lastCommit": "2026-06-23T22:59:47+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "amenities.json",
+      "records": 193045,
+      "bytes": 3794598,
+      "lastCommit": "2026-06-23T14:44:10+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "bathing-waters.json",
+      "records": 464,
+      "bytes": 34034,
+      "lastCommit": "2026-06-24T00:37:32+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "benchmarks.json",
+      "records": 4,
+      "bytes": 1178,
+      "lastCommit": "2026-06-20T18:03:23+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "broadband-by-laua.json",
+      "records": 361,
+      "bytes": 42199,
+      "lastCommit": "2026-06-22T21:13:21+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "census-by-urn.json",
+      "records": 24433,
+      "bytes": 1536076,
+      "lastCommit": "2026-06-20T23:58:13+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "council-tax-bands-by-lsoa.json",
+      "records": 35672,
+      "bytes": 2787343,
+      "lastCommit": "2026-06-23T01:35:59+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "council-tax-cost-by-laua.json",
+      "records": 296,
+      "bytes": 25451,
+      "lastCommit": "2026-06-23T12:51:53+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "cqc-locations.json",
+      "records": 50329,
+      "bytes": 7548816,
+      "lastCommit": "2026-06-23T22:34:19+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "destinations-by-urn.json",
+      "records": 4117,
+      "bytes": 496807,
+      "lastCommit": "2026-06-20T23:58:13+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ev-charging.json",
+      "records": 8518,
+      "bytes": 433244,
+      "lastCommit": "2026-06-24T00:09:52+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "finance-by-urn.json",
+      "records": 22080,
+      "bytes": 1674263,
+      "lastCommit": "2026-06-22T14:46:33+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "gias.json",
+      "records": 24911,
+      "bytes": 5628027,
+      "lastCommit": "2026-06-22T23:01:31+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "greenspace.json",
+      "records": 49874,
+      "bytes": 1620663,
+      "lastCommit": "2026-06-30T22:59:41+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "imd-domains-by-lsoa.json",
+      "records": 32844,
+      "bytes": 3241709,
+      "lastCommit": "2026-06-22T15:13:11+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "income-by-msoa.json",
+      "records": 7264,
+      "bytes": 130794,
+      "lastCommit": "2026-06-24T00:50:37+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ks2-by-urn.json",
+      "records": 15755,
+      "bytes": 1530871,
+      "lastCommit": "2026-06-20T23:47:59+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ks4-by-urn.json",
+      "records": 4631,
+      "bytes": 506646,
+      "lastCommit": "2026-06-22T14:26:30+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ks5-by-urn.json",
+      "records": 2547,
+      "bytes": 198972,
+      "lastCommit": "2026-06-21T23:01:10+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "mobile-by-laua.json",
+      "records": 361,
+      "bytes": 30468,
+      "lastCommit": "2026-06-23T23:21:32+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ni-schools.json",
+      "records": 1102,
+      "bytes": 182942,
+      "lastCommit": "2026-06-29T14:19:48+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "nimdm-by-soa.json",
+      "records": 890,
+      "bytes": 105662,
+      "lastCommit": "2026-06-29T13:44:38+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "nurseries.json",
+      "records": 23118,
+      "bytes": 4741986,
+      "lastCommit": "2026-06-22T11:29:18+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "ofsted-by-urn.json",
+      "records": 22529,
+      "bytes": 3923315,
+      "lastCommit": "2026-06-23T01:06:10+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "parentview-by-urn.json",
+      "records": 5909,
+      "bytes": 2285358,
+      "lastCommit": "2026-06-21T22:27:21+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "report-cards-by-urn.json",
+      "records": 1098,
+      "bytes": 367682,
+      "lastCommit": "2026-06-22T17:48:37+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "scotland-council-tax-by-laua.json",
+      "records": 32,
+      "bytes": 6938,
+      "lastCommit": "2026-06-29T22:03:47+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "scotland-crime-by-laua.json",
+      "records": 32,
+      "bytes": 14103,
+      "lastCommit": "2026-06-29T21:39:29+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "scotland-schools.json",
+      "records": 2483,
+      "bytes": 395844,
+      "lastCommit": "2026-06-29T14:45:17+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "simd-by-datazone.json",
+      "records": 6976,
+      "bytes": 848615,
+      "lastCommit": "2026-06-29T13:27:22+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "stations.json",
+      "records": 4320,
+      "bytes": 393015,
+      "lastCommit": "2026-06-23T16:33:40+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "welsh-schools.json",
+      "records": 1543,
+      "bytes": 284892,
+      "lastCommit": "2026-06-29T12:42:15+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "wimd-by-lsoa.json",
+      "records": 1917,
+      "bytes": 265216,
+      "lastCommit": "2026-06-25T22:28:35+01:00",
+      "dateSource": "git"
+    },
+    {
+      "file": "workforce-by-urn.json",
+      "records": 32811,
+      "bytes": 2447080,
+      "lastCommit": "2026-06-22T16:00:51+01:00",
+      "dateSource": "git"
+    }
+  ]
+}

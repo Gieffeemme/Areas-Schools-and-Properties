@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   // paths are dynamic, @vercel/nft can't trace these files automatically, so each server route that
   // reads them must list them here to get them copied into its serverless function bundle.
   outputFileTracingIncludes: {
+    "/api/health": ["src/data/data-manifest.json"], // freshness manifest for the ops health check
     "/api/area": ["src/data/*.json"], // fetchSchools reads gias + every URN-keyed enrichment file
     "/api/property": ["src/data/*.json"], // geocodePostcode reads imd + council-tax by LSOA
     "/api/schools": ["src/data/*.json"], // fetchSchoolsByIds builds full schools (compare view)
