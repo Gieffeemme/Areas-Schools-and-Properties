@@ -56,3 +56,14 @@ optional Upstash Redis caching. Full details, file map and roadmap in
 npm run lint     # ESLint        ·  npm run build  # production build
 npm run etl:gias # refresh a dataset (see DOCUMENTATION.md §6 for the full list)
 ```
+
+## Maintenance
+
+Aggregating ~35 open datasets + ~12 live upstreams, the risks are *silent staleness* and *silent
+breakage*. Two things surface them (details in `DOCUMENTATION.md` §10):
+
+- **`GET /api/health`** — every dataset's vintage + live-upstream reachability. `?strict=1` returns
+  **503** when unhealthy (point an uptime pinger at it); `?data=only` is a cheap freshness-only check.
+- **`npm run refresh <group>`** re-runs a cadence group of ETLs and, via the monthly GitHub Action,
+  opens a **PR** with the regenerated data for review (never auto-merges). `npm run data:manifest`
+  rebuilds the freshness index that `/api/health` reads.
