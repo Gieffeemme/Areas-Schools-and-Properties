@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import PostcodeSearch from "./PostcodeSearch";
 import AreaMap from "./AreaMap";
 import SchoolsPanel from "./SchoolsPanel";
+import CatchmentPanel from "./CatchmentPanel";
 import CrimePanel from "./CrimePanel";
 import ScotlandCrimePanel from "./ScotlandCrimePanel";
 import PricePanel from "./PricePanel";
@@ -286,14 +287,17 @@ function SidePanels({
   onChange: (f: SchoolFilters) => void;
 }) {
   const schools = (
-    <SchoolsPanel
-      schools={report.schools}
-      radiusMiles={report.radiusMiles}
-      ofstedLoaded={report.ofstedLoaded}
-      onSelect={onSelect}
-      filters={filters}
-      onChange={onChange}
-    />
+    <div className="space-y-4">
+      <CatchmentPanel schools={report.schools} onSelect={onSelect} />
+      <SchoolsPanel
+        schools={report.schools}
+        radiusMiles={report.radiusMiles}
+        ofstedLoaded={report.ofstedLoaded}
+        onSelect={onSelect}
+        filters={filters}
+        onChange={onChange}
+      />
+    </div>
   );
   // Scotland has no police.uk street-level data → show the council-area recorded-crime panel instead.
   const crime = report.facts.scotlandCrime ? (

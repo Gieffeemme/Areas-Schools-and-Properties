@@ -5,6 +5,7 @@ import Card from "./Card";
 import RouteHeader from "./RouteHeader";
 import PropertyMap from "./PropertyMap";
 import SchoolsPanel from "./SchoolsPanel";
+import CatchmentPanel from "./CatchmentPanel";
 import SchoolDetail from "./SchoolDetail";
 import CrimePanel from "./CrimePanel";
 import ScotlandCrimePanel from "./ScotlandCrimePanel";
@@ -485,6 +486,7 @@ function NeighbourhoodToggle({ postcode }: { postcode: string }) {
           {area && area !== "loading" && (
             <>
               <RankingsPanel report={area} />
+              <CatchmentPanel schools={area.schools} onSelect={setSchool} />
               <SchoolsPanel
                 schools={area.schools}
                 radiusMiles={area.radiusMiles}
