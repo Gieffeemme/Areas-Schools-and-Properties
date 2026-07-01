@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import PostcodeSearch from "./PostcodeSearch";
 import AreaMap from "./AreaMap";
 import SchoolsPanel from "./SchoolsPanel";
-import CatchmentPanel from "./CatchmentPanel";
 import CrimePanel from "./CrimePanel";
 import ScotlandCrimePanel from "./ScotlandCrimePanel";
 import PricePanel from "./PricePanel";
@@ -266,7 +265,7 @@ function Report({
       <p className="mt-2 text-xs text-[var(--muted)]">
         The shaded circle is a{" "}
         <strong>{report.radiusMiles === 0.5 ? "½" : report.radiusMiles}-mile distance guide</strong>,
-        not a school catchment boundary. Catchment areas are a later phase.
+        not a school catchment boundary.
       </p>
     </div>
   );
@@ -287,17 +286,14 @@ function SidePanels({
   onChange: (f: SchoolFilters) => void;
 }) {
   const schools = (
-    <div className="space-y-4">
-      <CatchmentPanel schools={report.schools} onSelect={onSelect} />
-      <SchoolsPanel
-        schools={report.schools}
-        radiusMiles={report.radiusMiles}
-        ofstedLoaded={report.ofstedLoaded}
-        onSelect={onSelect}
-        filters={filters}
-        onChange={onChange}
-      />
-    </div>
+    <SchoolsPanel
+      schools={report.schools}
+      radiusMiles={report.radiusMiles}
+      ofstedLoaded={report.ofstedLoaded}
+      onSelect={onSelect}
+      filters={filters}
+      onChange={onChange}
+    />
   );
   // Scotland has no police.uk street-level data → show the council-area recorded-crime panel instead.
   const crime = report.facts.scotlandCrime ? (

@@ -40,9 +40,10 @@ each dataset is, its source, and how to refresh it), and the data-sourcing gotch
 
 - Every panel names its data source; failed/partial upstream responses are surfaced, not hidden,
   and never cached.
-- The "likely catchment" is an **honest distance estimate** (nearest state school per phase), heavily
-  disclaimed — *real* catchment (where pupils actually live) needs restricted NPD data we can't use.
-  The radius ring is likewise a distance guide, not a catchment boundary. See `DOCUMENTATION.md` §9/§11.
+- We deliberately show **no catchment** — neither a map area nor a distance estimate. *Real* catchment
+  (where a school's pupils actually live) needs restricted NPD data we can't use, and a distance-only
+  proxy needs so many caveats it misleads. The radius ring is a distance guide, not a catchment boundary.
+  See `DOCUMENTATION.md` §9/§11.
 - Crime "vs average" is a **national percentile** benchmark; school grades carry their inspection
   date (Ofsted retired single overall grades in Sept 2024).
 

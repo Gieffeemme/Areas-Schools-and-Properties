@@ -280,7 +280,7 @@ src/
     SchoolCard.tsx       list card (pills: Ofsted, P8, GCSE%, Parent View; pupils in meta)
     SchoolDetail.tsx     the per-school drawer: Details, Ofsted, GCSE, A-level, KS2, Destinations,
                          Pupil composition, Workforce, Finances, Parent View (full breakdown)
-    DeprivationPanel · DemographicsPanel · CrimePanel · ScotlandCrimePanel · PricePanel · AmenitiesPanel · TransportPanel · EvChargingPanel · BroadbandPanel · MobilePanel · NoisePanel · AirQualityPanel · BathingWaterPanel · RankingsPanel · CatchmentPanel (nearest state school per phase — distance ESTIMATE, disclaimed)  (area panels)
+    DeprivationPanel · DemographicsPanel · CrimePanel · ScotlandCrimePanel · PricePanel · AmenitiesPanel · TransportPanel · EvChargingPanel · BroadbandPanel · MobilePanel · NoisePanel · AirQualityPanel · BathingWaterPanel · RankingsPanel  (area panels)
     PropertyExplorer  (the "Check a property" route: postcode → pick exact address → per-property report; EPC A–G scale, council-tax + neighbourhood bar, tenure+type, sold-price growth, nearby planning applications, planning constraints (designations + listed buildings), nearby health & care (CQC ratings), location map)
     PropertyMap  (lean single-marker Leaflet map on the property report; postcode centroid, CARTO tiles)
     PropertyChecks (postcode-area checks - flood/prices/tenure/EPC/council-tax with band bars + nearby planning applications + health & care (CQC); in the area route's Area panels) · RouteSelector · RouteHeader (shared title + two-tile chooser, on both the area & property landings so navigation matches) · PostcodeSearch
@@ -413,7 +413,9 @@ These cost real time to discover — don't re-learn them:
 - **`xlsx` is a project dependency** — use `import * as XLSX from "xlsx"; XLSX.read(buf, {type:"buffer"})`
   for the Ofsted/Parent View/FBIT workbooks.
 - **Catchment areas** (the big remaining gap) need **restricted NPD pupil-residence microdata** via
-  the ONS Secure Research Service — *not* free/open. Only approximable. Don't promise a clean build.
+  the ONS Secure Research Service — *not* free/open. A distance-only approximation was built and then
+  **removed** (a nearest-school-by-distance estimate needs so many caveats it confused more than it
+  helped). Don't promise a clean build, and don't re-ship the distance proxy without a product rethink.
 - **Per-school subjects aren't cleanly available either.** DfE's KS4 subject datasets (EES) are
   **national/aggregate** (no per-school URN), and the bulk KS4 download is summary-only. Per-school
   subject results render on the compare-school-performance *website* but aren't bulk-published — so
@@ -705,8 +707,8 @@ Every originally-queued free dataset has shipped; a "what other England free dat
 added **EV charging**, a **Census expansion** (car/van availability + self-reported health), **EA
 bathing-water** quality, **ONS small-area income** and the **ONS housing-affordability ratio** (the one
 worthwhile dataset earlier dropped, now in — so the *England* free set is complete; a later
-liveability sweep then also added **green space & garden access** (ONS/OS, GB — `etl:greenspace`) and an
-honest distance-based **catchment estimate** (`CatchmentPanel`), after which free open-data *content* is
+liveability sweep then also added **green space & garden access** (ONS/OS, GB — `etl:greenspace`),
+after which free open-data *content* is
 genuinely exhausted — everything remaining is gated (below) or product/UX). Remaining
 candidates, both judged **not worth building**: **bus stops** (NaPTAN/OSM — ~370k, low signal: there's almost always one nearby, and routed
 frequency needs the harder BODS feeds) and **DfT journey-time/connectivity** stats (genuinely useful
@@ -741,9 +743,10 @@ distinction matters: only the *login-gated* tier is unlockable by just registeri
   pupil-flow microdata via the **ONS Secure Research Service / DfE data share**. No fee, but needs
   accredited-researcher status + an approved project + a secure environment + output clearance, and only
   disclosure-controlled *aggregates* can leave — so it can't be served in a public app. This is
-  Locrating's flagship. We ship the honest **approximation** instead: `CatchmentPanel` shows the nearest
-  mainstream state school of each phase by straight-line distance (excluding independent/special/
-  selective; faith tagged), heavily disclaimed as a distance *estimate*, not real intake data.
+  Locrating's flagship — and we ship **no catchment feature at all**. A distance-based *approximation*
+  (nearest state school of each phase by straight-line distance) was built and then **removed**: it needs
+  so many caveats — real intake turns on siblings/faith/aptitude and the true last-distance-offered is
+  usually *much smaller* — that it misled more than it informed.
 - **Login-gated — free account.** **Per-property EPC for Scotland / NI**: separate national registers
   whose bulk extracts sit behind a free signup — the *same shape* as the England/Wales EPC the app
   already uses (registered key, EPB reuse terms). **Unlockable by registering** + confirming the reuse
